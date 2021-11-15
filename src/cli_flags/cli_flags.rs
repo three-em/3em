@@ -3,17 +3,23 @@ use std::env;
 use std::str::FromStr;
 
 pub struct CliContext {
-    command: Option<String>,
-    flags: HashMap<String, Vec<String>>,
+    command: String,
+    flags: HashMap<String, String>,
 }
 
-pub struct CliOperator;
-impl CliOperator {
-    pub fn new() -> CliOperator {
-        CliOperator {}
+pub struct CliOperator<'a> {
+    executors: HashMap<String, Box<dyn Fn(HashMap<String, String>) + 'a>>
+}
+
+impl<'a> CliOperator<'a> {
+
+    pub fn new() -> CliOperator<'a> {
+        CliOperator {
+            executors: HashMap::new()
+        }
     }
 
-    pub fn parse(&self, args: Vec<String>) -> Option<HashMap<String, Vec<(String, String)>>> {
+    pub fn parse(&self, args: Vec<String>) -> Option<CliContext> {
         let args: Vec<String> = args.into_iter().skip(1).collect();
         let command = args.get(0).and_then(|val| Some(val.to_owned()));
 
@@ -22,23 +28,39 @@ impl CliOperator {
 
         match command {
             Some(cmd) => {
-                let mut result_vec: Vec<(String, String)> = Vec::new();
-                let mut result_map: HashMap<String, Vec<(String, String)>> = HashMap::new();
+                let mut result_flags: HashMap<String, String> = HashMap::new();
+                let mut context: CliContext = CliContext {
+                    command: String::from(cmd.clone()),
+                    flags: HashMap::new()
+                };
                 let flags: &Vec<String> = &args.into_iter().skip(1).collect();
                 let known_flags: Vec<&str> = valid_commands.get(&cmd).unwrap().clone();
 
                 for known_flg in known_flags {
                     let flag = known_flg.to_owned();
-                    result_vec.push(self.get_arg_val(&flags, flag));
+                    let (arg, arg_val) = self.get_arg_val(&flags, flag);
+                    result_flags.insert(arg, arg_val);
                 }
 
-                result_map.insert(cmd, result_vec);
+                context.flags = result_flags;
 
-                Some(result_map)
+                Some(context)
             }
             None => None,
         }
     }
+
+    pub fn on<F: Fn(HashMap<String, String>) + 'a>(&mut self, command: &str, executor: F) {
+        self.executors.insert(String::from(command), Box::new(executor));
+    }
+
+    pub fn begin(&self, args: Vec<String>) {
+        let parse = self.parse(args).unwrap();
+        // TODO: Don't panic if the command doesn't exist
+        let executor = self.executors.get(&parse.command).unwrap();
+        executor(parse.flags);
+    }
+
 
     fn initialize_start_cmd(&self, commands: &mut HashMap<String, Vec<&str>>) {
         commands.insert("start".to_owned(), vec!["--host", "--port"]);
@@ -60,17 +82,31 @@ mod cli_flags_tests {
     fn parse_flags() {
         let operator = CliOperator::new();
         let mut flags: Vec<String> = Vec::new();
-        flags.push("vec".to_owned());
+        flags.push("3em".to_owned());
         flags.push("start".to_owned());
         flags.push("--host".to_owned());
         flags.push("127.0.0.1".to_owned());
 
         let parse_flags = operator.parse(flags).unwrap();
-        assert_eq!(parse_flags.contains_key("start"), true);
-
-        let start_flag = parse_flags.get("start").unwrap();
-        let (host_arg, host_val) = start_flag.get(0).unwrap();
-        assert_eq!(host_arg, "--host");
+        assert_eq!(parse_flags.command, "start");
+        let host_val = parse_flags.flags.get("--host").unwrap();
         assert_eq!(host_val, "127.0.0.1");
+    }
+
+    #[test]
+    fn execute_hello_world() {
+        let mut operator = CliOperator::new();
+        let mut flags: Vec<String> = Vec::new();
+        flags.push("3em".to_owned());
+        flags.push("start".to_owned());
+        flags.push("--host".to_owned());
+        flags.push("127.0.0.1".to_owned());
+
+        operator.on("start", |data| {
+            let result = format!("Hello world from {}", data.get("--host").unwrap());
+            assert_eq!(result, "Hello world from 127.0.0.1");
+        });
+
+        operator.begin(flags);
     }
 }
