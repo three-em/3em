@@ -1,13 +1,13 @@
-mod vem_core;
 mod cli_flags;
+mod vem_core;
 
-use std::{thread, env};
-use std::net::TcpStream;
-use std::io::{Read};
-use vem_core::core::VemCore;
 use crate::cli_flags::cli_flags::CliOperator;
+use std::io::Read;
+use std::net::TcpStream;
+use std::{env, thread};
+use vem_core::core::VemCore;
 
-fn handle_node(mut stream: TcpStream){
+fn handle_node(mut stream: TcpStream) {
     loop {
         let mut buf = [0; 1024];
         let n = stream.read(&mut buf[..]).unwrap();
@@ -21,28 +21,27 @@ fn handle_node(mut stream: TcpStream){
     }
 }
 
-
 pub fn main() {
-    let cli_operator = CliOperator {};
-    let flags = cli_operator.parse();
-
-    let core = VemCore {
-        ip: flags.host.unwrap_or("127.0.0.1".to_owned()),
-        port: flags.port.unwrap_or(8755),
-    };
-
-    let listener = core.begin();
-
-    for stream in listener.incoming() {
-        thread::spawn(|| {
-            match stream {
-                Ok(stream)=> {
-                    handle_node(stream);
-                }
-                Err(_e)=> {
-                    println!("A connection was received but failed to be handled.")
-                }
-            }
-        });
-    }
+    // let cli_operator = CliOperator {};
+    // let flags = cli_operator.parse();
+    //
+    // let core = VemCore {
+    //     ip: flags.host.unwrap_or("127.0.0.1".to_owned()),
+    //     port: flags.port.unwrap_or(8755),
+    // };
+    //
+    // let listener = core.begin();
+    //
+    // for stream in listener.incoming() {
+    //     thread::spawn(|| {
+    //         match stream {
+    //             Ok(stream)=> {
+    //                 handle_node(stream);
+    //             }
+    //             Err(_e)=> {
+    //                 println!("A connection was received but failed to be handled.")
+    //             }
+    //         }
+    //     });
+    // }
 }
