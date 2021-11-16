@@ -101,12 +101,89 @@
     async decrypt(encrypted, key, salt) {}
   }
 
+  // Adapted from arweave-js
+  // https://github.com/ArweaveTeam/arweave-js/blob/master/src/common/lib/utils.ts
+  class ArweaveUtils {
+    concatBuffers(
+      buffers,
+    ) {
+      let total_length = 0;
+
+      for (let i = 0; i < buffers.length; i++) {
+        total_length += buffers[i].byteLength;
+      }
+
+      let temp = new Uint8Array(total_length);
+      let offset = 0;
+
+      temp.set(new Uint8Array(buffers[0]), offset);
+      offset += buffers[0].byteLength;
+
+      for (let i = 1; i < buffers.length; i++) {
+        temp.set(new Uint8Array(buffers[i]), offset);
+        offset += buffers[i].byteLength;
+      }
+
+      return temp;
+    }
+
+    b64UrlToString(b64UrlString) {
+      let buffer = b64UrlToBuffer(b64UrlString);
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+
+    bufferToString(buffer) {
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+
+    stringToBuffer(string) {
+      return new TextEncoder().encode(string);
+    }
+
+    stringToB64Url(string) {
+      return bufferTob64Url(stringToBuffer(string));
+    }
+
+    b64UrlToBuffer(b64UrlString) {
+      return Uint8Array.from(atob(b64UrlString), c => c.charCodeAt(0));
+    }
+
+    bufferTob64(buffer) {
+      return B64js.fromByteArray(new Uint8Array(buffer));
+    }
+
+    bufferTob64Url(buffer) {
+      return b64UrlEncode(bufferTob64(buffer));
+    }
+
+    b64UrlEncode(b64UrlString) {
+      return b64UrlString
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/\=/g, "");
+    }
+
+    b64UrlDecode(b64UrlString) {
+      b64UrlString = b64UrlString.replace(/\-/g, "+").replace(/\_/g, "/");
+      let padding;
+      b64UrlString.length % 4 == 0
+        ? (padding = 0)
+        : (padding = 4 - (b64UrlString.length % 4));
+      return b64UrlString.concat("=".repeat(padding));
+    }
+  }
+
   class Arweave {
+    /** @deprecated */
     get crypto() {
       return new CryptoInterface();
     }
 
-    get utils() {}
+    /** @deprecated */
+    get utils() {
+      return new ArweaveUtils();
+    }
+
     get ar() {}
     get wallets() {}
   }
