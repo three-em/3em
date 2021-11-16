@@ -7,6 +7,7 @@ use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
+use deno_web::BlobStore;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -24,7 +25,13 @@ impl Runtime {
 
     let mut rt = JsRuntime::new(RuntimeOptions {
       // TODO(@littledivy): Move this to snapshots
-      extensions: vec![smartweave::init()],
+      extensions: vec![
+        deno_webidl::init(),
+        deno_url::init(),
+        deno_web::init(BlobStore::default(), None),
+        deno_crypto::init(None),
+        smartweave::init(),
+      ],
       module_loader: Some(module_loader),
       ..Default::default()
     });
@@ -85,5 +92,30 @@ mod test {
     let value: i64 = rt.call(&[()]).await.unwrap();
 
     assert_eq!(value, -69);
+  }
+
+  #[tokio::test]
+  async fn test_runtime_smartweave() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle(slice) {
+  return SmartWeave
+          .arweave
+          .crypto.hash(new Uint8Array(slice), 'SHA-1') 
+}
+"#,
+    )
+    .await
+    .unwrap();
+
+    let buf: [u8; 1] = [0x00; 1];
+    let hash: [u8; 20] = rt.call(&[buf]).await.unwrap();
+    assert_eq!(
+      hash,
+      [
+        91, 169, 60, 157, 176, 207, 249, 63, 82, 181, 33, 215, 66, 14, 67, 246,
+        237, 162, 120, 79
+      ]
+    );
   }
 }
