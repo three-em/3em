@@ -1,13 +1,10 @@
-mod cli_commands;
-mod cli_flags;
+mod cli;
+mod start;
 
-use crate::cli_flags::cli_flags::CliOperator;
+use cli::parse::Flags;
 use deno_core::error::AnyError;
 
-use crate::cli_commands::start_cmd::StartCmd;
-use std::io::Read;
-use std::net::TcpStream;
-use std::{env, thread};
+use std::env;
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
@@ -26,18 +23,16 @@ async fn main() -> Result<(), AnyError> {
     println!("{}", BANNER);
     println!("Version: {}", env!("CARGO_PKG_VERSION"));
 
-    let mut cli_operator = CliOperator::new();
-    let mut arguments: Vec<String> = env::args().collect();
-    if arguments.len() == 1 {
-        arguments = vec!["vem", "start", "--host", "127.0.0.1", "--port", "8755"]
-            .iter()
-            .map(|x| String::from(x.to_owned()))
-            .collect();
-    }
+    let flags = cli::parse::parse()?;
 
-    cli_operator.on_trait(StartCmd);
-
-    cli_operator.begin(arguments).await;
+    match flags {
+        Flags::Start { host, port } => {
+            start::start(host, port).await?;
+        }
+        _ => {
+            println!("{}", "Unknown flag.");
+        }
+    };
 
     Ok(())
 }

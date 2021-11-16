@@ -10,3 +10,4 @@ v8 = "0.34.0"
 deno_core = "0.107.0"
 tokio = { version = "1.10.1", features = ["full"] }
 async-trait = "0.1.51"
+pico-args = "0.4.2"
