@@ -1,4 +1,5 @@
 mod module_loader;
+mod smartweave;
 
 use crate::runtime::module_loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
@@ -22,7 +23,8 @@ impl Runtime {
       Rc::new(EmbeddedModuleLoader(source.to_owned(), specifier.clone()));
 
     let mut rt = JsRuntime::new(RuntimeOptions {
-      extensions: vec![],
+      // TODO(@littledivy): Move this to snapshots
+      extensions: vec![smartweave::init()],
       module_loader: Some(module_loader),
       ..Default::default()
     });

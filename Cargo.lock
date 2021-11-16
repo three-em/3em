@@ -558,6 +558,7 @@ dependencies = [
  "colored",
  "deno_core",
  "pico-args",
+ "serde",
  "tokio",
  "v8",
 ]

@@ -5,8 +5,8 @@ mod start;
 use cli::parse::Flags;
 use deno_core::error::AnyError;
 
-use std::env;
 use colored::Colorize;
+use std::env;
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
