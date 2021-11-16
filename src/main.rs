@@ -22,26 +22,33 @@ fn handle_node(mut stream: TcpStream) {
 }
 
 pub fn main() {
-    // let cli_operator = CliOperator {};
-    // let flags = cli_operator.parse();
-    //
-    // let core = VemCore {
-    //     ip: flags.host.unwrap_or("127.0.0.1".to_owned()),
-    //     port: flags.port.unwrap_or(8755),
-    // };
-    //
-    // let listener = core.begin();
-    //
-    // for stream in listener.incoming() {
-    //     thread::spawn(|| {
-    //         match stream {
-    //             Ok(stream)=> {
-    //                 handle_node(stream);
-    //             }
-    //             Err(_e)=> {
-    //                 println!("A connection was received but failed to be handled.")
-    //             }
-    //         }
-    //     });
-    // }
+    let mut cli_operator = CliOperator::new();
+    let mut arguments: Vec<String> = env::args().collect();
+    if arguments.len() == 1 {
+        arguments = vec!["vem", "start", "--host", "127.0.0.1", "--port", "8755"].iter().map(|x| String::from(x.to_owned())).collect();
+    }
+
+    cli_operator.on("start", |flags| {
+        let core = VemCore {
+            ip: flags.get("--host").unwrap().to_owned(),
+            port: flags.get("--port").unwrap().parse::<i32>().unwrap(),
+        };
+
+        let listener = core.begin();
+
+        for stream in listener.incoming() {
+            thread::spawn(|| {
+                match stream {
+                    Ok(stream)=> {
+                        handle_node(stream);
+                    }
+                    Err(_e)=> {
+                        println!("A connection was received but failed to be handled.")
+                    }
+                }
+            });
+        }
+    });
+
+    cli_operator.begin(arguments);
 }

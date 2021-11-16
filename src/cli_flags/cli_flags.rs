@@ -55,12 +55,12 @@ impl<'a> CliOperator<'a> {
     }
 
     pub fn begin(&self, args: Vec<String>) {
+        // TODO: Don't panic if command does not exist
         let parse = self.parse(args).unwrap();
         // TODO: Don't panic if the command doesn't exist
         let executor = self.executors.get(&parse.command).unwrap();
         executor(parse.flags);
     }
-
 
     fn initialize_start_cmd(&self, commands: &mut HashMap<String, Vec<&str>>) {
         commands.insert("start".to_owned(), vec!["--host", "--port"]);
