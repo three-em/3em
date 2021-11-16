@@ -20,19 +20,19 @@ Languages supported: Javascript, Rust, C++, C, C#.
 
 #[tokio::main]
 async fn main() -> Result<(), AnyError> {
-    println!("{}", BANNER);
-    println!("Version: {}", env!("CARGO_PKG_VERSION"));
+  println!("{}", BANNER);
+  println!("Version: {}", env!("CARGO_PKG_VERSION"));
 
-    let flags = cli::parse::parse()?;
+  let flags = cli::parse::parse()?;
 
-    match flags {
-        Flags::Start { host, port } => {
-            start::start(host, port).await?;
-        }
-        _ => {
-            println!("{}", "Unknown flag.");
-        }
-    };
+  match flags {
+    Flags::Start { host, port } => {
+      start::start(host, port).await?;
+    }
+    _ => {
+      println!("{}", "Unknown flag.");
+    }
+  };
 
-    Ok(())
+  Ok(())
 }
