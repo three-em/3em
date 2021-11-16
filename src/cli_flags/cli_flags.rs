@@ -2,6 +2,11 @@ use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
 
+pub trait CliHandler {
+    fn get_command(&self) -> &str;
+    fn execute(&self, flags: HashMap<String, String>) -> ();
+}
+
 pub struct CliContext {
     command: String,
     flags: HashMap<String, String>,
@@ -9,12 +14,14 @@ pub struct CliContext {
 
 pub struct CliOperator<'a> {
     executors: HashMap<String, Box<dyn Fn(HashMap<String, String>) + 'a>>,
+    trait_executors: HashMap<String, Box<dyn CliHandler + 'a>>,
 }
 
 impl<'a> CliOperator<'a> {
     pub fn new() -> CliOperator<'a> {
         CliOperator {
             executors: HashMap::new(),
+            trait_executors: HashMap::new(),
         }
     }
 
@@ -54,12 +61,19 @@ impl<'a> CliOperator<'a> {
             .insert(String::from(command), Box::new(executor));
     }
 
+    pub fn on_trait<Handler: CliHandler + 'a>(&mut self, handler: Handler) {
+        self.trait_executors
+            .insert(String::from(handler.get_command()), Box::new(handler));
+    }
+
     pub fn begin(&self, args: Vec<String>) {
         // TODO: Don't panic if command does not exist
         let parse = self.parse(args).unwrap();
-        // TODO: Don't panic if the command doesn't exist
-        let executor = self.executors.get(&parse.command).unwrap();
-        executor(parse.flags);
+        if let Some(executor) = self.executors.get(&parse.command) {
+            executor(parse.flags);
+        } else if let Some(executor) = self.trait_executors.get(&parse.command) {
+            executor.execute(parse.flags);
+        }
     }
 
     fn initialize_start_cmd(&self, commands: &mut HashMap<String, Vec<&str>>) {
@@ -76,7 +90,8 @@ impl<'a> CliOperator<'a> {
 
 #[cfg(test)]
 mod cli_flags_tests {
-    use crate::cli_flags::cli_flags::CliOperator;
+    use crate::cli_flags::cli_flags::{CliHandler, CliOperator};
+    use std::collections::HashMap;
 
     #[test]
     fn parse_flags() {
@@ -106,6 +121,32 @@ mod cli_flags_tests {
             let result = format!("Hello world from {}", data.get("--host").unwrap());
             assert_eq!(result, "Hello world from 127.0.0.1");
         });
+
+        operator.begin(flags);
+    }
+
+    pub struct StartCommand;
+    impl CliHandler for StartCommand {
+        fn get_command(&self) -> &str {
+            return "start";
+        }
+
+        fn execute(&self, flags: HashMap<String, String>) -> () {
+            let result = format!("Hello world from {}", flags.get("--host").unwrap());
+            assert_eq!(result, "Hello world from 127.0.0.1");
+        }
+    }
+
+    #[test]
+    fn execute_hello_world_trait() {
+        let mut operator = CliOperator::new();
+        let mut flags: Vec<String> = Vec::new();
+        flags.push("3em".to_owned());
+        flags.push("start".to_owned());
+        flags.push("--host".to_owned());
+        flags.push("127.0.0.1".to_owned());
+
+        operator.on_trait(StartCommand);
 
         operator.begin(flags);
     }
