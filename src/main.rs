@@ -25,7 +25,10 @@ pub fn main() {
     let mut cli_operator = CliOperator::new();
     let mut arguments: Vec<String> = env::args().collect();
     if arguments.len() == 1 {
-        arguments = vec!["vem", "start", "--host", "127.0.0.1", "--port", "8755"].iter().map(|x| String::from(x.to_owned())).collect();
+        arguments = vec!["vem", "start", "--host", "127.0.0.1", "--port", "8755"]
+            .iter()
+            .map(|x| String::from(x.to_owned()))
+            .collect();
     }
 
     cli_operator.on("start", |flags| {
@@ -37,14 +40,12 @@ pub fn main() {
         let listener = core.begin();
 
         for stream in listener.incoming() {
-            thread::spawn(|| {
-                match stream {
-                    Ok(stream)=> {
-                        handle_node(stream);
-                    }
-                    Err(_e)=> {
-                        println!("A connection was received but failed to be handled.")
-                    }
+            thread::spawn(|| match stream {
+                Ok(stream) => {
+                    handle_node(stream);
+                }
+                Err(_e) => {
+                    println!("A connection was received but failed to be handled.")
                 }
             });
         }

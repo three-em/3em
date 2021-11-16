@@ -8,14 +8,13 @@ pub struct CliContext {
 }
 
 pub struct CliOperator<'a> {
-    executors: HashMap<String, Box<dyn Fn(HashMap<String, String>) + 'a>>
+    executors: HashMap<String, Box<dyn Fn(HashMap<String, String>) + 'a>>,
 }
 
 impl<'a> CliOperator<'a> {
-
     pub fn new() -> CliOperator<'a> {
         CliOperator {
-            executors: HashMap::new()
+            executors: HashMap::new(),
         }
     }
 
@@ -31,7 +30,7 @@ impl<'a> CliOperator<'a> {
                 let mut result_flags: HashMap<String, String> = HashMap::new();
                 let mut context: CliContext = CliContext {
                     command: String::from(cmd.clone()),
-                    flags: HashMap::new()
+                    flags: HashMap::new(),
                 };
                 let flags: &Vec<String> = &args.into_iter().skip(1).collect();
                 let known_flags: Vec<&str> = valid_commands.get(&cmd).unwrap().clone();
@@ -51,7 +50,8 @@ impl<'a> CliOperator<'a> {
     }
 
     pub fn on<F: Fn(HashMap<String, String>) + 'a>(&mut self, command: &str, executor: F) {
-        self.executors.insert(String::from(command), Box::new(executor));
+        self.executors
+            .insert(String::from(command), Box::new(executor));
     }
 
     pub fn begin(&self, args: Vec<String>) {
