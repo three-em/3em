@@ -1,16 +1,16 @@
-mod vem_core;
 mod cli_flags;
 
-use std::{thread, env};
-use std::net::TcpStream;
-use std::io::{Read};
-use vem_core::core::VemCore;
 use crate::cli_flags::cli_flags::CliOperator;
+use deno_core::error::AnyError;
+use tokio::io::AsyncReadExt;
+use tokio::net::TcpListener;
+use tokio::net::TcpStream;
 
-fn handle_node(mut stream: TcpStream){
+async fn handle_node(mut stream: TcpStream) {
     loop {
         let mut buf = [0; 1024];
-        let n = stream.read(&mut buf[..]).unwrap();
+
+        let n = stream.read(&mut buf[..]).await.unwrap();
         eprintln!("read {}b of data", n);
         if n == 0 {
             eprintln!("no more data!");
@@ -21,28 +21,36 @@ fn handle_node(mut stream: TcpStream){
     }
 }
 
+static BANNER: &str = r#"
+██████╗     ███████╗    ███╗   ███╗
+╚════██╗    ██╔════╝    ████╗ ████║
+ █████╔╝    █████╗      ██╔████╔██║
+ ╚═══██╗    ██╔══╝      ██║╚██╔╝██║
+██████╔╝    ███████╗    ██║ ╚═╝ ██║
+╚═════╝     ╚══════╝    ╚═╝     ╚═╝
 
-pub fn main() {
+The Web3 Execution Machine
+Languages supported: Javascript, Rust, C++, C, C#.
+"#;
+
+#[tokio::main]
+async fn main() -> Result<(), AnyError> {
+    println!("{}", BANNER);
+    println!("Version: {}", env!("CARGO_PKG_VERSION"));
+
     let cli_operator = CliOperator {};
     let flags = cli_operator.parse();
 
-    let core = VemCore {
-        ip: flags.host.unwrap_or("127.0.0.1".to_owned()),
-        port: flags.port.unwrap_or(8755),
-    };
+    let specifier = format!("{}:{}", flags.host, flags.port);
+    println!("Serving {}", &specifier);
 
-    let listener = core.begin();
+    let listener = TcpListener::bind(specifier).await?;
 
-    for stream in listener.incoming() {
-        thread::spawn(|| {
-            match stream {
-                Ok(stream)=> {
-                    handle_node(stream);
-                }
-                Err(_e)=> {
-                    println!("A connection was received but failed to be handled.")
-                }
-            }
+    loop {
+        let (socket, _) = listener.accept().await?;
+
+        tokio::task::spawn(async move {
+            handle_node(socket).await;
         });
     }
 }
