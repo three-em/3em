@@ -83,6 +83,7 @@ impl Runtime {
 #[cfg(test)]
 mod test {
   use crate::runtime::Runtime;
+  use deno_core::ZeroCopyBuf;
 
   #[tokio::test]
   async fn test_runtime() {
@@ -101,15 +102,15 @@ mod test {
 export async function handle(slice) {
   return SmartWeave
           .arweave
-          .crypto.hash(new Uint8Array(slice), 'SHA-1') 
+          .crypto.hash(slice, 'SHA-1') 
 }
 "#,
     )
     .await
     .unwrap();
 
-    let buf: [u8; 1] = [0x00; 1];
-    let hash: [u8; 20] = rt.call(&[buf]).await.unwrap();
+    let buf: Vec<u8> = vec![0x00];
+    let hash: [u8; 20] = rt.call(&[ZeroCopyBuf::from(buf)]).await.unwrap();
     assert_eq!(
       hash,
       [
