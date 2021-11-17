@@ -3,18 +3,18 @@ pub mod extensions;
 mod module_loader;
 mod smartweave;
 
+use crate::runtime::extensions::get_extensions;
 use crate::runtime::module_loader::EmbeddedModuleLoader;
+use crate::snapshot_js::three_em_isolate;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
-use deno_core::{JsRuntime, Extension};
 use deno_core::RuntimeOptions;
+use deno_core::{Extension, JsRuntime};
 use deno_web::BlobStore;
 use std::fmt::Debug;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::path::{PathBuf, Path};
-use crate::runtime::extensions::get_extensions;
-use crate::snapshot_js::three_em_isolate;
 
 pub struct Runtime {
   rt: JsRuntime,
