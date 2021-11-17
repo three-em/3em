@@ -1,11 +1,8 @@
-pub mod extensions;
-
 mod module_loader;
 mod smartweave;
+mod snapshot;
 
-use crate::runtime::extensions::get_extensions;
 use crate::runtime::module_loader::EmbeddedModuleLoader;
-use crate::snapshot_js::three_em_isolate;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
@@ -29,10 +26,15 @@ impl Runtime {
       Rc::new(EmbeddedModuleLoader(source.to_owned(), specifier.clone()));
 
     let mut rt = JsRuntime::new(RuntimeOptions {
-      // TODO(@littledivy): Move this to snapshots
-      extensions: get_extensions(),
+      extensions: vec![
+        deno_webidl::init(),
+        deno_url::init(),
+        deno_web::init(BlobStore::default(), None),
+        deno_crypto::init(None),
+        smartweave::init(),
+      ],
       module_loader: Some(module_loader),
-      startup_snapshot: Some(three_em_isolate()),
+      startup_snapshot: Some(snapshot::snapshot()),
       ..Default::default()
     });
 

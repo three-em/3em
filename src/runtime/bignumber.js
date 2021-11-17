@@ -500,8 +500,9 @@
             0 === f[s];
             f.pop(), s--
           );
-          if (s < 0) f = [t = 0];
-          else {
+          if (s < 0) {
+            f = [t = 0];
+          } else {
             for (t = -1; 0 === f[0]; f.splice(0, 1), t -= j);
             for (s = 1, o = f[0]; 10 <= o; o /= 10, s++);
             s < j && (t -= j - s);
@@ -530,7 +531,9 @@
               e,
               r,
               n,
-              i ? (o = R, m) : (o = m, R),
+              i
+                ? (o = R, m)
+                : (o = m, R),
             )).length;
           0 == a[--u];
           a.pop()
@@ -548,11 +551,12 @@
             g = a[s = f + p + 1],
             u = n / 2,
             l = l || s < 0 || null != a[s + 1],
-            l = w < 4 ? (null != g || l) && (0 == w || w == (c.s < 0 ? 3 : 2))
-            : u < g ||
-              g == u &&
-                (4 == w || l || 6 == w && 1 & a[s - 1] ||
-                  w == (c.s < 0 ? 8 : 7)),
+            l = w < 4
+              ? (null != g || l) && (0 == w || w == (c.s < 0 ? 3 : 2))
+              : u < g ||
+                g == u &&
+                  (4 == w || l || 6 == w && 1 & a[s - 1] ||
+                    w == (c.s < 0 ? 8 : 7)),
             s < 1 || !a[0]
         ) {
           e = l ? Q(o.charAt(1), -p, o.charAt(0)) : o.charAt(0);
@@ -761,8 +765,9 @@
           c = c.times(c),
             o ? c.c && c.c.length > o && (c.c.length = o) : t && (c = c.mod(r));
         }
-        return t ? l
-        : (f && (l = w.div(l)), r ? l.mod(r) : o ? I(l, A, N, void 0) : l);
+        return t
+          ? l
+          : (f && (l = w.div(l)), r ? l.mod(r) : o ? I(l, A, N, void 0) : l);
       },
       t.integerValue = function (e) {
         var r = new _(this);
