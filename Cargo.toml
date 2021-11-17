@@ -17,3 +17,4 @@ serde = { version = "1", features = ["derive"] }
 async-trait = "0.1.51"
 pico-args = "0.4.2"
 colored = "2"
+reqwest = { version = "0.11" }
