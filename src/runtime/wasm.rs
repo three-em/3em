@@ -10,6 +10,7 @@ pub struct WasmRuntime {
   rt: JsRuntime,
   handle: v8::Global<v8::Value>,
   allocator: v8::Global<v8::Value>,
+  result_len: v8::Global<v8::Value>,
 }
 
 impl WasmRuntime {
@@ -64,21 +65,21 @@ impl WasmRuntime {
     let allocator = rt
       .execute_script("<anon>", "WASM_INSTANCE.exports._alloc")
       .unwrap();
-    
+
+    let result_len = rt
+      .execute_script("<anon>", "WASM_INSTANCE.exports.get_len")
+      .unwrap();
 
     Ok(Self {
       rt,
       handle,
       allocator,
+      result_len,
     })
   }
 
-  pub async fn call<T>(&mut self, state: &mut [u8]) -> Result<T, AnyError>
-  where
-    T: Debug + DeserializeOwned + 'static,
-  {
-
-    let global = {
+  pub async fn call(&mut self, state: &mut [u8]) -> Result<Vec<u8>, AnyError> {
+    let result = {
       let scope = &mut self.rt.handle_scope();
       let undefined = v8::undefined(scope);
 
@@ -92,8 +93,9 @@ impl WasmRuntime {
         .call(scope, undefined.into(), &[state_len.into()])
         .unwrap();
       let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
-      
-      let source = v8::String::new(scope, "WASM_INSTANCE.exports.memory.buffer").unwrap();
+
+      let source =
+        v8::String::new(scope, "WASM_INSTANCE.exports.memory.buffer").unwrap();
       let script = v8::Script::compile(scope, source, None).unwrap();
       let mem = script.run(scope).unwrap();
       let mem = v8::Global::new(scope, mem);
@@ -110,27 +112,34 @@ impl WasmRuntime {
       assert_eq!(raw_mem.len(), state.len());
       raw_mem.swap_with_slice(state);
 
-      let module_obj = self.handle.get(scope).to_object(scope).unwrap();
-      let func = v8::Local::<v8::Function>::try_from(module_obj)?;
+      let handler_obj = self.handle.get(scope).to_object(scope).unwrap();
+      let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
 
-      let result_ptr = func
+      let result_ptr = handle
         .call(
           scope,
           undefined.into(),
           &[local_ptr, state_len.into(), local_ptr, state_len.into()],
         )
         .unwrap();
-            
-      v8::Global::new(scope, local)
-    };
+      let result_ptr_u32 = result_ptr.uint32_value(scope).unwrap();
+      let get_len_obj = self.result_len.get(scope).to_object(scope).unwrap();
+      let get_len = v8::Local::<v8::Function>::try_from(get_len_obj)?;
 
-    let result: T = {
-      // Run the event loop.
-      let value = self.rt.resolve_value(global).await?;
-      let scope = &mut self.rt.handle_scope();
+      let result_len = get_len.call(scope, undefined.into(), &[]).unwrap();
+      let result_len = result_len.uint32_value(scope).unwrap();
 
-      let value = v8::Local::new(scope, value);
-      deno_core::serde_v8::from_v8(scope, value)?
+      let mut result_mem = unsafe {
+        get_backing_store_slice_mut(
+          &store,
+          result_ptr_u32 as usize,
+          result_len as usize,
+        )
+      };
+
+      assert_eq!(result_mem.len(), result_len as usize);
+
+      result_mem.to_vec()
     };
 
     Ok(result)
@@ -172,7 +181,10 @@ mod tests {
 
     let mut initial_state_bytes =
       deno_core::serde_json::to_vec(&initial_state).unwrap();
-    let state: Value = rt.call(&mut initial_state_bytes).await.unwrap();
-    panic!("{:#?}", state);
+    let state = rt.call(&mut initial_state_bytes).await.unwrap();
+
+    let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
+
+    assert_eq!(state.get("counter").unwrap(), 1,);
   }
 }

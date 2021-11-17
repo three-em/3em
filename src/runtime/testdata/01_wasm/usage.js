@@ -8,7 +8,7 @@ const instance = new WebAssembly.Instance(module);
 const alloc = instance.exports.alloc;
 memory = instance.exports.memory;
 
-console.log(new Uint8Array(memory.buffer)[0])
+console.log(new Uint8Array(memory.buffer)[0]);
 
 function copyMemory(data) {
   const d = new Uint8Array(data);
