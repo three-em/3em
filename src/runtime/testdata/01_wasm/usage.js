@@ -3,12 +3,12 @@ const WASM_BINARY = await Deno.readFile("01_wasm.wasm");
 let memory;
 
 const module = new WebAssembly.Module(WASM_BINARY);
-const instance = new WebAssembly.Instance(module);
+const instance = new WebAssembly.Instance(module, {
+  env: { abort: function () {} },
+});
 
 const alloc = instance.exports.alloc;
 memory = instance.exports.memory;
-
-console.log(new Uint8Array(memory.buffer)[0]);
 
 function copyMemory(data) {
   const d = new Uint8Array(data);
@@ -35,6 +35,7 @@ const resPtr = instance.exports.handle(
 const resLen = instance.exports.get_len();
 
 const resultBuf = new Uint8Array(memory.buffer, resPtr, resLen);
+
 console.log(
   JSON.parse(Deno.core.decode(resultBuf)),
 );

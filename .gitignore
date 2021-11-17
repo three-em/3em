@@ -2,3 +2,4 @@
 /.idea
 /snapshot-bin
 /src/runtime/testdata/01_wasm/target
+/src/runtime/testdata/02_wasm/node_modules

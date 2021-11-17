@@ -42,7 +42,7 @@ impl WasmRuntime {
 
     {
       let v8_instance = rt
-        .execute_script("<anon>", "new WebAssembly.Instance(WASM_MODULE)")
+        .execute_script("<anon>", "new WebAssembly.Instance(WASM_MODULE, { env: { abort: function() {} } })")
         .unwrap();
 
       let scope = &mut rt.handle_scope();
@@ -175,8 +175,30 @@ mod tests {
       "counter": 0,
     });
 
-    // Hundred thousand interactions
-    for i in 1..100_000 {
+    for i in 1..100 {
+      let mut prev_state_bytes =
+        deno_core::serde_json::to_vec(&prev_state).unwrap();
+      let state = rt.call(&mut prev_state_bytes).await.unwrap();
+
+      let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
+
+      assert_eq!(state.get("counter").unwrap(), i);
+      prev_state = state;
+    }
+  }
+
+  #[tokio::test]
+  async fn test_wasm_runtime_asc() {
+    let mut rt =
+      wasm::WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"))
+        .await
+        .unwrap();
+
+    let mut prev_state = json!({
+      "counter": 0,
+    });
+
+    for i in 1..100 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
       let state = rt.call(&mut prev_state_bytes).await.unwrap();

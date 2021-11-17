@@ -1,0 +1,13 @@
+{
+  "name": "02_wasm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "asc main.ts --runtime stub --converge -O --noAssert --trapMode clamp -o 02_wasm.wasm"
+  },
+  "dependencies": {
+    "assemblyscript": "^0.19.20",
+    "assemblyscript-json": "^1.1.0"
+  }
+}
