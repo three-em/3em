@@ -21,11 +21,13 @@ impl WasmRuntime {
     }
 
     {
-      let v8_module = rt.execute_script("<anon>", "new WebAssembly.Module(WASM_BINARY)").unwrap();
+      let v8_module = rt
+        .execute_script("<anon>", "new WebAssembly.Module(WASM_BINARY)")
+        .unwrap();
 
       let scope = &mut rt.handle_scope();
       let global = global.open(scope).global(scope);
-      let v8_module =  v8::Local::new(scope, v8_module);
+      let v8_module = v8::Local::new(scope, v8_module);
       let name = v8::String::new(scope, "WASM_MODULE").unwrap();
       global.set(scope, name.into(), v8_module);
     }
@@ -41,5 +43,11 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime() {
     let _rt = wasm::WasmRuntime::new(&[0; 100]);
+  }
+
+  #[tokio::test]
+  async fn test_wasm_runtime_contract() {
+    let _rt =
+      wasm::WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"));
   }
 }
