@@ -1,16 +1,20 @@
 use deno_core::error::AnyError;
 use deno_core::JsRuntime;
+use deno_core::ZeroCopyBuf;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::cell::Cell;
 use std::fmt::Debug;
 
 pub struct WasmRuntime {
   rt: JsRuntime,
   handle: v8::Global<v8::Value>,
+  allocator: v8::Global<v8::Value>,
+  mem: v8::Global<v8::Value>,
 }
 
 impl WasmRuntime {
-  pub async fn new(wasm: &[u8]) -> Result<Self, AnyError> {
+  pub async fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(Default::default());
     let global = rt.global_context();
     {
@@ -58,25 +62,61 @@ impl WasmRuntime {
       .execute_script("<anon>", "WASM_INSTANCE.exports[EXPORT_NAME]")
       .unwrap();
 
-    Ok(Self { rt, handle })
+    let allocator = rt
+      .execute_script("<anon>", "WASM_INSTANCE.exports.alloc")
+      .unwrap();
+    let mem = rt
+      .execute_script("<anon>", "WASM_INSTANCE.exports.memory.buffer")
+      .unwrap();
+
+    Ok(Self {
+      rt,
+      handle,
+      allocator,
+      mem,
+    })
   }
 
-  pub async fn call<R, T>(&mut self, arguments: &[R]) -> Result<T, AnyError>
+  pub async fn call<T>(&mut self, state: &mut [u8]) -> Result<T, AnyError>
   where
-    R: Serialize + 'static,
     T: Debug + DeserializeOwned + 'static,
   {
     let global = {
       let scope = &mut self.rt.handle_scope();
-      let arguments: Vec<v8::Local<v8::Value>> = arguments
-        .iter()
-        .map(|argument| deno_core::serde_v8::to_v8(scope, argument).unwrap())
-        .collect();
+      let undefined = v8::undefined(scope);
+
+      let alloc_obj = self.allocator.get(scope).to_object(scope).unwrap();
+      let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
+
+      let state_len = v8::Number::new(scope, state.len() as f64);
+
+      // Offset in memory for start of the block.
+      let local_ptr = alloc
+        .call(scope, undefined.into(), &[state_len.into()])
+        .unwrap();
+      let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
+
+      let mem_obj = self.mem.get(scope).to_object(scope).unwrap();
+      let mem_buf = v8::Local::<v8::ArrayBuffer>::try_from(mem_obj).unwrap();
+
+      // O HOLY Backin' store.
+      let store = mem_buf.get_backing_store();
+      assert!(store.len() as u32 >= local_ptr_u32);
+      let mut raw_mem = unsafe {
+        get_backing_store_slice_mut(&store, local_ptr_u32 as usize, state.len())
+      };
+      raw_mem.swap_with_slice(state);
+
       let module_obj = self.handle.get(scope).to_object(scope).unwrap();
       let func = v8::Local::<v8::Function>::try_from(module_obj)?;
 
-      let undefined = v8::undefined(scope);
-      let local = func.call(scope, undefined.into(), &arguments).unwrap();
+      let local = func
+        .call(
+          scope,
+          undefined.into(),
+          &[local_ptr, state_len.into(), local_ptr, state_len.into()],
+        )
+        .unwrap();
       v8::Global::new(scope, local)
     };
 
@@ -91,6 +131,17 @@ impl WasmRuntime {
 
     Ok(result)
   }
+}
+
+unsafe fn get_backing_store_slice_mut(
+  backing_store: &v8::SharedRef<v8::BackingStore>,
+  byte_offset: usize,
+  byte_length: usize,
+) -> &mut [u8] {
+  let cells: *const [Cell<u8>] =
+    &backing_store[byte_offset..byte_offset + byte_length];
+  let bytes = cells as *const _ as *mut [u8];
+  &mut *bytes
 }
 
 #[cfg(test)]
@@ -111,11 +162,12 @@ mod tests {
         .await
         .unwrap();
 
-    let state: Value = rt
-      .call(&[json!({
-        "counter": 0,
-      })])
-      .await
-      .unwrap();
+    let initial_state = json!({
+      "counter": 0,
+    });
+
+    let mut initial_state_bytes =
+      deno_core::serde_json::to_vec(&initial_state).unwrap();
+    let state: Value = rt.call(&mut initial_state_bytes).await.unwrap();
   }
 }
