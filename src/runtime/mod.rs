@@ -1,6 +1,7 @@
 mod module_loader;
 mod smartweave;
 mod snapshot;
+mod wasm;
 
 use crate::runtime::module_loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
