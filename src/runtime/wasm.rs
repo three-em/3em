@@ -52,14 +52,10 @@ impl WasmRuntime {
 
       let name = v8::String::new(scope, "WASM_INSTANCE").unwrap();
       global.set(scope, name.into(), v8_instance);
-
-      let name = v8::String::new(scope, "EXPORT_NAME").unwrap();
-      let func_name = v8::String::new(scope, "handle").unwrap();
-      global.set(scope, name.into(), func_name.into());
     }
 
     let handle = rt
-      .execute_script("<anon>", "WASM_INSTANCE.exports[EXPORT_NAME]")
+      .execute_script("<anon>", "WASM_INSTANCE.exports.handle")
       .unwrap();
 
     let allocator = rt
@@ -175,16 +171,20 @@ mod tests {
         .await
         .unwrap();
 
-    let initial_state = json!({
+    let mut prev_state = json!({
       "counter": 0,
     });
 
-    let mut initial_state_bytes =
-      deno_core::serde_json::to_vec(&initial_state).unwrap();
-    let state = rt.call(&mut initial_state_bytes).await.unwrap();
+    // Hundred thousand interactions
+    for i in 1..100_000 {
+      let mut prev_state_bytes =
+        deno_core::serde_json::to_vec(&prev_state).unwrap();
+      let state = rt.call(&mut prev_state_bytes).await.unwrap();
 
-    let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
+      let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
-    assert_eq!(state.get("counter").unwrap(), 1);
+      assert_eq!(state.get("counter").unwrap(), i);
+      prev_state = state;
+    }
   }
 }
