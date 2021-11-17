@@ -1,14 +1,19 @@
+pub mod extensions;
+
 mod module_loader;
 mod smartweave;
 
+use crate::runtime::extensions::get_extensions;
 use crate::runtime::module_loader::EmbeddedModuleLoader;
+use crate::snapshot_js::three_em_isolate;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
-use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
+use deno_core::{Extension, JsRuntime};
 use deno_web::BlobStore;
 use std::fmt::Debug;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 pub struct Runtime {
@@ -25,14 +30,9 @@ impl Runtime {
 
     let mut rt = JsRuntime::new(RuntimeOptions {
       // TODO(@littledivy): Move this to snapshots
-      extensions: vec![
-        deno_webidl::init(),
-        deno_url::init(),
-        deno_web::init(BlobStore::default(), None),
-        deno_crypto::init(None),
-        smartweave::init(),
-      ],
+      extensions: get_extensions(),
       module_loader: Some(module_loader),
+      startup_snapshot: Some(three_em_isolate()),
       ..Default::default()
     });
 

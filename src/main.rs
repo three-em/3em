@@ -1,5 +1,6 @@
 mod cli;
 mod runtime;
+mod snapshot_js;
 mod start;
 
 use cli::parse::Flags;
