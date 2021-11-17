@@ -10,7 +10,6 @@ pub struct WasmRuntime {
   rt: JsRuntime,
   handle: v8::Global<v8::Value>,
   allocator: v8::Global<v8::Value>,
-  mem: v8::Global<v8::Value>,
 }
 
 impl WasmRuntime {
@@ -63,17 +62,14 @@ impl WasmRuntime {
       .unwrap();
 
     let allocator = rt
-      .execute_script("<anon>", "WASM_INSTANCE.exports.alloc")
+      .execute_script("<anon>", "WASM_INSTANCE.exports._alloc")
       .unwrap();
-    let mem = rt
-      .execute_script("<anon>", "WASM_INSTANCE.exports.memory.buffer")
-      .unwrap();
+    
 
     Ok(Self {
       rt,
       handle,
       allocator,
-      mem,
     })
   }
 
@@ -81,6 +77,7 @@ impl WasmRuntime {
   where
     T: Debug + DeserializeOwned + 'static,
   {
+
     let global = {
       let scope = &mut self.rt.handle_scope();
       let undefined = v8::undefined(scope);
@@ -95,28 +92,35 @@ impl WasmRuntime {
         .call(scope, undefined.into(), &[state_len.into()])
         .unwrap();
       let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
-
-      let mem_obj = self.mem.get(scope).to_object(scope).unwrap();
+      
+      let source = v8::String::new(scope, "WASM_INSTANCE.exports.memory.buffer").unwrap();
+      let script = v8::Script::compile(scope, source, None).unwrap();
+      let mem = script.run(scope).unwrap();
+      let mem = v8::Global::new(scope, mem);
+      let mem_obj = mem.get(scope).to_object(scope).unwrap();
       let mem_buf = v8::Local::<v8::ArrayBuffer>::try_from(mem_obj).unwrap();
 
       // O HOLY Backin' store.
       let store = mem_buf.get_backing_store();
-      assert!(store.len() as u32 >= local_ptr_u32);
+
       let mut raw_mem = unsafe {
         get_backing_store_slice_mut(&store, local_ptr_u32 as usize, state.len())
       };
+
+      assert_eq!(raw_mem.len(), state.len());
       raw_mem.swap_with_slice(state);
 
       let module_obj = self.handle.get(scope).to_object(scope).unwrap();
       let func = v8::Local::<v8::Function>::try_from(module_obj)?;
 
-      let local = func
+      let result_ptr = func
         .call(
           scope,
           undefined.into(),
           &[local_ptr, state_len.into(), local_ptr, state_len.into()],
         )
         .unwrap();
+            
       v8::Global::new(scope, local)
     };
 
@@ -169,5 +173,6 @@ mod tests {
     let mut initial_state_bytes =
       deno_core::serde_json::to_vec(&initial_state).unwrap();
     let state: Value = rt.call(&mut initial_state_bytes).await.unwrap();
+    panic!("{:#?}", state);
   }
 }
