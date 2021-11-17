@@ -185,6 +185,6 @@ mod tests {
 
     let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
-    assert_eq!(state.get("counter").unwrap(), 1,);
+    assert_eq!(state.get("counter").unwrap(), 1);
   }
 }
