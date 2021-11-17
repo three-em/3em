@@ -1,3 +1,4 @@
 /target
 /.idea
 /snapshot-bin
+/src/runtime/testdata/01_wasm/target
