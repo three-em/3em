@@ -8,10 +8,12 @@ use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
 use deno_core::RuntimeOptions;
-use deno_core::{Extension, JsRuntime};
+use deno_core::Extension;
+use deno_core::JsRuntime;
 use deno_web::BlobStore;
 use std::fmt::Debug;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 pub struct Runtime {
@@ -26,7 +28,7 @@ impl Runtime {
     let module_loader =
       Rc::new(EmbeddedModuleLoader(source.to_owned(), specifier.clone()));
 
-    let flags = concat!(" --predictable",);
+    let flags = concat!("--predictable", " --predictable-gc-schedule", " --hash-seed=42");
     v8::V8::set_flags_from_string(flags);
 
     // Make's Math.random() and V8 hash seeds, address space layout repr deterministic.
@@ -36,7 +38,8 @@ impl Runtime {
       }
       true
     });
-
+    
+    let params = v8::CreateParams::default().heap_limits(0, 10 << 20);
     let mut rt = JsRuntime::new(RuntimeOptions {
       extensions: vec![
         deno_webidl::init(),
@@ -47,9 +50,15 @@ impl Runtime {
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
+      create_params: Some(params),
       ..Default::default()
     });
-
+    
+    fn heap_limit_reached(current: usize, initial: usize) -> usize {
+        println!("{} {}", current, initial);
+        current
+    }
+    rt.add_near_heap_limit_callback(heap_limit_reached);
     rt.sync_ops_cache();
     let global =
       rt.execute_script("<anon>", &format!("import(\"{}\")", specifier))?;
@@ -171,5 +180,72 @@ export async function handle(size) {
 
     assert_eq!(rand1.as_ref(), &[127, 111, 44, 205, 178, 63, 42, 187]);
     assert_eq!(rand2.as_ref(), &[123, 105, 39, 142, 148, 124, 1, 198]);
+  }
+
+  #[tokio::test]
+  async fn test_deterministic_gc() {
+    let mut rt = Runtime::new(
+      r#"
+let called = false;
+const registry = new FinalizationRegistry((_) => {
+  called = true;
+});
+
+export async function handle() {
+  let x = new Uint8Array(1024 * 1024 * 100);
+  registry.register(x, "called!");
+  x = null;
+  return called;
+}
+"#,
+    )
+    .await
+    .unwrap();
+
+    let gced: bool = rt.call(&[()]).await.unwrap();
+    assert_eq!(gced, false);
+  }
+
+  #[tokio::test]
+  async fn test_deterministic_weakref() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  let obj = { value: true };
+  const weakRef = new WeakRef(obj);
+  {
+    const wrapper = (_) => { return weakRef.deref()?.value };
+  }
+  return weakRef.deref()?.value || false;
+}
+"#,
+    )
+    .await
+    .unwrap();
+
+    let exists: bool = rt.call(&[()]).await.unwrap();
+    assert_eq!(exists, true);
+  }
+
+  #[tokio::test]
+  async fn test_deterministic_allocation_failure() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {  
+  const size = 1024 * 1024 * 100;
+  const array = new Uint8Array(size);
+  for (let i = 0; i < size; i += 4096) {
+    array[i] = 1;
+  }
+
+  return array;
+}
+"#,
+    )
+    .await
+    .unwrap();
+
+    let exists: bool = rt.call(&[()]).await.unwrap();
+    assert_eq!(exists, true);
   }
 }
