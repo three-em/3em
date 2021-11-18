@@ -1,9 +1,9 @@
+use crate::core_nodes::get_core_nodes;
+use crate::node::{send_message, Node};
 use deno_core::error::AnyError;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
-use crate::node::{Node, send_message};
-use crate::core_nodes::get_core_nodes;
 
 async fn handle_node(mut stream: TcpStream) {
   loop {
@@ -25,16 +25,24 @@ async fn discover(host: &str, port: i32) {
   send_message(String::from("Hello"), &node);
 }
 
-pub async fn start(host: String, port: i32, node_capacitiy: i32) -> Result<(), AnyError> {
+pub async fn start(
+  host: String,
+  port: i32,
+  node_capacitiy: i32,
+) -> Result<(), AnyError> {
   let specifier = format!("{}:{}", host, port);
   let this_node = Node::new(&host, port);
 
   println!("Serving {}", &specifier);
 
-  let core_nodes: Vec<Node> = get_core_nodes().into_iter().filter(|node| node.is_not(&this_node)).collect();
+  let core_nodes: Vec<Node> = get_core_nodes()
+    .into_iter()
+    .filter(|node| node.is_not(&this_node))
+    .collect();
 
   for x in core_nodes {
     println!("Sending message to {}", x.to_string());
+    // TODO: Don't pannic
     let ok = send_message(String::from("PING"), &x).await.unwrap();
     println!("{:?}", ok);
   }
