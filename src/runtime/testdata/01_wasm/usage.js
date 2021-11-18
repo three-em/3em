@@ -1,3 +1,6 @@
+// This file is just a reference implementation
+// to compare execution behaviour from runtime.
+
 const WASM_BINARY = await Deno.readFile("01_wasm.wasm");
 
 let memory;

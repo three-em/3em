@@ -323,4 +323,5 @@
   }
 
   window.SmartWeave = new SmartWeave();
+  window.crypto = crypto;
 })(this);
