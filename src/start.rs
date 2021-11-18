@@ -18,7 +18,7 @@ async fn handle_node(mut stream: TcpStream) {
   }
 }
 
-pub async fn start(host: String, port: i32) -> Result<(), AnyError> {
+pub async fn start(host: String, port: i32, node_capacitiy: i32) -> Result<(), AnyError> {
   let specifier = format!("{}:{}", host, port);
 
   println!("Serving {}", &specifier);
