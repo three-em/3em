@@ -1,13 +1,33 @@
 use std::net::TcpStream;
 use std::io::{Write, Read};
+use crate::utils::parse_node_ip;
 
 pub struct Node {
-    ip: String,
-    port: i32
+    pub ip: String,
+    pub port: i32
 }
 
-pub async fn send_message(message: String, node: &Node) -> Result<Vec<u8>, &'static str> {
-    match TcpStream::connect(format!("{}:{}", node.ip, node.port)) {
+impl Node {
+    pub fn new(host: &str, port: i32) -> Node {
+        Node {
+            ip: String::from(host),
+            port
+        }
+    }
+
+    pub fn is_not(&self, node: &Node) -> bool {
+        let current_node = parse_node_ip(self);
+        let diff_node = parse_node_ip(node);
+        current_node != diff_node
+    }
+
+    pub fn to_string(&self) -> String {
+        parse_node_ip(self)
+    }
+}
+
+pub async fn send_message(message: String, node: &Node) -> Vec<u8> {
+    let result = match TcpStream::connect(format!("{}:{}", node.ip, node.port)) {
         Ok(mut stream) => {
             let future = tokio::task::spawn(async move {
                 stream.write(message.as_bytes()).unwrap();
@@ -33,5 +53,7 @@ pub async fn send_message(message: String, node: &Node) -> Result<Vec<u8>, &'sta
         Err(_) => {
             Err("Could not send message")
         }
-    }
+    };
+
+    result.unwrap()
 }
