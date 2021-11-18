@@ -35,7 +35,7 @@ pub async fn start(host: String, port: i32, node_capacitiy: i32) -> Result<(), A
 
   for x in core_nodes {
     println!("Sending message to {}", x.to_string());
-    let ok = send_message(String::from("PING"), &x).await;
+    let ok = send_message(String::from("PING"), &x).await.unwrap();
     println!("{:?}", ok);
   }
 

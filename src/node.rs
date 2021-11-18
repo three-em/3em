@@ -26,7 +26,7 @@ impl Node {
     }
 }
 
-pub async fn send_message(message: String, node: &Node) -> Vec<u8> {
+pub async fn send_message(message: String, node: &Node) -> Result<Vec<u8>, &str> {
     let result = match TcpStream::connect(format!("{}:{}", node.ip, node.port)) {
         Ok(mut stream) => {
             let future = tokio::task::spawn(async move {
@@ -55,5 +55,29 @@ pub async fn send_message(message: String, node: &Node) -> Vec<u8> {
         }
     };
 
-    result.unwrap()
+    result
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::node::Node;
+
+    #[tokio::test]
+    async fn test_is_not() {
+        let node1 = Node::new("127.0.0.1", 9999);
+        let node2 = Node::new("127.0.0.1", 9898);
+        assert!(node1.is_not(&node2));
+
+        let node1 = Node::new("127.0.0.1", 9999);
+        let node2 = Node::new("127.0.0.1", 9999);
+        assert!(!(node1.is_not(&node2)));
+    }
+
+    #[tokio::test]
+    async fn test_to_string() {
+        let node1 = Node::new("127.0.0.1", 9999);
+        assert_eq!(node1.to_string(), "127.0.0.1:9999");
+    }
+
+
 }
