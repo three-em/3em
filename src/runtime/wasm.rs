@@ -8,69 +8,95 @@ use std::fmt::Debug;
 
 pub struct WasmRuntime {
   rt: JsRuntime,
-  handle: v8::Global<v8::Value>,
-  allocator: v8::Global<v8::Value>,
-  result_len: v8::Global<v8::Value>,
+  handle: v8::Global<v8::Function>,
+  allocator: v8::Global<v8::Function>,
+  result_len: v8::Global<v8::Function>,
+  exports: v8::Global<v8::Object>,
 }
 
 impl WasmRuntime {
   pub async fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(Default::default());
-    let global = rt.global_context();
-    {
+
+    // Get hold of the WebAssembly object.
+    let wasm_obj = rt.execute_script("<anon>", "WebAssembly").unwrap();
+    let (exports, handle, allocator, result_len) = {
       let scope = &mut rt.handle_scope();
-      let global = global.open(scope).global(scope);
       let buf =
         v8::ArrayBuffer::new_backing_store_from_boxed_slice(wasm.into());
       let buf = v8::SharedRef::from(buf);
-      let name = v8::String::new(scope, "WASM_BINARY").unwrap();
       let buf = v8::ArrayBuffer::with_backing_store(scope, &buf);
-      global.set(scope, name.into(), buf.into());
-    }
 
-    {
-      let v8_module = rt
-        .execute_script("<anon>", "new WebAssembly.Module(WASM_BINARY)")
+      let wasm_obj = wasm_obj.get(scope).to_object(scope).unwrap();
+
+      // Create a new WebAssembly.Instance object.
+      let module_str = v8::String::new(scope, "Module").unwrap();
+      let module_value = wasm_obj.get(scope, module_str.into()).unwrap();
+      let module_constructor =
+        v8::Local::<v8::Function>::try_from(module_value)?;
+
+      let module = module_constructor
+        .new_instance(scope, &[buf.into()])
         .unwrap();
 
-      let scope = &mut rt.handle_scope();
-      let global = global.open(scope).global(scope);
-      let v8_module = v8::Local::new(scope, v8_module);
-      let name = v8::String::new(scope, "WASM_MODULE").unwrap();
-      global.set(scope, name.into(), v8_module);
-    }
+      // Create a new WebAssembly.Instance object.
+      let instance_str = v8::String::new(scope, "Instance").unwrap();
+      let instance_value = wasm_obj.get(scope, instance_str.into()).unwrap();
+      let instance_constructor =
+        v8::Local::<v8::Function>::try_from(instance_value)?;
 
-    {
-      let v8_instance = rt
-        .execute_script("<anon>", "new WebAssembly.Instance(WASM_MODULE, { env: { abort: function() {} } })")
+      let imports = v8::Object::new(scope);
+      // AssemblyScript needs `abort` to be defined.
+      let env = v8::Object::new(scope);
+      let abort_str = v8::String::new(scope, "abort").unwrap();
+      let function_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+
+      let abort_callback = v8::Function::new(scope, function_callback).unwrap();
+      env.set(scope, abort_str.into(), abort_callback.into());
+
+      let env_str = v8::String::new(scope, "env").unwrap();
+      imports.set(scope, env_str.into(), env.into());
+
+      let instance = instance_constructor
+        .new_instance(scope, &[module.into(), imports.into()])
         .unwrap();
 
-      let scope = &mut rt.handle_scope();
+      let exports_str = v8::String::new(scope, "exports").unwrap();
+      let exports = instance.get(scope, exports_str.into()).unwrap();
+      let exports = v8::Local::<v8::Object>::try_from(exports)?;
 
-      let global = global.open(scope).global(scope);
-      let v8_instance = v8::Local::new(scope, v8_instance);
+      let alloc_str = v8::String::new(scope, "_alloc").unwrap();
+      let alloc_obj = exports.get(scope, alloc_str.into()).unwrap();
+      let allocator = v8::Local::<v8::Function>::try_from(alloc_obj)?;
+      let allocator = v8::Global::new(scope, allocator);
 
-      let name = v8::String::new(scope, "WASM_INSTANCE").unwrap();
-      global.set(scope, name.into(), v8_instance);
-    }
+      let handle_str = v8::String::new(scope, "handle").unwrap();
 
-    let handle = rt
-      .execute_script("<anon>", "WASM_INSTANCE.exports.handle")
-      .unwrap();
+      let handle_obj = exports.get(scope, handle_str.into()).unwrap();
+      let handle = v8::Local::<v8::Function>::try_from(handle_obj)?;
+      let handle = v8::Global::new(scope, handle);
 
-    let allocator = rt
-      .execute_script("<anon>", "WASM_INSTANCE.exports._alloc")
-      .unwrap();
+      let result_len_str = v8::String::new(scope, "get_len").unwrap();
 
-    let result_len = rt
-      .execute_script("<anon>", "WASM_INSTANCE.exports.get_len")
-      .unwrap();
+      let result_len_obj = exports.get(scope, result_len_str.into()).unwrap();
+      let result_len = v8::Local::<v8::Function>::try_from(result_len_obj)?;
+      let result_len = v8::Global::new(scope, result_len);
+
+      let exports = v8::Global::new(scope, exports);
+      (exports, handle, allocator, result_len)
+    };
 
     Ok(Self {
       rt,
       handle,
       allocator,
       result_len,
+      exports,
     })
   }
 
@@ -90,13 +116,16 @@ impl WasmRuntime {
         .unwrap();
       let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
 
-      let source =
-        v8::String::new(scope, "WASM_INSTANCE.exports.memory.buffer").unwrap();
-      let script = v8::Script::compile(scope, source, None).unwrap();
-      let mem = script.run(scope).unwrap();
-      let mem = v8::Global::new(scope, mem);
-      let mem_obj = mem.get(scope).to_object(scope).unwrap();
-      let mem_buf = v8::Local::<v8::ArrayBuffer>::try_from(mem_obj).unwrap();
+      let exports_obj = self.exports.get(scope).to_object(scope).unwrap();
+
+      let mem_str = v8::String::new(scope, "memory").unwrap();
+      let mem_obj = exports_obj.get(scope, mem_str.into()).unwrap();
+      let mem_obj = v8::Local::<v8::Object>::try_from(mem_obj)?;
+
+      let buffer_str = v8::String::new(scope, "buffer").unwrap();
+      let buffer_obj = mem_obj.get(scope, buffer_str.into()).unwrap();
+
+      let mem_buf = v8::Local::<v8::ArrayBuffer>::try_from(buffer_obj)?;
 
       // O HOLY Backin' store.
       let store = mem_buf.get_backing_store();
