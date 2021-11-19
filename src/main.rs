@@ -1,6 +1,10 @@
 mod cli;
+mod core_nodes;
+mod messages;
+mod node;
 mod runtime;
 mod start;
+mod utils;
 
 use cli::parse::Flags;
 use deno_core::error::AnyError;
@@ -36,8 +40,12 @@ async fn main() -> Result<(), AnyError> {
   let flags = cli::parse::parse()?;
 
   match flags {
-    Flags::Start { host, port } => {
-      start::start(host, port).await?;
+    Flags::Start {
+      host,
+      port,
+      node_capacity,
+    } => {
+      start::start(host, port, node_capacity).await?;
     }
     Flags::Unknown(cmd) => {
       print_cmd_error(&cmd);
