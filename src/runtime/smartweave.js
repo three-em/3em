@@ -323,4 +323,27 @@
   }
 
   window.SmartWeave = new SmartWeave();
+  window.crypto = crypto;
+
+  // Remove non-deterministic GC dependent V8 globals.
+  window.FinalizationRegistry = class FinalizationRegistry {
+    #register;
+    constructor(fn) {
+      this.#register = fn;
+    }
+
+    register() { /* Nop */ }
+  }
+
+  window.WeakRef = class WeakRef {
+    #value;
+    constructor(value) { this.#value = value; }
+
+    deref() {
+      return this.#value;
+    }
+  };
+  
+  // JSON.stringify is deterministic. Not action required there.
+  // https://github.com/nodejs/node/issues/15628#issuecomment-332588533
 })(this);
