@@ -1,5 +1,6 @@
 mod cli;
 mod core_nodes;
+mod messages;
 mod node;
 mod runtime;
 mod start;

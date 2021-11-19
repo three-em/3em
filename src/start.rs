@@ -1,4 +1,5 @@
 use crate::core_nodes::get_core_nodes;
+use crate::messages::get_addr::get_addr;
 use crate::node::{send_message, Node};
 use deno_core::error::AnyError;
 use tokio::io::AsyncReadExt;
@@ -25,6 +26,15 @@ async fn discover(host: &str, port: i32) {
   send_message(String::from("Hello"), &node);
 }
 
+async fn send_discovery(nodes: &Vec<Node>) {
+  for node in nodes {
+    let message = get_addr(node);
+    let result = send_message(message, node).await.unwrap();
+    // TODO: Verify result is a pong message containing the same output from get_addr
+    // TODO: If the response matches get_addr (host and version information), add the node to a list of nodes that answered the call.
+  }
+}
+
 pub async fn start(
   host: String,
   port: i32,
@@ -40,12 +50,7 @@ pub async fn start(
     .filter(|node| node.is_not(&this_node))
     .collect();
 
-  for x in core_nodes {
-    println!("Sending message to {}", x.to_string());
-    // TODO: Don't pannic
-    let ok = send_message(String::from("PING"), &x).await.unwrap();
-    println!("{:?}", ok);
-  }
+  send_discovery(&core_nodes).await;
 
   let listener = TcpListener::bind(specifier).await?;
 

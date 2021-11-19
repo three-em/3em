@@ -1,4 +1,5 @@
 use crate::utils::parse_node_ip;
+use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 
@@ -27,11 +28,12 @@ impl Node {
   }
 }
 
+// TODO: Implement length approach
 pub async fn send_message(
   message: String,
   node: &Node,
 ) -> Result<Vec<u8>, &str> {
-  let result = match TcpStream::connect(format!("{}:{}", node.ip, node.port)) {
+  let result = match TcpStream::connect(node.to_string()) {
     Ok(mut stream) => {
       let future = tokio::task::spawn(async move {
         stream.write(message.as_bytes()).unwrap();
