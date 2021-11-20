@@ -20,18 +20,23 @@ fn hasher(data: &[u8]) -> Vec<u8> {
   hasher.finalize()[..].to_vec()
 }
 
-pub fn generate_keypair() -> GeneratedPair {
-  let mut rng = OsRng;
-  let private_key = RsaPrivateKey::new(&mut rng, 2048 as usize).unwrap();
-  let public_key = RsaPublicKey::from(&private_key);
+pub async fn generate_keypair() -> GeneratedPair {
+  let pair = tokio::task::spawn_blocking(move || {
+    let mut rng = OsRng;
+    let private_key = RsaPrivateKey::new(&mut rng, 2048 as usize).unwrap();
+    let public_key = RsaPublicKey::from(&private_key);
 
-  let private_key_bytes = private_key.to_pkcs1_der().unwrap();
-  let public_key_bytes = public_key.to_pkcs1_der().unwrap();
+    let private_key_bytes = private_key.to_pkcs1_der().unwrap();
+    let public_key_bytes = public_key.to_pkcs1_der().unwrap();
 
-  GeneratedPair {
-    private_key: private_key_bytes.as_ref().to_vec(),
-    public_key: public_key_bytes.as_ref().to_vec(),
-  }
+    GeneratedPair {
+      private_key: private_key_bytes.as_ref().to_vec(),
+      public_key: public_key_bytes.as_ref().to_vec(),
+    }
+  })
+  .await
+  .unwrap();
+  pair
 }
 
 pub fn to_private_key(
@@ -96,8 +101,8 @@ pub fn verify(public_key: Vec<u8>, signature: Vec<u8>, data: &str) -> bool {
 }
 
 impl GeneratedPair {
-  pub fn new() -> GeneratedPair {
-    generate_keypair()
+  pub async fn new() -> GeneratedPair {
+    generate_keypair().await
   }
 
   pub fn public_to_string(&self) -> String {
@@ -129,7 +134,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_encrypt() {
-    let keypair = generate_keypair();
+    let keypair = generate_keypair().await;
     let (encrypt, encrypt_len) =
       encrypt(keypair.public_key.to_owned(), "Hello Divy");
     let (decrypt, decrypt_len) =
@@ -142,7 +147,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_encrypt_from_internal() {
-    let keypair = GeneratedPair::new();
+    let keypair = GeneratedPair::new().await;
     let (encrypt, encrypt_len) = keypair.encrypt("Hello Divy");
     let (decrypt, decrypt_len) = keypair.decrypt(encrypt);
     assert_eq!(
@@ -153,8 +158,8 @@ mod tests {
 
   #[tokio::test]
   async fn test_signing() {
-    let keypair = generate_keypair();
-    let keypair2 = generate_keypair();
+    let keypair = generate_keypair().await;
+    let keypair2 = generate_keypair().await;
 
     let signed = sign(keypair.private_key, "Hello World!");
     let is_valid = verify(
@@ -179,7 +184,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_signing_internal() {
-    let keypair = generate_keypair();
+    let keypair = generate_keypair().await;
     let signed = keypair.sign("Hello World!");
     let is_valid = verify(
       keypair.public_key.to_owned(),
