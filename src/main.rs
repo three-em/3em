@@ -5,6 +5,7 @@ mod node;
 mod runtime;
 mod start;
 mod utils;
+mod node_crypto;
 
 use cli::parse::Flags;
 use deno_core::error::AnyError;
