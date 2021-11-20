@@ -2,6 +2,7 @@ mod cli;
 mod core_nodes;
 mod messages;
 mod node;
+mod node_crypto;
 mod runtime;
 mod start;
 mod utils;
