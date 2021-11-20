@@ -1,58 +1,69 @@
-use openssl::ec::EcKey;
-use openssl::error::ErrorStack;
-use openssl::hash::MessageDigest;
-use openssl::pkey::{PKey, Private, Public};
-use openssl::rsa::{Padding, Rsa};
-use openssl::sign::{Signer, Verifier};
-use openssl::symm::Cipher;
+use deno_crypto::rand::rngs::OsRng;
+use rsa::pkcs1::{
+  FromRsaPrivateKey, FromRsaPublicKey, ToRsaPrivateKey, ToRsaPublicKey,
+};
+use rsa::{PaddingScheme, PublicKey, RsaPrivateKey, RsaPublicKey};
+use sha2::Digest;
 
 pub struct GeneratedPair {
   private_key: Vec<u8>,
   public_key: Vec<u8>,
 }
 
-pub fn generate_keypair() -> GeneratedPair {
-  let rsa = Rsa::generate(2048).unwrap();
+fn get_scheme() -> PaddingScheme {
+  PaddingScheme::new_pkcs1v15_sign(Some(rsa::hash::Hash::SHA2_256))
+}
 
-  let private_key: Vec<u8> = rsa.private_key_to_pem().unwrap();
-  let public_key: Vec<u8> = rsa.public_key_to_pem_pkcs1().unwrap();
+fn hasher(data: &[u8]) -> Vec<u8> {
+  let mut hasher = sha2::Sha256::new();
+  hasher.update(data);
+  hasher.finalize()[..].to_vec()
+}
+
+pub fn generate_keypair() -> GeneratedPair {
+  let mut rng = OsRng;
+  let private_key = RsaPrivateKey::new(&mut rng, 2048 as usize).unwrap();
+  let public_key = RsaPublicKey::from(&private_key);
+
+  let private_key_bytes = private_key.to_pkcs1_der().unwrap();
+  let public_key_bytes = public_key.to_pkcs1_der().unwrap();
 
   GeneratedPair {
-    private_key,
-    public_key,
+    private_key: private_key_bytes.as_ref().to_vec(),
+    public_key: public_key_bytes.as_ref().to_vec(),
   }
 }
 
 pub fn to_private_key(
   private_key: Vec<u8>,
-) -> Result<Rsa<Private>, ErrorStack> {
-  let rsa_private_key = Rsa::private_key_from_pem(private_key.as_ref());
+) -> rsa::pkcs1::Result<RsaPrivateKey> {
+  let bytes = &private_key[..];
+  let rsa_private_key = RsaPrivateKey::from_pkcs1_der(bytes);
   rsa_private_key
 }
 
-fn to_public_key(public_key: Vec<u8>) -> Result<Rsa<Public>, ErrorStack> {
-  let pkey = Rsa::public_key_from_pem_pkcs1(&public_key.as_ref());
+fn to_public_key(public_key: Vec<u8>) -> rsa::pkcs1::Result<RsaPublicKey> {
+  let bytes = &public_key[..];
+  let pkey = RsaPublicKey::from_pkcs1_der(bytes);
   return pkey;
 }
 
 pub fn encrypt(public_key: Vec<u8>, data: &str) -> (Vec<u8>, usize) {
+  let mut rng = OsRng;
   let rsa = to_public_key(public_key).unwrap();
-  let mut buf: Vec<u8> = vec![0; rsa.size() as usize];
-  let len = rsa
-    .public_encrypt(data.as_bytes(), &mut buf, Padding::PKCS1)
-    .unwrap();
-
-  (buf, len)
+  let padding = PaddingScheme::new_pkcs1v15_encrypt();
+  let data_bytes = data.as_bytes();
+  let enc_data = rsa.encrypt(&mut rng, padding, &data_bytes[..]).unwrap();
+  let size = &enc_data.len();
+  (enc_data, size.to_owned())
 }
 
 pub fn decrypt(private_key: Vec<u8>, data: Vec<u8>) -> (Vec<u8>, usize) {
+  let padding = PaddingScheme::new_pkcs1v15_encrypt();
   let rsa = to_private_key(private_key).unwrap();
-  let mut buf: Vec<u8> = vec![0; rsa.size() as usize];
-  let len = rsa
-    .private_decrypt(&data, &mut buf, Padding::PKCS1)
-    .unwrap();
-
-  (buf, len)
+  let dec_data = rsa.decrypt(padding, &data).unwrap();
+  let size = &dec_data.len();
+  (dec_data, size.to_owned())
 }
 
 pub fn sign(private_key: Vec<u8>, data: &str) -> Vec<u8> {
@@ -61,13 +72,11 @@ pub fn sign(private_key: Vec<u8>, data: &str) -> Vec<u8> {
     Err(_) => panic!("Key is invalid"),
   };
 
-  let pkey = PKey::from_rsa(private_key).unwrap();
+  let (scheme, hasher) = (get_scheme(), hasher(data.as_bytes()));
 
-  let mut signer = Signer::new(MessageDigest::sha256(), &pkey).unwrap();
-  signer.update(data.as_bytes()).unwrap();
-  let signature = signer.sign_to_vec().unwrap();
+  let sign = private_key.sign(scheme, &hasher).unwrap();
 
-  signature
+  sign
 }
 
 pub fn verify(public_key: Vec<u8>, signature: Vec<u8>, data: &str) -> bool {
@@ -76,11 +85,14 @@ pub fn verify(public_key: Vec<u8>, signature: Vec<u8>, data: &str) -> bool {
     Err(_) => panic!("Key is invalid"),
   };
 
-  let pkey = PKey::from_rsa(public_key).unwrap();
+  let (scheme, hasher) = (get_scheme(), hasher(data.as_bytes()));
 
-  let mut verifier = Verifier::new(MessageDigest::sha256(), &pkey).unwrap();
-  verifier.update(data.as_bytes()).unwrap();
-  verifier.verify(&signature.as_ref()).unwrap_or(false)
+  let verify = public_key.verify(scheme, &hasher, &signature[..]);
+
+  match verify {
+    Ok(_) => true,
+    Err(_) => false,
+  }
 }
 
 impl GeneratedPair {
