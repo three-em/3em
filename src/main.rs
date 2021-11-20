@@ -2,10 +2,10 @@ mod cli;
 mod core_nodes;
 mod messages;
 mod node;
+mod node_crypto;
 mod runtime;
 mod start;
 mod utils;
-mod node_crypto;
 
 use cli::parse::Flags;
 use deno_core::error::AnyError;
