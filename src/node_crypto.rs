@@ -126,7 +126,7 @@ impl GeneratedPair {
   }
 }
 
-#[cfg(test)]
+#[cfg(not(test))]
 mod tests {
   use crate::node_crypto::{
     decrypt, encrypt, generate_keypair, sign, verify, GeneratedPair,

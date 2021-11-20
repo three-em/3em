@@ -184,19 +184,19 @@ unsafe fn get_backing_store_slice_mut(
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::wasm;
+  use crate::runtime::wasm::WasmRuntime;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
 
   #[tokio::test]
   async fn test_wasm_runtime() {
-    let _rt = wasm::WasmRuntime::new(&[0; 100]);
+    let _rt = WasmRuntime::new(&[0; 100]);
   }
 
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
     let mut rt =
-      wasm::WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"))
+      WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"))
         .await
         .unwrap();
 
@@ -219,7 +219,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
     let mut rt =
-      wasm::WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"))
+      WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"))
         .await
         .unwrap();
 

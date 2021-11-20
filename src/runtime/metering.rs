@@ -6,9 +6,9 @@ use wasm_encoder::Function;
 use wasm_encoder::Instruction;
 use wasm_encoder::MemArg;
 use wasm_encoder::Module;
-use wasm_encoder::ValType;
 use wasm_encoder::RawSection;
 use wasm_encoder::SectionId;
+use wasm_encoder::ValType;
 use wasmparser::Chunk;
 use wasmparser::CodeSectionReader;
 use wasmparser::MemoryImmediate;
@@ -24,82 +24,65 @@ use wasmparser::TypeOrFuncType;
 pub struct Metering;
 
 impl Metering {
-  pub fn inject(source: &[u8]) -> Result<Module> {
-    let mut source = source;
+  pub fn inject(input: &[u8]) -> Result<Module> {
+    let mut source = input;
     let mut parser = Parser::new(0);
     let mut module = Module::new();
     loop {
-      let (payload, consumed) = match parser.parse(source, true).unwrap() {
+      let (payload, consumed) = match parser.parse(source, true)? {
         Chunk::NeedMoreData(hint) => unreachable!(),
         Chunk::Parsed { consumed, payload } => (payload, consumed),
       };
-      println!("{:?}", payload);
+
       match payload {
-        Payload::StartSection { func: _, range: _ } => {
-          // TODO: This is not a smart contract
-          // return Err(Error::InvalidModule);
+        Payload::StartSection { func: _, range } => {
+          module.section(&RawSection {
+            id: SectionId::Start as u8,
+            data: &input[range.start..range.end],
+          });
         }
         Payload::CodeSectionStart {
           count: _,
           range,
           size: _,
         } => {
-          let section = &source[range.start..range.end];
-          parser.skip_section();
-          let mut reader = CodeSectionReader::new(section, 0).unwrap();
+          let section = &input[range.start..range.end];
 
+          let mut reader = CodeSectionReader::new(section, 0)?;
           let mut section = CodeSection::new();
+
           for body in reader {
-            let body = body.unwrap();
+            let body = body?;
             // Preserve the locals.
-            let locals = body.get_locals_reader().unwrap();
-            let locals =
-              locals.into_iter().collect::<Result<Vec<(u32, Type)>>>().unwrap_or(vec![]);
+            let locals = match body.get_locals_reader() {
+              Ok(locals) => {
+                locals.into_iter().collect::<Result<Vec<(u32, Type)>>>()?
+              }
+              Err(_) => vec![],
+            };
             let locals: Vec<(u32, ValType)> =
               locals.into_iter().map(|(i, t)| (i, map_type(t))).collect();
             let mut func = Function::new(locals);
 
-            let mut operators = body.get_operators_reader().unwrap();
+            let mut operators = body.get_operators_reader()?;
             let operators =
-              operators.into_iter().collect::<Result<Vec<Operator>>>().unwrap();
+              operators.into_iter().collect::<Result<Vec<Operator>>>()?;
 
             for op in operators {
               let instruction = match op {
                 Operator::Unreachable => Instruction::Unreachable,
                 Operator::Nop => Instruction::Nop,
-                Operator::Block { ty, .. } => match ty {
-                  TypeOrFuncType::Type(t) => {
-                    Instruction::Block(BlockType::Result(map_type(t)))
-                  }
-                  TypeOrFuncType::FuncType(idx) => {
-                    Instruction::Block(BlockType::FunctionType(idx))
-                  }
-                },
-                Operator::Loop { ty, .. } => match ty {
-                  TypeOrFuncType::Type(t) => {
-                    Instruction::Block(BlockType::Result(map_type(t)))
-                  }
-                  TypeOrFuncType::FuncType(idx) => {
-                    Instruction::Loop(BlockType::FunctionType(idx))
-                  }
-                },
-                Operator::If { ty, .. } => match ty {
-                  TypeOrFuncType::Type(t) => {
-                    Instruction::If(BlockType::Result(map_type(t)))
-                  }
-                  TypeOrFuncType::FuncType(idx) => {
-                    Instruction::If(BlockType::FunctionType(idx))
-                  }
-                },
+                Operator::Block { ty, .. } => {
+                  Instruction::Block(map_block_type(ty))
+                }
+                Operator::Loop { ty, .. } => {
+                  Instruction::Loop(map_block_type(ty))
+                }
+                Operator::If { ty, .. } => Instruction::If(map_block_type(ty)),
                 Operator::Else => Instruction::Else,
-                Operator::Try { ty, .. } => match ty {
-                  TypeOrFuncType::Type(t) => {
-                    Instruction::Try(BlockType::Result(map_type(t)))
-                  }
-                  TypeOrFuncType::FuncType(idx) => {
-                    Instruction::Try(BlockType::FunctionType(idx))
-                  }
-                },
+                Operator::Try { ty, .. } => {
+                  Instruction::Try(map_block_type(ty))
+                }
                 Operator::Catch { index } => Instruction::Catch(index),
                 Operator::Throw { index } => Instruction::Throw(index),
                 Operator::Rethrow { relative_depth } => {
@@ -113,7 +96,7 @@ impl Metering {
                   Instruction::BrIf(relative_depth)
                 }
                 Operator::BrTable { table } => Instruction::BrTable(
-                  table.targets().collect::<Result<Cow<'_, [u32]>>>().unwrap(),
+                  table.targets().collect::<Result<Cow<'_, [u32]>>>()?,
                   table.default(),
                 ),
                 Operator::Return => Instruction::Return,
@@ -418,6 +401,8 @@ impl Metering {
                 // Operator::I32AtomicLoad => {},
                 // Operator::I64AtomicLoad => {},
                 // ...
+                //
+                // SIMD proposal.
                 Operator::V128Load { memarg } => Instruction::V128Load {
                   memarg: map_memarg(&memarg),
                 },
@@ -429,74 +414,78 @@ impl Metering {
             section.function(&func);
           }
           module.section(&section);
+
+          parser.skip_section();
+          source = &input[range.end..];
+          continue;
         }
         Payload::DataCountSection { count: _, range } => {
           module.section(&RawSection {
             id: SectionId::DataCount as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::TypeSection(mut reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Type as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::ImportSection(mut reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Import as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::FunctionSection(mut reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Function as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::TableSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Table as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::MemorySection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Memory as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::GlobalSection(mut reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Global as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::ExportSection(mut reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Export as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::ElementSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Element as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::DataSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Data as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::CustomSection {
@@ -507,14 +496,14 @@ impl Metering {
         } => {
           module.section(&RawSection {
             id: SectionId::Custom as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::AliasSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Alias as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::UnknownSection {
@@ -524,27 +513,27 @@ impl Metering {
         } => {
           module.section(&RawSection {
             id,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::InstanceSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Instance as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::TagSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Tag as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::CodeSectionEntry(_) => {
           // Already parsed in Payload::CodeSectionStart
           unreachable!();
-        },
+        }
         Payload::ModuleSectionStart {
           count: _,
           size: _,
@@ -552,22 +541,19 @@ impl Metering {
         } => {
           module.section(&RawSection {
             id: SectionId::Module as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
-        Payload::ModuleSectionEntry {
-          parser: _,
-          range,
-        } => {
+        Payload::ModuleSectionEntry { parser: _, range } => {
           module.section(&RawSection {
             id: SectionId::Module as u8,
-            data: &source[range.start..range.end],
+            data: &input[range.start..range.end],
           });
         }
         Payload::Version { .. } => {}
         Payload::End => break,
       };
-      
+
       source = &source[consumed..];
     }
 
@@ -584,8 +570,19 @@ fn map_type(t: Type) -> ValType {
     Type::V128 => ValType::V128,
     Type::ExternRef => ValType::ExternRef,
     Type::FuncRef => ValType::FuncRef,
-    // TODO: Figure this out.
-    _ => panic!("unsupported type"),
+    Type::EmptyBlockType | Type::Func => unreachable!(),
+    Type::ExnRef => panic!("unsupported type"),
+  }
+}
+
+fn map_block_type(ty: TypeOrFuncType) -> BlockType {
+  match ty {
+    TypeOrFuncType::Type(t) => match t {
+      Type::EmptyBlockType => BlockType::Empty,
+      Type::Func => unreachable!(),
+      _ => BlockType::Result(map_type(t)),
+    },
+    TypeOrFuncType::FuncType(idx) => BlockType::FunctionType(idx),
   }
 }
 
@@ -600,10 +597,25 @@ fn map_memarg(memarg: &MemoryImmediate) -> MemArg {
 #[cfg(test)]
 mod tests {
   use crate::runtime::metering::Metering;
+  use crate::runtime::wasm::WasmRuntime;
+  use deno_core::serde_json;
+  use deno_core::serde_json::json;
+  use deno_core::serde_json::Value;
 
-  #[test]
-  fn test_metering() {
+  #[tokio::test]
+  async fn test_metering() {
     let source = include_bytes!("./testdata/02_wasm/02_wasm.wasm");
     let module = Metering::inject(source).unwrap();
+
+    let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
+
+    let mut prev_state = json!({
+      "counter": 0,
+    });
+    let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();
+    let state = rt.call(&mut prev_state_bytes).await.unwrap();
+
+    let state: Value = serde_json::from_slice(&state).unwrap();
+    assert_eq!(state.get("counter").unwrap(), 1);
   }
 }
