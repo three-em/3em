@@ -2,15 +2,21 @@ use std::borrow::Cow;
 use std::mem::transmute;
 use wasm_encoder::BlockType;
 use wasm_encoder::CodeSection;
+use wasm_encoder::ElementSection;
+use wasm_encoder::EntityType;
 use wasm_encoder::Function;
+use wasm_encoder::ImportSection;
 use wasm_encoder::Instruction;
 use wasm_encoder::MemArg;
 use wasm_encoder::Module;
 use wasm_encoder::RawSection;
 use wasm_encoder::SectionId;
+use wasm_encoder::StartSection;
+use wasm_encoder::TypeSection;
 use wasm_encoder::ValType;
 use wasmparser::Chunk;
 use wasmparser::CodeSectionReader;
+use wasmparser::ImportSectionEntryType;
 use wasmparser::MemoryImmediate;
 use wasmparser::Operator;
 use wasmparser::Parser;
@@ -18,6 +24,7 @@ use wasmparser::Payload;
 use wasmparser::Result;
 use wasmparser::SectionReader;
 use wasmparser::Type;
+use wasmparser::TypeDef;
 use wasmparser::TypeOrFuncType;
 
 /// WebAssembly metering
@@ -28,6 +35,8 @@ impl Metering {
     let mut source = input;
     let mut parser = Parser::new(0);
     let mut module = Module::new();
+    let mut consume_gas_index = 0;
+    let mut func_idx = 0;
     loop {
       let (payload, consumed) = match parser.parse(source, true)? {
         Chunk::NeedMoreData(hint) => unreachable!(),
@@ -35,11 +44,11 @@ impl Metering {
       };
 
       match payload {
-        Payload::StartSection { func: _, range } => {
-          module.section(&RawSection {
-            id: SectionId::Start as u8,
-            data: &input[range.start..range.end],
-          });
+        Payload::StartSection { func, range } => {
+          let function_index = if func >= func_idx { func + 1 } else { func };
+
+          let start = StartSection { function_index };
+          module.section(&start);
         }
         Payload::CodeSectionStart {
           count: _,
@@ -101,6 +110,11 @@ impl Metering {
                 ),
                 Operator::Return => Instruction::Return,
                 Operator::Call { function_index } => {
+                  let function_index = if function_index >= func_idx {
+                    function_index + 1
+                  } else {
+                    function_index
+                  };
                   Instruction::Call(function_index)
                 }
                 Operator::CallIndirect {
@@ -409,6 +423,9 @@ impl Metering {
                 _ => unimplemented!(),
               };
 
+              func.instruction(&Instruction::I32Const(1));
+              func.instruction(&Instruction::Call(func_idx));
+
               func.instruction(&instruction);
             }
             section.function(&func);
@@ -427,17 +444,270 @@ impl Metering {
         }
         Payload::TypeSection(mut reader) => {
           let range = reader.range();
-          module.section(&RawSection {
-            id: SectionId::Type as u8,
-            data: &input[range.start..range.end],
-          });
+
+          let mut types = TypeSection::new();
+
+          for ty in reader {
+            let ty = ty?;
+            match ty {
+              TypeDef::Func(func) => {
+                let params: Vec<ValType> =
+                  func.params.iter().map(|ty| map_type(*ty)).collect();
+                let returns: Vec<ValType> =
+                  func.returns.iter().map(|ty| map_type(*ty)).collect();
+
+                types.function(params, returns);
+              }
+              TypeDef::Instance(instance) => {
+                let exports: Vec<(&str, EntityType)> = instance
+                  .exports
+                  .iter()
+                  .map(|export| {
+                    let ty = match export.ty {
+                      ImportSectionEntryType::Function(ty) => {
+                        EntityType::Function(ty)
+                      }
+                      ImportSectionEntryType::Table(
+                        wasmparser::TableType {
+                          element_type,
+                          initial: minimum,
+                          maximum,
+                        },
+                      ) => EntityType::Table(wasm_encoder::TableType {
+                        element_type: map_type(element_type),
+                        minimum,
+                        maximum,
+                      }),
+                      ImportSectionEntryType::Memory(
+                        wasmparser::MemoryType {
+                          memory64,
+                          shared: _,
+                          initial: minimum,
+                          maximum,
+                        },
+                      ) => EntityType::Memory(wasm_encoder::MemoryType {
+                        memory64,
+                        minimum,
+                        maximum,
+                      }),
+                      ImportSectionEntryType::Tag(wasmparser::TagType {
+                        type_index: func_type_idx,
+                      }) => EntityType::Tag(wasm_encoder::TagType {
+                        kind: wasm_encoder::TagKind::Exception,
+                        func_type_idx,
+                      }),
+                      ImportSectionEntryType::Global(
+                        wasmparser::GlobalType {
+                          mutable,
+                          content_type,
+                        },
+                      ) => EntityType::Global(wasm_encoder::GlobalType {
+                        mutable,
+                        val_type: map_type(content_type),
+                      }),
+                      ImportSectionEntryType::Module(idx) => {
+                        EntityType::Module(idx)
+                      }
+                      ImportSectionEntryType::Instance(idx) => {
+                        EntityType::Instance(idx)
+                      }
+                    };
+                    let name = export.name;
+                    (name, ty)
+                  })
+                  .collect();
+
+                types.instance(exports);
+              }
+              TypeDef::Module(module) => {
+                let imports: Vec<(&str, Option<&str>, EntityType)> = module
+                  .imports
+                  .iter()
+                  .map(|import| {
+                    let ty = match import.ty {
+                      ImportSectionEntryType::Function(ty) => {
+                        EntityType::Function(ty)
+                      }
+                      ImportSectionEntryType::Table(
+                        wasmparser::TableType {
+                          element_type,
+                          initial: minimum,
+                          maximum,
+                        },
+                      ) => EntityType::Table(wasm_encoder::TableType {
+                        element_type: map_type(element_type),
+                        minimum,
+                        maximum,
+                      }),
+                      ImportSectionEntryType::Memory(
+                        wasmparser::MemoryType {
+                          memory64,
+                          shared: _,
+                          initial: minimum,
+                          maximum,
+                        },
+                      ) => EntityType::Memory(wasm_encoder::MemoryType {
+                        memory64,
+                        minimum,
+                        maximum,
+                      }),
+                      ImportSectionEntryType::Tag(wasmparser::TagType {
+                        type_index: func_type_idx,
+                      }) => EntityType::Tag(wasm_encoder::TagType {
+                        kind: wasm_encoder::TagKind::Exception,
+                        func_type_idx,
+                      }),
+                      ImportSectionEntryType::Global(
+                        wasmparser::GlobalType {
+                          mutable,
+                          content_type,
+                        },
+                      ) => EntityType::Global(wasm_encoder::GlobalType {
+                        mutable,
+                        val_type: map_type(content_type),
+                      }),
+                      ImportSectionEntryType::Module(idx) => {
+                        EntityType::Module(idx)
+                      }
+                      ImportSectionEntryType::Instance(idx) => {
+                        EntityType::Instance(idx)
+                      }
+                    };
+
+                    let module = import.module;
+                    let field = import.field;
+                    (module, field, ty)
+                  })
+                  .collect();
+                let exports: Vec<(&str, EntityType)> = module
+                  .exports
+                  .iter()
+                  .map(|export| {
+                    let ty = match export.ty {
+                      ImportSectionEntryType::Function(ty) => {
+                        EntityType::Function(ty)
+                      }
+                      ImportSectionEntryType::Table(
+                        wasmparser::TableType {
+                          element_type,
+                          initial: minimum,
+                          maximum,
+                        },
+                      ) => EntityType::Table(wasm_encoder::TableType {
+                        element_type: map_type(element_type),
+                        minimum,
+                        maximum,
+                      }),
+                      ImportSectionEntryType::Memory(
+                        wasmparser::MemoryType {
+                          memory64,
+                          shared: _,
+                          initial: minimum,
+                          maximum,
+                        },
+                      ) => EntityType::Memory(wasm_encoder::MemoryType {
+                        memory64,
+                        minimum,
+                        maximum,
+                      }),
+                      ImportSectionEntryType::Tag(wasmparser::TagType {
+                        type_index: func_type_idx,
+                      }) => EntityType::Tag(wasm_encoder::TagType {
+                        kind: wasm_encoder::TagKind::Exception,
+                        func_type_idx,
+                      }),
+                      ImportSectionEntryType::Global(
+                        wasmparser::GlobalType {
+                          mutable,
+                          content_type,
+                        },
+                      ) => EntityType::Global(wasm_encoder::GlobalType {
+                        mutable,
+                        val_type: map_type(content_type),
+                      }),
+                      ImportSectionEntryType::Module(idx) => {
+                        EntityType::Module(idx)
+                      }
+                      ImportSectionEntryType::Instance(idx) => {
+                        EntityType::Instance(idx)
+                      }
+                    };
+                    let name = export.name;
+                    (name, ty)
+                  })
+                  .collect();
+
+                types.module(imports, exports);
+              }
+            }
+          }
+
+          types.function([ValType::I32], []);
+
+          consume_gas_index = types.len() - 1;
+
+          module.section(&types);
         }
         Payload::ImportSection(mut reader) => {
           let range = reader.range();
-          module.section(&RawSection {
-            id: SectionId::Import as u8,
-            data: &input[range.start..range.end],
-          });
+
+          let mut imports = ImportSection::new();
+
+          for import in reader {
+            let import = import?;
+            let ty = match import.ty {
+              ImportSectionEntryType::Function(ty) => {
+                func_idx += 1;
+                EntityType::Function(ty)
+              }
+              ImportSectionEntryType::Table(wasmparser::TableType {
+                element_type,
+                initial: minimum,
+                maximum,
+              }) => EntityType::Table(wasm_encoder::TableType {
+                element_type: map_type(element_type),
+                minimum,
+                maximum,
+              }),
+              ImportSectionEntryType::Memory(wasmparser::MemoryType {
+                memory64,
+                shared: _,
+                initial: minimum,
+                maximum,
+              }) => EntityType::Memory(wasm_encoder::MemoryType {
+                memory64,
+                minimum,
+                maximum,
+              }),
+              ImportSectionEntryType::Tag(wasmparser::TagType {
+                type_index: func_type_idx,
+              }) => EntityType::Tag(wasm_encoder::TagType {
+                kind: wasm_encoder::TagKind::Exception,
+                func_type_idx,
+              }),
+              ImportSectionEntryType::Global(wasmparser::GlobalType {
+                mutable,
+                content_type,
+              }) => EntityType::Global(wasm_encoder::GlobalType {
+                mutable,
+                val_type: map_type(content_type),
+              }),
+              ImportSectionEntryType::Module(idx) => EntityType::Module(idx),
+              ImportSectionEntryType::Instance(idx) => {
+                EntityType::Instance(idx)
+              }
+            };
+
+            imports.import(import.module, import.field, ty);
+          }
+
+          imports.import(
+            "3em",
+            Some("consumeGas"),
+            EntityType::Function(consume_gas_index),
+          );
+
+          module.section(&imports);
         }
         Payload::FunctionSection(mut reader) => {
           let range = reader.range();
@@ -469,17 +739,85 @@ impl Metering {
         }
         Payload::ExportSection(mut reader) => {
           let range = reader.range();
-          module.section(&RawSection {
-            id: SectionId::Export as u8,
-            data: &input[range.start..range.end],
-          });
+          let mut section = wasm_encoder::ExportSection::new();
+
+          for export in reader {
+            let export = export?;
+            let idx = export.index;
+            let field = export.field;
+
+            let export = match export.kind {
+              wasmparser::ExternalKind::Function => {
+                let idx = if idx >= func_idx { idx + 1 } else { idx };
+                wasm_encoder::Export::Function(idx)
+              }
+              wasmparser::ExternalKind::Table => {
+                wasm_encoder::Export::Table(idx)
+              }
+              wasmparser::ExternalKind::Memory => {
+                wasm_encoder::Export::Memory(idx)
+              }
+              wasmparser::ExternalKind::Tag => wasm_encoder::Export::Tag(idx),
+              wasmparser::ExternalKind::Global => {
+                wasm_encoder::Export::Global(idx)
+              }
+              wasmparser::ExternalKind::Type => {
+                unreachable!("No encoder mappings")
+              }
+              wasmparser::ExternalKind::Module => {
+                wasm_encoder::Export::Module(idx)
+              }
+              wasmparser::ExternalKind::Instance => {
+                wasm_encoder::Export::Instance(idx)
+              }
+            };
+
+            section.export(field, export);
+          }
+          module.section(&section);
         }
         Payload::ElementSection(reader) => {
           let range = reader.range();
-          module.section(&RawSection {
-            id: SectionId::Element as u8,
-            data: &input[range.start..range.end],
-          });
+          let mut section = ElementSection::new();
+          for element in reader {
+            let element = element?;
+
+            let element_type = map_type(element.ty);
+            let mode = match element.kind {
+              wasmparser::ElementKind::Passive => {
+                wasm_encoder::ElementMode::Passive
+              }
+              wasmparser::ElementKind::Active {
+                table_index,
+                init_expr,
+              } => panic!("Active elements not implemented"),
+              wasmparser::ElementKind::Declared => {
+                wasm_encoder::ElementMode::Declared
+              }
+            };
+
+            let mut funcs = vec![];
+            for item in element.items.get_items_reader().unwrap() {
+              match item.unwrap() {
+                wasmparser::ElementItem::Func(idx) => {
+                  let idx = if idx >= func_idx { idx + 1 } else { idx };
+                  funcs.push(idx);
+                }
+                wasmparser::ElementItem::Expr(_) => {
+                  todo!("Implement Expr Item.")
+                }
+              }
+            }
+
+            let elements = wasm_encoder::Elements::Functions(&funcs);
+            let segment = wasm_encoder::ElementSegment {
+              element_type,
+              mode,
+              elements,
+            };
+            section.segment(segment);
+          }
+          module.section(&section);
         }
         Payload::DataSection(reader) => {
           let range = reader.range();
@@ -606,7 +944,12 @@ mod tests {
   async fn test_metering() {
     let source = include_bytes!("./testdata/02_wasm/02_wasm.wasm");
     let module = Metering::inject(source).unwrap();
+    use std::fs::File;
+    use std::io::Write;
 
+    let mut f = File::create("foo.wasm").expect("Unable to create file");
+    f.write_all(module.as_slice())
+      .expect("Unable to write data");
     let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
 
     let mut prev_state = json!({

@@ -4,7 +4,9 @@ use deno_core::ZeroCopyBuf;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::cell::Cell;
+use std::cell::RefCell;
 use std::fmt::Debug;
+use std::rc::Rc;
 
 pub struct WasmRuntime {
   rt: JsRuntime,
@@ -17,7 +19,6 @@ pub struct WasmRuntime {
 impl WasmRuntime {
   pub async fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(Default::default());
-
     // Get hold of the WebAssembly object.
     let wasm_obj = rt.execute_script("<anon>", "WebAssembly").unwrap();
     let (exports, handle, allocator, result_len) = {
@@ -61,6 +62,21 @@ impl WasmRuntime {
 
       let env_str = v8::String::new(scope, "env").unwrap();
       imports.set(scope, env_str.into(), env.into());
+
+      let ns = v8::Object::new(scope);
+      let consume_gas_str = v8::String::new(scope, "consumeGas").unwrap();
+
+      let consume_gas = |scope: &mut v8::HandleScope,
+                         args: v8::FunctionCallbackArguments,
+                         _: v8::ReturnValue| {
+        let cost = args.get(0).to_number(scope).unwrap().value();
+      };
+
+      let consume_gas_callback = v8::Function::new(scope, consume_gas).unwrap();
+      ns.set(scope, consume_gas_str.into(), consume_gas_callback.into());
+
+      let ns_str = v8::String::new(scope, "3em").unwrap();
+      imports.set(scope, ns_str.into(), ns.into());
 
       let instance = instance_constructor
         .new_instance(scope, &[module.into(), imports.into()])
