@@ -942,7 +942,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_metering() {
-    let source = include_bytes!("./testdata/02_wasm/02_wasm.wasm");
+    let source = include_bytes!("./testdata/01_wasm/01_wasm.wasm");
     let module = Metering::inject(source).unwrap();
     use std::fs::File;
     use std::io::Write;

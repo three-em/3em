@@ -69,7 +69,7 @@ impl WasmRuntime {
       let consume_gas = |scope: &mut v8::HandleScope,
                          args: v8::FunctionCallbackArguments,
                          _: v8::ReturnValue| {
-        let cost = args.get(0).to_number(scope).unwrap().value();
+        let _cost = args.get(0).to_number(scope).unwrap().int32_value(scope);
       };
 
       let consume_gas_callback = v8::Function::new(scope, consume_gas).unwrap();
