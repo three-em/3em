@@ -25,23 +25,30 @@ use crate::utils::u8_array_to_usize;
 /// If the magic number is not 0x69, the data is invalid.
 fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
   let stream = unfold(stream, |mut stream| async {
-    let mut buf = [0; 1024];
-
     let mut len = [0; 4];
-    let read = stream.read(&mut len).await.unwrap();
-    println!("reading {:?}", len);
+    let read_len = stream.read(&mut len).await.unwrap();
+    let message_len = u8_array_to_usize(len);
 
-    let mut len_u32 = u8_array_to_usize(len);
-    let mut data = vec![0; len_u32];
-    let read = stream.read(&mut data).await.unwrap();
+    let mut inbound_data: Vec<u8> = vec![];
 
-    println!("read {}b of data", read);
-    println!("read: {}", String::from_utf8(data.to_owned()).unwrap());
+    let mut n_to_read: usize = message_len.to_owned();
+
+    loop {
+      let mut buf= vec![0u8; n_to_read]; // Allocate strictly what the header indicated, then allocate the left overs.
+      let n = stream.read(&mut buf).await.unwrap();
+      n_to_read = n_to_read - n;
+
+      inbound_data.append(&mut buf);
+
+      if n == 0 || n_to_read <= 0 {
+        break;
+      }
+    }
+
     let mut magic = [0; 1];
     let read = stream.read(&mut magic).await.unwrap();
-
     assert_eq!(magic[0], 0x69);
-    Some((data, (stream)))
+    Some((inbound_data, (stream)))
   });
 
   Box::pin(stream)
