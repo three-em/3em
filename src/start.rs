@@ -14,6 +14,7 @@ use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
+use crate::utils::u8_array_to_usize;
 
 /// A stream of incoming data from a TCP socket.
 ///
@@ -28,12 +29,14 @@ fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
 
     let mut len = [0; 4];
     let read = stream.read(&mut len).await.unwrap();
+    println!("reading {:?}", len);
 
-    let mut len_u32 = u32::from_le_bytes(len);
-    let mut data = vec![0; len_u32 as usize];
+    let mut len_u32 = u8_array_to_usize(len);
+    let mut data = vec![0; len_u32];
     let read = stream.read(&mut data).await.unwrap();
 
     println!("read {}b of data", read);
+    println!("read: {}", String::from_utf8(data.to_owned()).unwrap());
     let mut magic = [0; 1];
     let read = stream.read(&mut magic).await.unwrap();
 
