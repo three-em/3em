@@ -2,28 +2,55 @@ use crate::core_nodes::get_core_nodes;
 use crate::messages::get_addr::get_addr;
 use crate::node::{send_message, Node};
 use deno_core::error::AnyError;
+use deno_core::futures::pin_mut;
+use deno_core::futures::stream::poll_fn;
+use deno_core::futures::stream::unfold;
+use deno_core::futures::stream::Stream;
+use deno_core::futures::task::Poll;
+use deno_core::futures::StreamExt;
+use std::future::Future;
+use std::pin::Pin;
 use tokio::io::AsyncReadExt;
+use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
 
-async fn handle_node(mut stream: TcpStream) {
-  loop {
+/// A stream of incoming data from a TCP socket.
+///
+/// The data is represented as follows:
+/// |<--- 4 bytes ---> | <--- n bytes --->|   <--- 1 byte --->  |
+/// |  length of data  |  actual data     | 0x69 - magic number |
+///
+/// If the magic number is not 0x69, the data is invalid.
+fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
+  let stream = unfold(stream, |mut stream| async {
     let mut buf = [0; 1024];
 
-    let n = stream.read(&mut buf[..]).await.unwrap();
-    eprintln!("read {}b of data", n);
-    if n == 0 {
-      eprintln!("no more data!");
-      break;
-    } else {
-      println!("{}", std::str::from_utf8(&buf[..n]).unwrap());
-    }
-  }
+    let mut len = [0; 4];
+    let read = stream.read(&mut len).await.unwrap();
+
+    let mut len_u32 = u32::from_le_bytes(len);
+    let mut data = vec![0; len_u32 as usize];
+    let read = stream.read(&mut data).await.unwrap();
+
+    println!("read {}b of data", read);
+    let mut magic = [0; 1];
+    let read = stream.read(&mut magic).await.unwrap();
+
+    assert_eq!(magic[0], 0x69);
+    Some((data, (stream)))
+  });
+
+  Box::pin(stream)
+}
+
+async fn process(inbound: Vec<u8>) {
+  // TODO
 }
 
 async fn discover(host: &str, port: i32) {
   let node = Node::new(host, port);
-  send_message(String::from("Hello"), &node);
+  send_message(String::from("Hello"), &node).await;
 }
 
 async fn send_discovery(nodes: &Vec<Node>) {
@@ -58,7 +85,9 @@ pub async fn start(
     let (socket, _) = listener.accept().await?;
 
     tokio::task::spawn(async move {
-      handle_node(socket).await;
+      for data in handle_node(socket).next().await {
+        process(data).await;
+      }
     });
   }
 }
