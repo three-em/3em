@@ -35,7 +35,7 @@ impl Metering {
     let mut source = input;
     let mut parser = Parser::new(0);
     let mut module = Module::new();
-    let mut consume_gas_index = 0;
+    let mut consume_gas_index = -1;
     let mut func_idx: i32 = -1;
 
     // Temporary store for payloads.
@@ -109,7 +109,7 @@ impl Metering {
           imports.import(
             "3em",
             Some("consumeGas"),
-            EntityType::Function(consume_gas_index),
+            EntityType::Function(consume_gas_index as u32),
           );
 
           module.section(&imports);
@@ -315,7 +315,7 @@ impl Metering {
           }
 
           types.function([ValType::I32], []);
-          consume_gas_index = types.len() - 1;
+          consume_gas_index = types.len() as i32 - 1;
 
           module.section(&types);
         }
@@ -327,13 +327,23 @@ impl Metering {
       source = &source[consumed..];
     }
 
+    // No types section? Make one :-)
+    if consume_gas_index == -1 {
+      let mut types = TypeSection::new();
+      types.function([ValType::I32], []);
+      // This is the only type defined.
+      consume_gas_index = 0;
+
+      module.section(&types);
+    }
+
     // There is no import section. Make one.
     if func_idx == -1 {
       let mut imports = ImportSection::new();
       imports.import(
         "3em",
         Some("consumeGas"),
-        EntityType::Function(consume_gas_index),
+        EntityType::Function(consume_gas_index as u32),
       );
       func_idx = 0;
       module.section(&imports);
@@ -936,7 +946,7 @@ mod tests {
   use deno_core::serde_json::Value;
 
   #[tokio::test]
-  async fn test_metering() {
+  async fn test_metering_contracts() {
     // (expected gas consumption, module bytes)
     let sources: [(usize, &[u8]); 2] = [
       (4327, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
@@ -959,5 +969,47 @@ mod tests {
 
       assert_eq!(rt.get_cost(), source.0);
     }
+  }
+
+  #[test]
+  fn test_metering_general() {
+    let module =
+      Metering::inject(include_bytes!("./testdata/metering/add.wasm")).unwrap();
+    // Deterministic codegen.
+    assert_eq!(
+      &module.finish(),
+      include_bytes!("./testdata/metering/add.metering.wasm")
+    );
+  }
+
+  #[test]
+  fn test_metering_nop() {
+    const NOP_WASM: [u8; 8] = [
+      0x00, 0x61, 0x73, 0x6D, // Magic
+      0x01, 0x00, 0x00, 0x00, // Version
+    ];
+
+    let module = Metering::inject(&NOP_WASM).unwrap();
+
+    const METERING_NOP_BOILERPLATE: [u8; 35] = [
+      0x00, 0x61, 0x73, 0x6D, // Magic
+      0x01, 0x00, 0x00, 0x00, // Version
+      // ..
+      // (module
+      // (type $t0 (func (param i32)))
+      // (import "3em" "consumeGas" (func $3em.consumeGas (type $t0))))
+      // ..
+      0x01, 0x05, 0x01, 0x60, 0x01, 0x7F, 0x00, 0x02, 0x12, 0x01, 0x03, 0x33,
+      0x65, 0x6D, 0x0A, 0x63, 0x6F, 0x6E, 0x73, 0x75, 0x6D, 0x65, 0x47, 0x61,
+      0x73, 0x00, 0x00,
+    ];
+
+    assert_eq!(&module.finish(), &METERING_NOP_BOILERPLATE);
+  }
+
+  #[test]
+  fn test_metering_invalid_module() {
+    let module = Metering::inject(&[]);
+    assert!(&module.is_err());
   }
 }
