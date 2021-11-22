@@ -2047,7 +2047,9 @@ dependencies = [
  "sha2",
  "tokio",
  "v8",
+ "wasm-encoder",
  "wasmer",
+ "wasmparser 0.81.0",
 ]
 
 [[package]]
@@ -2388,6 +2390,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0237232789cf037d5480773fe568aac745bfe2afbc11a863e97901780a6b47cc"
 
 [[package]]
+name = "wasm-encoder"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db0c351632e46cc06a58a696a6c11e4cf90cad4b9f8f07a0b59128d616c29bb0"
+dependencies = [
+ "leb128",
+]
+
+[[package]]
 name = "wasmer"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2427,7 +2438,7 @@ dependencies = [
  "thiserror",
  "wasmer-types",
  "wasmer-vm",
- "wasmparser",
+ "wasmparser 0.78.2",
 ]
 
 [[package]]
@@ -2575,6 +2586,12 @@ name = "wasmparser"
 version = "0.78.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52144d4c78e5cf8b055ceab8e5fa22814ce4315d6002ad32cfd914f37c12fd65"
+
+[[package]]
+name = "wasmparser"
+version = "0.81.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98930446519f63d00a836efdc22f67766ceae8dbcc1571379f2bcabc6b2b9abc"
 
 [[package]]
 name = "wast"

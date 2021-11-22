@@ -4,7 +4,14 @@ use deno_core::ZeroCopyBuf;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::cell::Cell;
+use std::cell::RefCell;
 use std::fmt::Debug;
+use std::rc::Rc;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
+
+static COST: AtomicUsize = AtomicUsize::new(0);
 
 pub struct WasmRuntime {
   rt: JsRuntime,
@@ -17,7 +24,6 @@ pub struct WasmRuntime {
 impl WasmRuntime {
   pub async fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(Default::default());
-
     // Get hold of the WebAssembly object.
     let wasm_obj = rt.execute_script("<anon>", "WebAssembly").unwrap();
     let (exports, handle, allocator, result_len) = {
@@ -62,6 +68,27 @@ impl WasmRuntime {
       let env_str = v8::String::new(scope, "env").unwrap();
       imports.set(scope, env_str.into(), env.into());
 
+      let ns = v8::Object::new(scope);
+      let consume_gas_str = v8::String::new(scope, "consumeGas").unwrap();
+
+      let consume_gas = |scope: &mut v8::HandleScope,
+                         args: v8::FunctionCallbackArguments,
+                         _: v8::ReturnValue| {
+        let inc = args
+          .get(0)
+          .to_number(scope)
+          .unwrap()
+          .int32_value(scope)
+          .unwrap();
+        COST.fetch_add(inc as usize, Ordering::SeqCst);
+      };
+
+      let consume_gas_callback = v8::Function::new(scope, consume_gas).unwrap();
+      ns.set(scope, consume_gas_str.into(), consume_gas_callback.into());
+
+      let ns_str = v8::String::new(scope, "3em").unwrap();
+      imports.set(scope, ns_str.into(), ns.into());
+
       let instance = instance_constructor
         .new_instance(scope, &[module.into(), imports.into()])
         .unwrap();
@@ -98,6 +125,10 @@ impl WasmRuntime {
       result_len,
       exports,
     })
+  }
+
+  pub fn get_cost(&self) -> usize {
+    COST.load(Ordering::SeqCst)
   }
 
   pub async fn call(&mut self, state: &mut [u8]) -> Result<Vec<u8>, AnyError> {
@@ -184,19 +215,19 @@ unsafe fn get_backing_store_slice_mut(
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::wasm;
+  use crate::runtime::wasm::WasmRuntime;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
 
   #[tokio::test]
   async fn test_wasm_runtime() {
-    let _rt = wasm::WasmRuntime::new(&[0; 100]);
+    let _rt = WasmRuntime::new(&[0; 100]);
   }
 
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
     let mut rt =
-      wasm::WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"))
+      WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"))
         .await
         .unwrap();
 
@@ -214,12 +245,15 @@ mod tests {
       assert_eq!(state.get("counter").unwrap(), i);
       prev_state = state;
     }
+
+    // No cost without metering.
+    assert_eq!(rt.get_cost(), 0);
   }
 
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
     let mut rt =
-      wasm::WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"))
+      WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"))
         .await
         .unwrap();
 
@@ -237,5 +271,8 @@ mod tests {
       assert_eq!(state.get("counter").unwrap(), i);
       prev_state = state;
     }
+
+    // No cost without metering.
+    assert_eq!(rt.get_cost(), 0);
   }
 }

@@ -1,3 +1,4 @@
+mod metering;
 mod module_loader;
 mod smartweave;
 mod snapshot;
