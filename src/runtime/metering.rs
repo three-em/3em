@@ -36,7 +36,13 @@ impl Metering {
     let mut parser = Parser::new(0);
     let mut module = Module::new();
     let mut consume_gas_index = 0;
-    let mut func_idx = 0;
+    let mut func_idx: i32 = -1;
+
+    // Temporary store for payloads.
+    // We'd want to wait until the imports section
+    // is processed i.e. func_idx >= 0
+    let mut pending_payloads = vec![];
+
     loop {
       let (payload, consumed) = match parser.parse(source, true)? {
         Chunk::NeedMoreData(hint) => unreachable!(),
@@ -44,60 +50,69 @@ impl Metering {
       };
 
       match payload {
-        Payload::StartSection { func, range } => {
-          let function_index = if func >= func_idx { func + 1 } else { func };
+        Payload::ImportSection(mut reader) => {
+          let range = reader.range();
 
-          let start = StartSection { function_index };
-          module.section(&start);
-        }
-        Payload::CodeSectionStart {
-          count: _,
-          range,
-          size: _,
-        } => {
-          let section = &input[range.start..range.end];
+          let mut imports = ImportSection::new();
 
-          let mut reader = CodeSectionReader::new(section, 0)?;
-          let mut section = CodeSection::new();
-
-          for body in reader {
-            let body = body?;
-            // Preserve the locals.
-            let locals = match body.get_locals_reader() {
-              Ok(locals) => {
-                locals.into_iter().collect::<Result<Vec<(u32, Type)>>>()?
+          for import in reader {
+            let import = import?;
+            let ty = match import.ty {
+              ImportSectionEntryType::Function(ty) => {
+                if func_idx == -1 {
+                  func_idx = 0
+                };
+                func_idx += 1;
+                EntityType::Function(ty)
               }
-              Err(_) => vec![],
+              ImportSectionEntryType::Table(wasmparser::TableType {
+                element_type,
+                initial: minimum,
+                maximum,
+              }) => EntityType::Table(wasm_encoder::TableType {
+                element_type: map_type(element_type),
+                minimum,
+                maximum,
+              }),
+              ImportSectionEntryType::Memory(wasmparser::MemoryType {
+                memory64,
+                shared: _,
+                initial: minimum,
+                maximum,
+              }) => EntityType::Memory(wasm_encoder::MemoryType {
+                memory64,
+                minimum,
+                maximum,
+              }),
+              ImportSectionEntryType::Tag(wasmparser::TagType {
+                type_index: func_type_idx,
+              }) => EntityType::Tag(wasm_encoder::TagType {
+                kind: wasm_encoder::TagKind::Exception,
+                func_type_idx,
+              }),
+              ImportSectionEntryType::Global(wasmparser::GlobalType {
+                mutable,
+                content_type,
+              }) => EntityType::Global(wasm_encoder::GlobalType {
+                mutable,
+                val_type: map_type(content_type),
+              }),
+              ImportSectionEntryType::Module(idx) => EntityType::Module(idx),
+              ImportSectionEntryType::Instance(idx) => {
+                EntityType::Instance(idx)
+              }
             };
-            let locals: Vec<(u32, ValType)> =
-              locals.into_iter().map(|(i, t)| (i, map_type(t))).collect();
-            let mut func = Function::new(locals);
 
-            let mut operators = body.get_operators_reader()?;
-            let operators =
-              operators.into_iter().collect::<Result<Vec<Operator>>>()?;
-
-            for op in operators {
-              let instruction = map_operator(op, func_idx as i32)?;
-
-              func.instruction(&Instruction::I32Const(1));
-              func.instruction(&Instruction::Call(func_idx));
-
-              func.instruction(&instruction);
-            }
-            section.function(&func);
+            imports.import(import.module, import.field, ty);
           }
-          module.section(&section);
 
-          parser.skip_section();
-          source = &input[range.end..];
-          continue;
-        }
-        Payload::DataCountSection { count: _, range } => {
-          module.section(&RawSection {
-            id: SectionId::DataCount as u8,
-            data: &input[range.start..range.end],
-          });
+          imports.import(
+            "3em",
+            Some("consumeGas"),
+            EntityType::Function(consume_gas_index),
+          );
+
+          module.section(&imports);
         }
         Payload::TypeSection(mut reader) => {
           let range = reader.range();
@@ -300,71 +315,90 @@ impl Metering {
           }
 
           types.function([ValType::I32], []);
-
           consume_gas_index = types.len() - 1;
 
           module.section(&types);
         }
-        Payload::ImportSection(mut reader) => {
-          let range = reader.range();
+        Payload::Version { .. } => {}
+        Payload::End => break,
+        _ => pending_payloads.push(payload),
+      };
 
-          let mut imports = ImportSection::new();
+      source = &source[consumed..];
+    }
 
-          for import in reader {
-            let import = import?;
-            let ty = match import.ty {
-              ImportSectionEntryType::Function(ty) => {
-                func_idx += 1;
-                EntityType::Function(ty)
+    // There is no import section. Make one.
+    if func_idx == -1 {
+      let mut imports = ImportSection::new();
+      imports.import(
+        "3em",
+        Some("consumeGas"),
+        EntityType::Function(consume_gas_index),
+      );
+      func_idx = 0;
+      module.section(&imports);
+    }
+
+    for payload in pending_payloads {
+      match payload {
+        Payload::StartSection { func, range } => {
+          let function_index = if func >= func_idx as u32 {
+            func + 1
+          } else {
+            func
+          };
+
+          let start = StartSection { function_index };
+          module.section(&start);
+        }
+        Payload::CodeSectionStart {
+          count: _,
+          range,
+          size: _,
+        } => {
+          let section = &input[range.start..range.end];
+
+          let mut reader = CodeSectionReader::new(section, 0)?;
+          let mut section = CodeSection::new();
+
+          for body in reader {
+            let body = body?;
+            // Preserve the locals.
+            let locals = match body.get_locals_reader() {
+              Ok(locals) => {
+                locals.into_iter().collect::<Result<Vec<(u32, Type)>>>()?
               }
-              ImportSectionEntryType::Table(wasmparser::TableType {
-                element_type,
-                initial: minimum,
-                maximum,
-              }) => EntityType::Table(wasm_encoder::TableType {
-                element_type: map_type(element_type),
-                minimum,
-                maximum,
-              }),
-              ImportSectionEntryType::Memory(wasmparser::MemoryType {
-                memory64,
-                shared: _,
-                initial: minimum,
-                maximum,
-              }) => EntityType::Memory(wasm_encoder::MemoryType {
-                memory64,
-                minimum,
-                maximum,
-              }),
-              ImportSectionEntryType::Tag(wasmparser::TagType {
-                type_index: func_type_idx,
-              }) => EntityType::Tag(wasm_encoder::TagType {
-                kind: wasm_encoder::TagKind::Exception,
-                func_type_idx,
-              }),
-              ImportSectionEntryType::Global(wasmparser::GlobalType {
-                mutable,
-                content_type,
-              }) => EntityType::Global(wasm_encoder::GlobalType {
-                mutable,
-                val_type: map_type(content_type),
-              }),
-              ImportSectionEntryType::Module(idx) => EntityType::Module(idx),
-              ImportSectionEntryType::Instance(idx) => {
-                EntityType::Instance(idx)
-              }
+              Err(_) => vec![],
             };
+            let locals: Vec<(u32, ValType)> =
+              locals.into_iter().map(|(i, t)| (i, map_type(t))).collect();
+            let mut func = Function::new(locals);
 
-            imports.import(import.module, import.field, ty);
+            let mut operators = body.get_operators_reader()?;
+            let operators =
+              operators.into_iter().collect::<Result<Vec<Operator>>>()?;
+
+            for op in operators {
+              let instruction = map_operator(op, func_idx as i32)?;
+
+              func.instruction(&Instruction::I32Const(1));
+              func.instruction(&Instruction::Call(func_idx as u32));
+
+              func.instruction(&instruction);
+            }
+            section.function(&func);
           }
+          module.section(&section);
 
-          imports.import(
-            "3em",
-            Some("consumeGas"),
-            EntityType::Function(consume_gas_index),
-          );
-
-          module.section(&imports);
+          // parser.skip_section();
+          source = &input[range.end..];
+          continue;
+        }
+        Payload::DataCountSection { count: _, range } => {
+          module.section(&RawSection {
+            id: SectionId::DataCount as u8,
+            data: &input[range.start..range.end],
+          });
         }
         Payload::FunctionSection(mut reader) => {
           let range = reader.range();
@@ -405,7 +439,7 @@ impl Metering {
 
             let export = match export.kind {
               wasmparser::ExternalKind::Function => {
-                let idx = if idx >= func_idx { idx + 1 } else { idx };
+                let idx = if idx >= func_idx as u32 { idx + 1 } else { idx };
                 wasm_encoder::Export::Function(idx)
               }
               wasmparser::ExternalKind::Table => {
@@ -445,7 +479,7 @@ impl Metering {
             for item in element.items.get_items_reader().unwrap() {
               match item.unwrap() {
                 wasmparser::ElementItem::Func(idx) => {
-                  let idx = if idx >= func_idx { idx + 1 } else { idx };
+                  let idx = if idx >= func_idx as u32 { idx + 1 } else { idx };
                   funcs.push(idx);
                 }
                 wasmparser::ElementItem::Expr(_) => {
@@ -466,19 +500,22 @@ impl Metering {
               } => {
                 let mut reader = init_expr.get_operators_reader();
 
-                for op in reader {
-                  let op = op?;
-                  // A "constant-time" instruction
-                  // (*.const or global.get)
-                  let offset = map_operator(op, func_idx as i32)?;      
-                  section.active(Some(table_index), &offset, element_type, elements);
-                }                
+                let op = reader.read()?;
+                // A "constant-time" instruction
+                // (*.const or global.get)
+                let offset = map_operator(op, func_idx as i32)?;
+                section.active(
+                  Some(table_index),
+                  &offset,
+                  element_type,
+                  elements,
+                );
               }
               wasmparser::ElementKind::Declared => {
                 section.declared(element_type, elements);
               }
             };
-          };
+          }
 
           module.section(&section);
         }
@@ -533,7 +570,7 @@ impl Metering {
         }
         Payload::CodeSectionEntry(_) => {
           // Already parsed in Payload::CodeSectionStart
-          unreachable!();
+          // unreachable!();
         }
         Payload::ModuleSectionStart {
           count: _,
@@ -551,13 +588,9 @@ impl Metering {
             data: &input[range.start..range.end],
           });
         }
-        Payload::Version { .. } => {}
-        Payload::End => break,
-      };
-
-      source = &source[consumed..];
+        _ => unreachable!(),
+      }
     }
-
     Ok(module)
   }
 }
@@ -566,29 +599,19 @@ fn map_operator(operator: Operator, gas_idx: i32) -> Result<Instruction> {
   let inst = match operator {
     Operator::Unreachable => Instruction::Unreachable,
     Operator::Nop => Instruction::Nop,
-    Operator::Block { ty, .. } => {
-      Instruction::Block(map_block_type(ty))
-    }
-    Operator::Loop { ty, .. } => {
-      Instruction::Loop(map_block_type(ty))
-    }
+    Operator::Block { ty, .. } => Instruction::Block(map_block_type(ty)),
+    Operator::Loop { ty, .. } => Instruction::Loop(map_block_type(ty)),
     Operator::If { ty, .. } => Instruction::If(map_block_type(ty)),
     Operator::Else => Instruction::Else,
-    Operator::Try { ty, .. } => {
-      Instruction::Try(map_block_type(ty))
-    }
+    Operator::Try { ty, .. } => Instruction::Try(map_block_type(ty)),
     Operator::Catch { index } => Instruction::Catch(index),
     Operator::Throw { index } => Instruction::Throw(index),
     Operator::Rethrow { relative_depth } => {
       Instruction::Rethrow(relative_depth)
     }
     Operator::End => Instruction::End,
-    Operator::Br { relative_depth } => {
-      Instruction::Br(relative_depth)
-    }
-    Operator::BrIf { relative_depth } => {
-      Instruction::BrIf(relative_depth)
-    }
+    Operator::Br { relative_depth } => Instruction::Br(relative_depth),
+    Operator::BrIf { relative_depth } => Instruction::BrIf(relative_depth),
     Operator::BrTable { table } => Instruction::BrTable(
       table.targets().collect::<Result<Cow<'_, [u32]>>>()?,
       table.default(),
@@ -617,36 +640,20 @@ fn map_operator(operator: Operator, gas_idx: i32) -> Result<Instruction> {
     Operator::CatchAll => Instruction::CatchAll,
     Operator::Drop => Instruction::Drop,
     Operator::Select => Instruction::Select,
-    Operator::TypedSelect { ty } => {
-      Instruction::TypedSelect(map_type(ty))
-    }
-    Operator::LocalGet { local_index } => {
-      Instruction::LocalGet(local_index)
-    }
-    Operator::LocalSet { local_index } => {
-      Instruction::LocalSet(local_index)
-    }
-    Operator::LocalTee { local_index } => {
-      Instruction::LocalTee(local_index)
-    }
+    Operator::TypedSelect { ty } => Instruction::TypedSelect(map_type(ty)),
+    Operator::LocalGet { local_index } => Instruction::LocalGet(local_index),
+    Operator::LocalSet { local_index } => Instruction::LocalSet(local_index),
+    Operator::LocalTee { local_index } => Instruction::LocalTee(local_index),
     Operator::GlobalGet { global_index } => {
       Instruction::GlobalGet(global_index)
     }
     Operator::GlobalSet { global_index } => {
       Instruction::GlobalSet(global_index)
     }
-    Operator::I32Load { memarg } => {
-      Instruction::I32Load(map_memarg(&memarg))
-    }
-    Operator::I64Load { memarg } => {
-      Instruction::I64Load(map_memarg(&memarg))
-    }
-    Operator::F32Load { memarg } => {
-      Instruction::F32Load(map_memarg(&memarg))
-    }
-    Operator::F64Load { memarg } => {
-      Instruction::F64Load(map_memarg(&memarg))
-    }
+    Operator::I32Load { memarg } => Instruction::I32Load(map_memarg(&memarg)),
+    Operator::I64Load { memarg } => Instruction::I64Load(map_memarg(&memarg)),
+    Operator::F32Load { memarg } => Instruction::F32Load(map_memarg(&memarg)),
+    Operator::F64Load { memarg } => Instruction::F64Load(map_memarg(&memarg)),
     Operator::I32Load8S { memarg } => {
       Instruction::I32Load8_S(map_memarg(&memarg))
     }
@@ -677,18 +684,10 @@ fn map_operator(operator: Operator, gas_idx: i32) -> Result<Instruction> {
     Operator::I64Load32U { memarg } => {
       Instruction::I64Load32_U(map_memarg(&memarg))
     }
-    Operator::I32Store { memarg } => {
-      Instruction::I32Store(map_memarg(&memarg))
-    }
-    Operator::I64Store { memarg } => {
-      Instruction::I64Store(map_memarg(&memarg))
-    }
-    Operator::F32Store { memarg } => {
-      Instruction::F32Store(map_memarg(&memarg))
-    }
-    Operator::F64Store { memarg } => {
-      Instruction::F64Store(map_memarg(&memarg))
-    }
+    Operator::I32Store { memarg } => Instruction::I32Store(map_memarg(&memarg)),
+    Operator::I64Store { memarg } => Instruction::I64Store(map_memarg(&memarg)),
+    Operator::F32Store { memarg } => Instruction::F32Store(map_memarg(&memarg)),
+    Operator::F64Store { memarg } => Instruction::F64Store(map_memarg(&memarg)),
     Operator::I32Store8 { memarg } => {
       Instruction::I32Store8(map_memarg(&memarg))
     }
@@ -704,21 +703,17 @@ fn map_operator(operator: Operator, gas_idx: i32) -> Result<Instruction> {
     Operator::I64Store32 { memarg } => {
       Instruction::I64Store32(map_memarg(&memarg))
     }
-    Operator::MemorySize { mem, mem_byte: _ } => {
-      Instruction::MemorySize(mem)
-    }
-    Operator::MemoryGrow { mem, mem_byte: _ } => {
-      Instruction::MemoryGrow(mem)
-    }
+    Operator::MemorySize { mem, mem_byte: _ } => Instruction::MemorySize(mem),
+    Operator::MemoryGrow { mem, mem_byte: _ } => Instruction::MemoryGrow(mem),
     Operator::I32Const { value } => Instruction::I32Const(value),
     Operator::I64Const { value } => Instruction::I64Const(value),
     // Floats and Ints have the same endianness on all supported platforms.
-    Operator::F32Const { value } => Instruction::F32Const(unsafe {
-      transmute::<u32, f32>(value.bits())
-    }),
-    Operator::F64Const { value } => Instruction::F64Const(unsafe {
-      transmute::<u64, f64>(value.bits())
-    }),
+    Operator::F32Const { value } => {
+      Instruction::F32Const(unsafe { transmute::<u32, f32>(value.bits()) })
+    }
+    Operator::F64Const { value } => {
+      Instruction::F64Const(unsafe { transmute::<u64, f64>(value.bits()) })
+    }
     Operator::RefNull { ty } => Instruction::RefNull(map_type(ty)),
     Operator::RefIsNull => Instruction::RefIsNull,
     Operator::RefFunc {
@@ -863,34 +858,22 @@ fn map_operator(operator: Operator, gas_idx: i32) -> Result<Instruction> {
     Operator::MemoryInit { mem, segment: data } => {
       Instruction::MemoryInit { mem, data }
     }
-    Operator::DataDrop { segment: data } => {
-      Instruction::DataDrop(data)
-    }
-    Operator::MemoryCopy { dst, src } => {
-      Instruction::MemoryCopy { dst, src }
-    }
+    Operator::DataDrop { segment: data } => Instruction::DataDrop(data),
+    Operator::MemoryCopy { dst, src } => Instruction::MemoryCopy { dst, src },
     Operator::MemoryFill { mem } => Instruction::MemoryFill(mem),
     Operator::TableInit { table, segment } => {
       Instruction::TableInit { segment, table }
     }
-    Operator::ElemDrop { segment } => {
-      Instruction::ElemDrop { segment }
-    }
+    Operator::ElemDrop { segment } => Instruction::ElemDrop { segment },
     Operator::TableCopy {
       dst_table: dst,
       src_table: src,
     } => Instruction::TableCopy { dst, src },
-    Operator::TableFill { table } => {
-      Instruction::TableFill { table }
-    }
+    Operator::TableFill { table } => Instruction::TableFill { table },
     Operator::TableGet { table } => Instruction::TableGet { table },
     Operator::TableSet { table } => Instruction::TableSet { table },
-    Operator::TableGrow { table } => {
-      Instruction::TableGrow { table }
-    }
-    Operator::TableSize { table } => {
-      Instruction::TableSize { table }
-    }
+    Operator::TableGrow { table } => Instruction::TableGrow { table },
+    Operator::TableSize { table } => Instruction::TableSize { table },
     // WebAssembly threads proposal.
     // https://github.com/webassembly/threads
     // Operator::MemoryAtomicNotify => {},
@@ -954,23 +937,27 @@ mod tests {
 
   #[tokio::test]
   async fn test_metering() {
-    let source = include_bytes!("./testdata/01_wasm/01_wasm.wasm");
-    let module = Metering::inject(source).unwrap();
-    use std::fs::File;
-    use std::io::Write;
+    // (expected gas consumption, module bytes)
+    let sources: [(usize, &[u8]); 2] = [
+      (4327, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
+      (16875, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
+    ];
 
-    let mut f = File::create("foo.wasm").expect("Unable to create file");
-    f.write_all(module.as_slice())
-      .expect("Unable to write data");
-    let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
+    for source in sources {
+      let module = Metering::inject(source.1).unwrap();
 
-    let mut prev_state = json!({
-      "counter": 0,
-    });
-    let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();
-    let state = rt.call(&mut prev_state_bytes).await.unwrap();
+      let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
 
-    let state: Value = serde_json::from_slice(&state).unwrap();
-    assert_eq!(state.get("counter").unwrap(), 1);
+      let mut prev_state = json!({
+        "counter": 0,
+      });
+      let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();
+      let state = rt.call(&mut prev_state_bytes).await.unwrap();
+
+      let state: Value = serde_json::from_slice(&state).unwrap();
+      assert_eq!(state.get("counter").unwrap(), 1);
+
+      assert_eq!(rt.get_cost(), source.0);
+    }
   }
 }

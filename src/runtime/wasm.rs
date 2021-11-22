@@ -7,6 +7,11 @@ use std::cell::Cell;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
+
+static COST: AtomicUsize = AtomicUsize::new(0);
 
 pub struct WasmRuntime {
   rt: JsRuntime,
@@ -69,7 +74,13 @@ impl WasmRuntime {
       let consume_gas = |scope: &mut v8::HandleScope,
                          args: v8::FunctionCallbackArguments,
                          _: v8::ReturnValue| {
-        let _cost = args.get(0).to_number(scope).unwrap().int32_value(scope);
+        let inc = args
+          .get(0)
+          .to_number(scope)
+          .unwrap()
+          .int32_value(scope)
+          .unwrap();
+        COST.fetch_add(inc as usize, Ordering::SeqCst);
       };
 
       let consume_gas_callback = v8::Function::new(scope, consume_gas).unwrap();
@@ -114,6 +125,10 @@ impl WasmRuntime {
       result_len,
       exports,
     })
+  }
+
+  pub fn get_cost(&self) -> usize {
+    COST.load(Ordering::SeqCst)
   }
 
   pub async fn call(&mut self, state: &mut [u8]) -> Result<Vec<u8>, AnyError> {
@@ -230,6 +245,9 @@ mod tests {
       assert_eq!(state.get("counter").unwrap(), i);
       prev_state = state;
     }
+
+    // No cost without metering.
+    assert_eq!(rt.get_cost(), 0);
   }
 
   #[tokio::test]
@@ -253,5 +271,8 @@ mod tests {
       assert_eq!(state.get("counter").unwrap(), i);
       prev_state = state;
     }
+
+    // No cost without metering.
+    assert_eq!(rt.get_cost(), 0);
   }
 }
