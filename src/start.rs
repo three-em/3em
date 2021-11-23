@@ -14,6 +14,7 @@ use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
+use crate::utils::u8_array_to_usize;
 
 /// A stream of incoming data from a TCP socket.
 ///
@@ -24,21 +25,28 @@ use tokio::net::TcpStream;
 /// If the magic number is not 0x69, the data is invalid.
 fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
   let stream = unfold(stream, |mut stream| async {
-    let mut buf = [0; 1024];
-
     let mut len = [0; 4];
-    let read = stream.read(&mut len).await.unwrap();
+    let read_len = stream.read(&mut len).await.unwrap();
+    let mut message_len = u8_array_to_usize(len);
 
-    let mut len_u32 = u32::from_le_bytes(len);
-    let mut data = vec![0; len_u32 as usize];
-    let read = stream.read(&mut data).await.unwrap();
+    let mut inbound_data: Vec<u8> = vec![];
 
-    println!("read {}b of data", read);
+    loop {
+      let mut buf= vec![0u8; message_len]; // Allocate strictly what the header indicated, then allocate the left overs.
+      let n = stream.read(&mut buf).await.unwrap();
+      message_len = message_len - n;
+
+      inbound_data.append(&mut buf);
+
+      if n == 0 || message_len <= 0 {
+        break;
+      }
+    }
+
     let mut magic = [0; 1];
     let read = stream.read(&mut magic).await.unwrap();
-
     assert_eq!(magic[0], 0x69);
-    Some((data, (stream)))
+    Some((inbound_data, (stream)))
   });
 
   Box::pin(stream)

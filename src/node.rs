@@ -1,4 +1,4 @@
-use crate::utils::parse_node_ip;
+use crate::utils::{parse_node_ip, usize_to_u8_array};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -36,7 +36,19 @@ pub async fn send_message(
   let result = match TcpStream::connect(node.to_string()) {
     Ok(mut stream) => {
       let future = tokio::task::spawn(async move {
-        stream.write(message.as_bytes()).unwrap();
+        let message_as_bytes = message.as_bytes();
+        let message_len = message_as_bytes.len();
+        let message_length = &usize_to_u8_array(message_len.to_owned() as u32);
+        let magic_number = 0x69 as u8;
+
+        let mut final_message: Vec<u8> = Vec::new();
+        final_message.extend_from_slice(message_length);
+        final_message.extend_from_slice(message_as_bytes);
+        final_message.extend_from_slice(&[magic_number]);
+
+
+        let as_bytes = &final_message[..];
+        stream.write(as_bytes).unwrap();
         let mut result: Vec<u8> = Vec::new();
 
         loop {
