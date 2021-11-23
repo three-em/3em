@@ -38,7 +38,7 @@ pub async fn send_message(
       let future = tokio::task::spawn(async move {
         let message_as_bytes = message.as_bytes();
         let message_len = message_as_bytes.len();
-        let message_length = &usize_to_u8_array(message_len.to_owned());
+        let message_length = &usize_to_u8_array(message_len.to_owned() as u32);
         let magic_number = 0x69 as u8;
 
         let mut final_message: Vec<u8> = Vec::new();

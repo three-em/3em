@@ -13,22 +13,12 @@ pub fn current_node_tcp_ip(port: i32) -> String {
   String::from(parse_basic_ip(ip, port))
 }
 
-pub fn usize_to_u8_array(num: usize) -> [u8; 4] {
-  let mut bytes = [0; 4];
-  bytes[0] = (num >> 24) as u8;
-  bytes[1] = (num >> 16) as u8;
-  bytes[2] = (num >> 8) as u8;
-  bytes[3] = num as u8;
-  bytes
+pub fn usize_to_u8_array(num: u32) -> [u8; 4] {
+  u32::to_le_bytes(num)
 }
 
 pub fn u8_array_to_usize(bytes: [u8; 4]) -> usize {
-  let mut num = 0;
-  num |= (bytes[0] as usize) << 24;
-  num |= (bytes[1] as usize) << 16;
-  num |= (bytes[2] as usize) << 8;
-  num |= bytes[3] as usize;
-  num
+  u32::from_le_bytes(bytes) as usize
 }
 
 #[cfg(test)]
@@ -41,8 +31,8 @@ mod tests {
     let bytes = message.as_bytes();
     let len = bytes.len();
     assert_eq!(len, 500000 as usize);
-    let to_u8_array = usize_to_u8_array(len);
-    let expected: [u8; 4] = [0, 7, 161, 32];
+    let to_u8_array = usize_to_u8_array(len as u32);
+    let expected: [u8; 4] = [32, 161, 7, 0];
     assert_eq!(to_u8_array, expected);
     assert_eq!(500000 as usize, u8_array_to_usize(to_u8_array));
     assert_eq!(usize_to_u8_array(500000), expected.to_owned());
