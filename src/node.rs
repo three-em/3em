@@ -46,7 +46,6 @@ pub async fn send_message(
         final_message.extend_from_slice(message_as_bytes);
         final_message.extend_from_slice(&[magic_number]);
 
-
         let as_bytes = &final_message[..];
         stream.write(as_bytes).unwrap();
         let mut result: Vec<u8> = Vec::new();
