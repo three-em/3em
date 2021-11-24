@@ -27,6 +27,9 @@ wasmparser = "0.81.0"
 wasm-encoder = "0.8.0"
 primitive-types = "0.10.1"
 
+[dev-dependencies]
+hex-literal = "0.3.4"
+
 [build-dependencies]
 v8 = "0.34.0"
 deno_core = "0.107.0"
