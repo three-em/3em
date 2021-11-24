@@ -23,7 +23,7 @@ pub fn u8_array_to_usize(bytes: [u8; 4]) -> usize {
 
 #[cfg(test)]
 mod tests {
-  use crate::utils::{usize_to_u8_array, u8_array_to_usize};
+  use crate::utils::{u8_array_to_usize, usize_to_u8_array};
 
   #[tokio::test]
   async fn test_usize_to_u8_array() {
@@ -37,5 +37,4 @@ mod tests {
     assert_eq!(500000 as usize, u8_array_to_usize(to_u8_array));
     assert_eq!(usize_to_u8_array(500000), expected.to_owned());
   }
-
 }
