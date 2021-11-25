@@ -26,6 +26,7 @@ sha2 = "0.9.5"
 wasmparser = "0.81.0"
 wasm-encoder = "0.8.0"
 primitive-types = "0.10.1"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [dev-dependencies]
 hex-literal = "0.3.4"

@@ -1,4 +1,6 @@
 use primitive_types::U256;
+use tiny_keccak::Hasher;
+use tiny_keccak::Keccak;
 
 macro_rules! repr_u8 {
   ($(#[$meta:meta])* $vis:vis enum $name:ident {
@@ -228,10 +230,12 @@ impl Stack {
   }
 }
 
-#[derive(Default)]
 pub struct Machine {
   pub stack: Stack,
+  state: U256,
   memory: Vec<u8>,
+  result: Vec<u8>,
+  cost_fn: Box<dyn Fn(&Instruction) -> U256>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -247,9 +251,21 @@ pub enum ExecutionState {
 }
 
 impl Machine {
+  pub fn new<T>(cost_fn: T) -> Self 
+  where T: Fn(&Instruction) -> U256 + 'static {
+    Machine {
+      stack: Stack::default(),
+      state: U256::zero(),
+      memory: Vec::new(),
+      result: Vec::new(),
+      cost_fn: Box::new(cost_fn),
+    }
+  }
+
   pub fn execute(&mut self, bytecode: &[u8]) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
+
     while pc < len {
       let opcode = bytecode[pc];
       let inst = Instruction::try_from(opcode).unwrap();
@@ -411,25 +427,40 @@ impl Machine {
           }
         }
         Instruction::Keccak256 => {
-          // TODO
+          let offset = self.stack.pop().low_u64() as usize;
+          let size = self.stack.pop().low_u64() as usize;
+
+          let data = &self.memory[offset..offset + size];
+          let mut result = [0u8; 32];
+          let mut keccak = Keccak::v256();
+
+          keccak.update(data);
+          keccak.finalize(&mut result);
+
+          self.stack.push(U256::from(result));
         }
         Instruction::Address => {
-          // TODO
+          // TODO: address
+          self.stack.push(U256::zero());
         }
         Instruction::Balance => {
-          // TODO
+          let _addr = self.stack.pop();
+          // TODO: balance
+          self.stack.push(U256::zero());
         }
         Instruction::Origin => {
-          // TODO
+          // TODO: origin
+          self.stack.push(U256::zero());
         }
         Instruction::Caller => {
-          // TODO
+          // TODO: caller
+          self.stack.push(U256::zero());
         }
         Instruction::CallValue => {
-          // TODO
+          self.stack.push(self.state);
         }
         Instruction::CallDataLoad => {
-          // TODO
+          let offset = self.stack.pop().low_u64() as usize;
         }
         Instruction::CallDataSize => {
           self.stack.push(U256::from(self.stack.len()));
@@ -454,7 +485,8 @@ impl Machine {
             .copy_from_slice(&code[..len]);
         }
         Instruction::GasPrice => {
-          // TODO
+          // TODO: Gas
+          self.stack.push(U256::zero());
         }
         Instruction::ExtCodeSize => {
           // TODO
@@ -530,23 +562,25 @@ impl Machine {
         }
         Instruction::Jump => {
           let offset = self.stack.pop();
-
-          // self.pc = offset.low_u64() as usize;
+          pc = offset.low_u64() as usize;
         }
         Instruction::JumpI => {
           let offset = self.stack.pop();
           let condition = self.stack.pop();
 
           if condition != U256::zero() {
-            // self.pc = offset.low_u64() as usize;
+            pc = offset.low_u64() as usize;
           }
         }
-        // Instruction::Pc
+        Instruction::GetPc => {
+          self.stack.push(U256::from(pc));
+        }
         Instruction::MSize => {
           // TODO
         }
         Instruction::Gas => {
-          // TODO
+          // TODO: remaining gas
+          self.stack.push(U256::zero());
         }
         Instruction::JumpDest => {}
         Instruction::Push1
@@ -643,8 +677,11 @@ impl Machine {
         | Instruction::DelegateCall => {
           // TODO
         }
-        Instruction::Return | Instruction::Revert => {
-          // TODO
+        Instruction::Return => {
+          let offset = self.stack.pop().low_u64() as usize;
+          let size = self.stack.pop().low_u64() as usize;
+
+          self.result = self.memory[offset..offset + size].to_vec();
         }
         _ => unimplemented!(),
       }
@@ -661,6 +698,10 @@ mod tests {
   use crate::runtime::evm::Machine;
   use hex_literal::hex;
   use primitive_types::U256;
+
+  fn test_cost_fn(_: &Instruction) -> U256 {
+    U256::zero()
+  }
 
   #[test]
   fn test_basic() {
@@ -799,6 +840,21 @@ mod tests {
     let mut machine = Machine::default();
 
     let status = machine.execute(&hex_code);
+    assert_eq!(status, ExecutionState::Ok);
+  }
+
+  #[test]
+  fn test_keccak256() {
+    // object "object" {
+    //   code {
+    //       mstore(0, 0x10)
+    //       pop(keccak256(0, 0x20))
+    //   }
+    // }
+    let bytes = hex!("6010600052602060002050");
+    let mut machine = Machine::default();
+
+    let status = machine.execute(&bytes);
     assert_eq!(status, ExecutionState::Ok);
   }
 }
