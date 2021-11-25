@@ -27,11 +27,21 @@ use wasmparser::Type;
 use wasmparser::TypeDef;
 use wasmparser::TypeOrFuncType;
 
-/// WebAssembly metering
-pub struct Metering;
+/// 3EM's WebAssembly metering module.
+pub struct Metering(
+  // Cost function
+  Box<dyn Fn(&Instruction) -> i32>,
+);
 
 impl Metering {
-  pub fn inject(input: &[u8]) -> Result<Module> {
+  pub fn new<T>(cost_fn: T) -> Self
+  where
+    T: Fn(&Instruction) -> i32 + 'static,
+  {
+    Self(Box::new(cost_fn))
+  }
+
+  pub fn inject(&self, input: &[u8]) -> Result<Module> {
     let mut source = input;
     let mut parser = Parser::new(0);
     let mut module = Module::new();
@@ -391,8 +401,14 @@ impl Metering {
             for op in operators {
               let instruction = map_operator(op, func_idx as i32)?;
 
-              func.instruction(&Instruction::I32Const(1));
-              func.instruction(&Instruction::Call(func_idx as u32));
+              let cost = self.0(&instruction);
+              // There is no such thing as negative cost.
+              // If the cost function returns a negative value
+              // the gas is skipped.
+              if cost >= 0 {
+                func.instruction(&Instruction::I32Const(cost));
+                func.instruction(&Instruction::Call(func_idx as u32));
+              }
 
               func.instruction(&instruction);
             }
@@ -944,9 +960,15 @@ mod tests {
   use deno_core::serde_json;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
+  use wasm_encoder::Instruction;
+
+  fn test_cost_function(_: &Instruction) -> i32 {
+    1
+  }
 
   #[tokio::test]
   async fn test_metering_contracts() {
+    let metering = Metering::new(test_cost_function);
     // (expected gas consumption, module bytes)
     let sources: [(usize, &[u8]); 2] = [
       (4327, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
@@ -954,7 +976,7 @@ mod tests {
     ];
 
     for source in sources {
-      let module = Metering::inject(source.1).unwrap();
+      let module = metering.inject(source.1).unwrap();
 
       let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
 
@@ -973,8 +995,10 @@ mod tests {
 
   #[test]
   fn test_metering_general() {
-    let module =
-      Metering::inject(include_bytes!("./testdata/metering/add.wasm")).unwrap();
+    let metering = Metering::new(test_cost_function);
+    let module = metering
+      .inject(include_bytes!("./testdata/metering/add.wasm"))
+      .unwrap();
     // Deterministic codegen.
     assert_eq!(
       &module.finish(),
@@ -984,12 +1008,14 @@ mod tests {
 
   #[test]
   fn test_metering_nop() {
+    let metering = Metering::new(test_cost_function);
+
     const NOP_WASM: [u8; 8] = [
       0x00, 0x61, 0x73, 0x6D, // Magic
       0x01, 0x00, 0x00, 0x00, // Version
     ];
 
-    let module = Metering::inject(&NOP_WASM).unwrap();
+    let module = metering.inject(&NOP_WASM).unwrap();
 
     const METERING_NOP_BOILERPLATE: [u8; 35] = [
       0x00, 0x61, 0x73, 0x6D, // Magic
@@ -1009,7 +1035,9 @@ mod tests {
 
   #[test]
   fn test_metering_invalid_module() {
-    let module = Metering::inject(&[]);
+    let metering = Metering::new(test_cost_function);
+
+    let module = metering.inject(&[]);
     assert!(&module.is_err());
   }
 }

@@ -1,6 +1,7 @@
 use crate::core_nodes::get_core_nodes;
 use crate::messages::get_addr::get_addr;
 use crate::node::{send_message, Node};
+use crate::utils::u8_array_to_usize;
 use deno_core::error::AnyError;
 use deno_core::futures::pin_mut;
 use deno_core::futures::stream::poll_fn;
@@ -14,7 +15,6 @@ use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
-use crate::utils::u8_array_to_usize;
 
 /// A stream of incoming data from a TCP socket.
 ///
@@ -32,7 +32,7 @@ fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
     let mut inbound_data: Vec<u8> = vec![];
 
     loop {
-      let mut buf= vec![0u8; message_len]; // Allocate strictly what the header indicated, then allocate the left overs.
+      let mut buf = vec![0u8; message_len]; // Allocate strictly what the header indicated, then allocate the left overs.
       let n = stream.read(&mut buf).await.unwrap();
       message_len = message_len - n;
 
