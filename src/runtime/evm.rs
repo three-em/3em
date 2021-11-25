@@ -235,42 +235,78 @@ pub struct Machine {
   state: U256,
   memory: Vec<u8>,
   result: Vec<u8>,
+  // The cost function.
   cost_fn: Box<dyn Fn(&Instruction) -> U256>,
+  // Total gas used so far.
+  // gas_used += cost_fn(instruction)
+  gas_used: U256,
+  // The input data.
+  // <- 4 bytes -> | < 32 bytes -> | ... |
+  data: Vec<u8>,
 }
 
 #[derive(PartialEq, Debug)]
 pub enum AbortError {
   DivZero,
+  InvalidOpcode,
 }
 
 #[derive(PartialEq, Debug)]
 pub enum ExecutionState {
   Abort(AbortError),
   Return(U256),
+  Revert,
   Ok,
 }
 
 impl Machine {
-  pub fn new<T>(cost_fn: T) -> Self 
-  where T: Fn(&Instruction) -> U256 + 'static {
+  pub fn new<T>(cost_fn: T) -> Self
+  where
+    T: Fn(&Instruction) -> U256 + 'static,
+  {
     Machine {
       stack: Stack::default(),
       state: U256::zero(),
       memory: Vec::new(),
       result: Vec::new(),
       cost_fn: Box::new(cost_fn),
+      gas_used: U256::zero(),
+      data: Vec::new(),
+    }
+  }
+
+  pub fn new_with_data<T>(cost_fn: T, data: Vec<u8>) -> Self
+  where
+    T: Fn(&Instruction) -> U256 + 'static,
+  {
+    Machine {
+      stack: Stack::default(),
+      state: U256::zero(),
+      memory: Vec::new(),
+      result: Vec::new(),
+      cost_fn: Box::new(cost_fn),
+      gas_used: U256::zero(),
+      data,
     }
   }
 
   pub fn execute(&mut self, bytecode: &[u8]) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
-
+    let mut i = 0;
     while pc < len {
       let opcode = bytecode[pc];
-      let inst = Instruction::try_from(opcode).unwrap();
+      let inst = match Instruction::try_from(opcode) {
+        Ok(inst) => inst,
+        // For ASSERT (0xfe) and friends.
+        Err(_) => {
+          return ExecutionState::Abort(AbortError::InvalidOpcode);
+        }
+      };
 
+      let cost = (self.cost_fn)(&inst);
       pc += 1;
+      i += 1;
       match inst {
         Instruction::Stop => {}
         Instruction::Add => {
@@ -370,6 +406,17 @@ impl Machine {
         Instruction::SGt => {
           // TODO
         }
+        Instruction::Shr => {
+          println!("Shr");
+          let rhs = self.stack.pop();
+          let lhs = self.stack.pop();
+
+          if rhs < U256::from(256) {
+            self.stack.push(lhs >> rhs);
+          } else {
+            self.stack.push(U256::zero());
+          }
+        }
         Instruction::Eq => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
@@ -460,10 +507,21 @@ impl Machine {
           self.stack.push(self.state);
         }
         Instruction::CallDataLoad => {
-          let offset = self.stack.pop().low_u64() as usize;
+          let offset = self.stack.pop();
+
+          let offset = match offset > usize::max_value().into() {
+            true => self.data.len(),
+            false => offset.low_u64() as usize,
+          };
+
+          let end = std::cmp::min(offset + 32, self.data.len());
+          let mut data = self.data[offset..end].to_vec();
+          data.resize(32, 0u8);
+          println!("CALLDATALOAD {:?}", data);
+          self.stack.push(U256::from(data.as_slice()));
         }
         Instruction::CallDataSize => {
-          self.stack.push(U256::from(self.stack.len()));
+          self.stack.push(U256::from(self.data.len()));
         }
         Instruction::CallDataCopy => {
           // TODO
@@ -473,16 +531,29 @@ impl Machine {
         }
         Instruction::CodeCopy => {
           let mem_offset = self.stack.pop().low_u64() as usize;
-          let code_offset = self.stack.pop().low_u64() as usize;
+          let code_offset = self.stack.pop();
           let len = self.stack.pop().low_u64() as usize;
 
-          let code = &bytecode[code_offset..code_offset + len];
-          if self.memory.len() < mem_offset + len {
-            self.memory.resize(mem_offset + len, 0);
+          if code_offset > usize::max_value().into() {
+            println!("CODECOPY: offset too large");
           }
 
-          self.memory[mem_offset..mem_offset + len]
-            .copy_from_slice(&code[..len]);
+          let code_offset = code_offset.low_u64() as usize;
+          if code_offset < self.data.len() {
+            let code = &bytecode[code_offset..code_offset + len];
+
+            if self.memory.len() < mem_offset + 32 {
+              self.memory.resize(mem_offset + 32, 0);
+            }
+
+            for i in 0..32 {
+              if i > code.len() {
+                self.memory[mem_offset + i] = 0;
+              } else {
+                self.memory[mem_offset + i] = code[i];
+              }
+            }
+          }
         }
         Instruction::GasPrice => {
           // TODO: Gas
@@ -519,11 +590,14 @@ impl Machine {
           // TODO
         }
         Instruction::Pop => {
+          println!("Pop {}", i);
           self.stack.pop();
         }
         Instruction::MLoad => {
           let offset = self.stack.pop();
-
+          if offset > usize::max_value().into() {
+            println!("MLOAD: offset too large");
+          }
           let len = offset.low_u64() as usize;
           let mut data = vec![0u8; len];
 
@@ -536,22 +610,33 @@ impl Machine {
         Instruction::MStore => {
           let offset = self.stack.pop();
           let val = self.stack.pop();
-
+          if offset > usize::max_value().into() {
+            println!("MStore: offset too large");
+          }
           let offset = offset.low_u64() as usize;
-          if self.memory.len() < offset + 32 {
+          if self.memory.len() <= offset + 32 {
             self.memory.resize(offset + 32, 0);
           }
 
           for i in 0..32 {
             let mem_ptr = offset + i;
-            self.memory[mem_ptr] = val.byte(i);
+
+            // Big endian byte
+            let index = 4 * 8 - 1 - i;
+            self.memory[mem_ptr] = val.byte(index);
           }
         }
         Instruction::MStore8 => {
           let offset = self.stack.pop();
           let val = self.stack.pop();
-
+          if offset > usize::max_value().into() {
+            println!("MStore8: offset too large");
+          }
           let mem_ptr = offset.low_u64() as usize;
+          if mem_ptr >= self.memory.len() {
+            self.memory.resize(mem_ptr + 1, 0);
+          }
+
           self.memory[mem_ptr] = val.byte(0);
         }
         Instruction::SLoad => {
@@ -567,7 +652,6 @@ impl Machine {
         Instruction::JumpI => {
           let offset = self.stack.pop();
           let condition = self.stack.pop();
-
           if condition != U256::zero() {
             pc = offset.low_u64() as usize;
           }
@@ -582,7 +666,9 @@ impl Machine {
           // TODO: remaining gas
           self.stack.push(U256::zero());
         }
-        Instruction::JumpDest => {}
+        Instruction::JumpDest => {
+          println!("{} JMPDEST", i);
+        }
         Instruction::Push1
         | Instruction::Push2
         | Instruction::Push3
@@ -678,15 +764,35 @@ impl Machine {
           // TODO
         }
         Instruction::Return => {
-          let offset = self.stack.pop().low_u64() as usize;
+          let offset = self.stack.pop();
+          
+          if offset > usize::max_value().into() {
+            println!("Return: offset too large");
+          }
+          let offset = offset.low_u64() as usize;
           let size = self.stack.pop().low_u64() as usize;
 
-          self.result = self.memory[offset..offset + size].to_vec();
+          let mut data = vec![];
+          for idx in offset..offset + size {
+            if idx >= self.memory.len() {
+              data.push(0);
+            } else {
+              data.push(self.memory[idx]);
+            }
+          }
+
+          self.result = data;
+          break;
+        }
+        Instruction::Revert => {
+          return ExecutionState::Revert;
         }
         _ => unimplemented!(),
       }
-    }
 
+      self.gas_used += cost;
+    }
+    println!("{} STEPS", i);
     ExecutionState::Ok
   }
 }
@@ -703,9 +809,21 @@ mod tests {
     U256::zero()
   }
 
+  fn print_vm_memory(vm: &Machine) {
+    let mem = &vm.memory;
+    println!("{:?}", mem);
+    for i in 0..mem.len() {
+      if i % 16 == 0 {
+        print!("\n{:x}: ", i);
+      }
+
+      print!("{:#04x} ", mem[i]);
+    }
+  }
+
   #[test]
   fn test_basic() {
-    let mut machine = Machine::default();
+    let mut machine = Machine::new(test_cost_fn);
 
     let status = machine.execute(&[
       Instruction::Push1 as u8,
@@ -721,7 +839,7 @@ mod tests {
 
   #[test]
   fn test_add_solidity() {
-    let mut machine = Machine::default();
+    let mut machine = Machine::new(test_cost_fn);
     // label_0000:
     // 	// Inputs[1] { @0005  msg.value }
     // 	0000    60  PUSH1 0x80
@@ -836,11 +954,36 @@ mod tests {
     // 	0072    A2    LOG2
     // 	0073    35    CALLDATALOAD
     // 	0074    7F    PUSH32 0xe5d46648452a2ffa2d4046a757ef013fbfe7a7d764736f6c634300080a0033
-    let hex_code = hex!("6080604052348015600f57600080fd5b50607780601d6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80634f2be91f14602d575b600080fd5b600360405190815260200160405180910390f3fea2646970667358221220fda5d9d2169ab447b0a2357fe5d46648452a2ffa2d4046a757ef013fbfe7a7d764736f6c634300080a0033");
-    let mut machine = Machine::default();
+    let hex_code = hex!("6080604052348015600f57600080fd5b506004361060285760003560e01c80634f2be91f14602d575b600080fd5b60336047565b604051603e91906067565b60405180910390f35b60006003905090565b6000819050919050565b6061816050565b82525050565b6000602082019050607a6000830184605a565b9291505056fea26469706673582212200047574855cc88b41f29d7879f8126fe8da6f03c5f30c66c8e1290510af5253964736f6c634300080a0033");
+    let mut machine =
+      Machine::new_with_data(test_cost_fn, hex!("4f2be91f").to_vec());
 
     let status = machine.execute(&hex_code);
     assert_eq!(status, ExecutionState::Ok);
+
+    assert_eq!(machine.result.len(), 119);
+    print_vm_memory(&machine);
+    use core::fmt::Write;
+    let mut hex_str = String::new();
+    for i in 0..machine.result.len() {
+      write!(hex_str, "{:02X}", machine.result[i]).unwrap();
+    }
+    assert_eq!(&hex_str, "");
+  }
+
+  #[test]
+  fn test_mstore() {
+    //
+    let mut machine = Machine::new(test_cost_fn);
+
+    // memory[0x40:0x60] = 0x80
+    let status = machine.execute(&[
+      Instruction::Push1 as u8,
+      0x80,
+      Instruction::Push1 as u8,
+      0x40,
+      Instruction::MStore as u8,
+    ]);
   }
 
   #[test]
@@ -852,7 +995,7 @@ mod tests {
     //   }
     // }
     let bytes = hex!("6010600052602060002050");
-    let mut machine = Machine::default();
+    let mut machine = Machine::new(test_cost_fn);
 
     let status = machine.execute(&bytes);
     assert_eq!(status, ExecutionState::Ok);
