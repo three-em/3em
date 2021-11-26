@@ -186,47 +186,43 @@ pub const MAX_STACK_SIZE: usize = 1024;
 
 #[derive(Debug)]
 pub struct Stack {
-  pub data: [U256; MAX_STACK_SIZE],
-  // Stack pointer
-  pub ptr: usize,
+  pub data: Vec<U256>,
 }
 
 impl Default for Stack {
   fn default() -> Self {
-    Stack {
-      data: [U256::zero(); MAX_STACK_SIZE],
-      ptr: 16,
-    }
+    let mut data = Vec::with_capacity(MAX_STACK_SIZE);
+
+    Stack { data }
   }
 }
 
 impl Stack {
   pub fn push(&mut self, value: U256) {
-    self.data[self.ptr] = value;
-    self.ptr += 1;
+    self.data.push(value);
   }
 
   pub fn pop(&mut self) -> U256 {
-    let val = self.data[self.ptr - 1];
-    self.ptr -= 1;
-    val
+    self.data.pop().unwrap()
   }
 
   pub fn peek(&self) -> U256 {
-    self.data[self.ptr]
-  }
-
-  pub fn len(&self) -> usize {
-    self.ptr
+    self.data[self.data.len() - 1]
   }
 
   pub fn swap(&mut self, index: usize) {
-    self.data[self.ptr] = self.data[index];
-    self.data[index] = self.data[self.ptr];
+    let ptr = self.data.len() - 1;
+    println!("Swap {}", self.data[ptr]);
+
+    if ptr < index {
+      return;
+    }
+    self.data.swap(ptr, ptr - index);
+    println!("SWAP: {}", self.data[ptr]);
   }
 
   pub fn dup(&mut self, index: usize) {
-    self.push(self.data[self.ptr - index]);
+    self.push(self.data[self.data.len() - index]);
   }
 }
 
@@ -293,7 +289,6 @@ impl Machine {
   pub fn execute(&mut self, bytecode: &[u8]) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
-    let mut i = 0;
     while pc < len {
       let opcode = bytecode[pc];
       let inst = match Instruction::try_from(opcode) {
@@ -305,8 +300,10 @@ impl Machine {
       };
 
       let cost = (self.cost_fn)(&inst);
+
+      println!("{:#?} {:#04x}", inst, opcode);
       pc += 1;
-      i += 1;
+
       match inst {
         Instruction::Stop => {}
         Instruction::Add => {
@@ -407,7 +404,6 @@ impl Machine {
           // TODO
         }
         Instruction::Shr => {
-          println!("Shr");
           let rhs = self.stack.pop();
           let lhs = self.stack.pop();
 
@@ -517,7 +513,6 @@ impl Machine {
           let end = std::cmp::min(offset + 32, self.data.len());
           let mut data = self.data[offset..end].to_vec();
           data.resize(32, 0u8);
-          println!("CALLDATALOAD {:?}", data);
           self.stack.push(U256::from(data.as_slice()));
         }
         Instruction::CallDataSize => {
@@ -590,16 +585,16 @@ impl Machine {
           // TODO
         }
         Instruction::Pop => {
-          println!("Pop {}", i);
           self.stack.pop();
         }
         Instruction::MLoad => {
+          println!("MLOAD");
           let offset = self.stack.pop();
           if offset > usize::max_value().into() {
             println!("MLOAD: offset too large");
           }
           let len = offset.low_u64() as usize;
-          let mut data = vec![0u8; len];
+          let mut data = vec![0u8; 32];
 
           for (idx, mem_ptr) in (0..len).zip(len..len + 32) {
             data[idx] = self.memory[mem_ptr];
@@ -648,12 +643,17 @@ impl Machine {
         Instruction::Jump => {
           let offset = self.stack.pop();
           pc = offset.low_u64() as usize;
+          println!("JUMP: {}", offset);
         }
         Instruction::JumpI => {
           let offset = self.stack.pop();
           let condition = self.stack.pop();
           if condition != U256::zero() {
             pc = offset.low_u64() as usize;
+            println!(
+              "Jumping to: {:#?}",
+              Instruction::try_from(bytecode[pc + 1]).unwrap()
+            );
           }
         }
         Instruction::GetPc => {
@@ -666,9 +666,7 @@ impl Machine {
           // TODO: remaining gas
           self.stack.push(U256::zero());
         }
-        Instruction::JumpDest => {
-          println!("{} JMPDEST", i);
-        }
+        Instruction::JumpDest => {}
         Instruction::Push1
         | Instruction::Push2
         | Instruction::Push3
@@ -703,7 +701,7 @@ impl Machine {
         | Instruction::Push32 => {
           let value_size = (opcode - 0x60 + 1) as usize;
 
-          let mut value = &bytecode[pc..pc + value_size];
+          let value = &bytecode[pc..pc + value_size];
           pc += value_size;
 
           self.stack.push(U256::from(value));
@@ -765,7 +763,7 @@ impl Machine {
         }
         Instruction::Return => {
           let offset = self.stack.pop();
-          
+
           if offset > usize::max_value().into() {
             println!("Return: offset too large");
           }
@@ -792,7 +790,7 @@ impl Machine {
 
       self.gas_used += cost;
     }
-    println!("{} STEPS", i);
+
     ExecutionState::Ok
   }
 }
@@ -802,6 +800,8 @@ mod tests {
   use crate::runtime::evm::ExecutionState;
   use crate::runtime::evm::Instruction;
   use crate::runtime::evm::Machine;
+  use crate::runtime::evm::Stack;
+
   use hex_literal::hex;
   use primitive_types::U256;
 
@@ -831,6 +831,38 @@ mod tests {
       Instruction::Push1 as u8,
       0x02,
       Instruction::Add as u8,
+    ]);
+
+    assert_eq!(status, ExecutionState::Ok);
+    assert_eq!(machine.stack.pop(), U256::from(0x03));
+  }
+
+  #[test]
+  fn test_stack_swap() {
+    let mut stack = Stack::default();
+
+    stack.push(U256::from(0x01));
+    stack.push(U256::from(0x02));
+    stack.swap(1);
+
+    stack.pop();
+    stack.swap(1);
+
+    assert_eq!(stack.pop(), U256::from(0x02));
+  }
+
+  #[test]
+  fn test_swap_jump() {
+    let mut machine = Machine::new(test_cost_fn);
+
+    let status = machine.execute(&[
+      Instruction::Push1 as u8,
+      0x00,
+      Instruction::Push1 as u8,
+      0x03,
+      Instruction::Swap1 as u8,
+      Instruction::Pop as u8,
+      Instruction::Swap1 as u8,
     ]);
 
     assert_eq!(status, ExecutionState::Ok);
@@ -961,14 +993,8 @@ mod tests {
     let status = machine.execute(&hex_code);
     assert_eq!(status, ExecutionState::Ok);
 
-    assert_eq!(machine.result.len(), 119);
-    print_vm_memory(&machine);
-    use core::fmt::Write;
-    let mut hex_str = String::new();
-    for i in 0..machine.result.len() {
-      write!(hex_str, "{:02X}", machine.result[i]).unwrap();
-    }
-    assert_eq!(&hex_str, "");
+    assert_eq!(machine.result.len(), 32);
+    assert_eq!(machine.result.pop(), Some(0x03));
   }
 
   #[test]
