@@ -1,3 +1,4 @@
+mod evm;
 mod metering;
 mod module_loader;
 mod smartweave;
