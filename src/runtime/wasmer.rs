@@ -1,5 +1,6 @@
 use std::cell::Cell;
 use wasmer::{imports, wat2wasm, Instance, MemoryView, Module, Store};
+use crate::runtime::smartweave::ContractInfo;
 
 fn wasmer_bench(
   state: &mut [u8],
@@ -16,7 +17,7 @@ fn wasmer_bench(
   let handle = instance
     .exports
     .get_function("handle")?
-    .native::<(u32, u32, u32, u32), u32>()?;
+    .native::<(u32, u32, u32, u32, u32, u32), u32>()?;
 
   let alloc = instance
     .exports
@@ -32,8 +33,13 @@ fn wasmer_bench(
   let mut raw_mem = unsafe { memory.data_unchecked_mut() };
   raw_mem[ptr as usize..ptr as usize + state.len()].swap_with_slice(state);
 
+  let mut info = deno_core::serde_json::to_vec(&ContractInfo::default()).unwrap();
+  let info_ptr = alloc.call(info.len() as u32)?;
+
+  raw_mem[info_ptr as usize..info_ptr as usize + info.len()].swap_with_slice(&mut info);
+
   let result_ptr =
-    handle.call(ptr, state.len() as u32, ptr, state.len() as u32)? as usize;
+    handle.call(ptr, state.len() as u32, ptr, state.len() as u32, info_ptr, info.len() as u32)? as usize;
 
   let view: MemoryView<u8> = memory.view();
   let result_len = get_len.call()? as usize;
@@ -76,7 +82,7 @@ pub async fn bench() {
     for i in 0..iters {
       let mut rt = wasm::WasmRuntime::new(include_bytes!(
         "./testdata/01_wasm/01_wasm.wasm"
-      ))
+      ), Default::default())
       .await
       .unwrap();
 

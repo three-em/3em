@@ -1,3 +1,4 @@
+use crate::runtime::smartweave::ContractInfo;
 use deno_core::error::AnyError;
 use deno_core::JsRuntime;
 use deno_core::ZeroCopyBuf;
@@ -11,22 +12,48 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
+macro_rules! wasm_alloc {
+  ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {
+    $alloc.call($scope, $this.into(), &[$len.into()]).unwrap()
+  };
+}
+
 static COST: AtomicUsize = AtomicUsize::new(0);
 
 pub struct WasmRuntime {
   rt: JsRuntime,
+  /// The contract handler.
+  /// `handle(state_ptr, state_len, action_ptr, action_len) -> result_ptr`
+  /// Length of the result can be obtained by calling `WasmRuntime::result_len`.
   handle: v8::Global<v8::Function>,
-  allocator: v8::Global<v8::Function>,
+  /// The length of the updated state.
+  /// `get_len() -> usize`
   result_len: v8::Global<v8::Function>,
+  /// Memory allocator for the contract.
+  /// `_alloc(size) -> ptr`
+  allocator: v8::Global<v8::Function>,
+  /// `WebAssembly.Instance.exports` object.
   exports: v8::Global<v8::Object>,
+  /// Allocated Smartweave ContractInfo
+  sw_contract: (
+    Vec<u8>,
+    // Pointer to the allocated contract info
+    u32,
+    // Length of the allocated contract info
+    usize,
+  ),
 }
 
 impl WasmRuntime {
-  pub async fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
+  pub async fn new(
+    wasm: &[u8],
+    contract: ContractInfo,
+  ) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(Default::default());
+    let contract = deno_core::serde_json::to_vec(&contract)?;
     // Get hold of the WebAssembly object.
     let wasm_obj = rt.execute_script("<anon>", "WebAssembly").unwrap();
-    let (exports, handle, allocator, result_len) = {
+    let (exports, handle, allocator, result_len, contract_ptr) = {
       let scope = &mut rt.handle_scope();
       let buf =
         v8::ArrayBuffer::new_backing_store_from_boxed_slice(wasm.into());
@@ -115,15 +142,26 @@ impl WasmRuntime {
       let result_len = v8::Global::new(scope, result_len);
 
       let exports = v8::Global::new(scope, exports);
-      (exports, handle, allocator, result_len)
+
+      let undefined = v8::undefined(scope);
+      let alloc_obj = allocator.get(scope).to_object(scope).unwrap();
+      let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
+
+      let contact_info_len = v8::Number::new(scope, contract.len() as f64);
+      let contract_ptr = wasm_alloc!(scope, alloc, undefined, contact_info_len);
+      let contract_ptr_u32 = contract_ptr.uint32_value(scope).unwrap();
+
+      (exports, handle, allocator, result_len, contract_ptr_u32)
     };
 
+    let len = contract.len();
     Ok(Self {
       rt,
       handle,
       allocator,
       result_len,
       exports,
+      sw_contract: (contract, contract_ptr, len),
     })
   }
 
@@ -140,13 +178,15 @@ impl WasmRuntime {
       let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
 
       let state_len = v8::Number::new(scope, state.len() as f64);
+      let contract_ptr = v8::Number::new(scope, self.sw_contract.1 as f64);
+      let contract_info_len = v8::Number::new(scope, self.sw_contract.2 as f64);
 
       // Offset in memory for start of the block.
-      let local_ptr = alloc
-        .call(scope, undefined.into(), &[state_len.into()])
-        .unwrap();
+      let local_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
       let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
-
+      // let action_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
+      // let action_ptr_u32 = action_ptr.uint32_value(scope).unwrap();
+      
       let exports_obj = self.exports.get(scope).to_object(scope).unwrap();
 
       let mem_str = v8::String::new(scope, "memory").unwrap();
@@ -161,12 +201,23 @@ impl WasmRuntime {
       // O HOLY Backin' store.
       let store = mem_buf.get_backing_store();
 
-      let mut raw_mem = unsafe {
+      let mut state_mem_region = unsafe {
         get_backing_store_slice_mut(&store, local_ptr_u32 as usize, state.len())
       };
 
-      assert_eq!(raw_mem.len(), state.len());
-      raw_mem.swap_with_slice(state);
+      state_mem_region.swap_with_slice(state);
+
+      // let action_mem_region = unsafe {
+      //   get_backing_store_slice_mut(&store, action_ptr_u32 as usize, state.len())
+      // };
+
+      // action_mem_region.swap_with_slice(state);
+      
+      let contract_mem_region = unsafe {
+        get_backing_store_slice_mut(&store, self.sw_contract.1 as usize, self.sw_contract.2)
+      };
+
+      contract_mem_region.swap_with_slice(&mut self.sw_contract.0);
 
       let handler_obj = self.handle.get(scope).to_object(scope).unwrap();
       let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
@@ -175,7 +226,14 @@ impl WasmRuntime {
         .call(
           scope,
           undefined.into(),
-          &[local_ptr, state_len.into(), local_ptr, state_len.into()],
+          &[
+            local_ptr,
+            state_len.into(),
+            local_ptr,
+            state_len.into(),
+            contract_ptr.into(),
+            contract_info_len.into(),
+          ],
         )
         .unwrap();
       let result_ptr_u32 = result_ptr.uint32_value(scope).unwrap();
@@ -220,14 +278,9 @@ mod tests {
   use deno_core::serde_json::Value;
 
   #[tokio::test]
-  async fn test_wasm_runtime() {
-    let _rt = WasmRuntime::new(&[0; 100]);
-  }
-
-  #[tokio::test]
   async fn test_wasm_runtime_contract() {
     let mut rt =
-      WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"))
+      WasmRuntime::new(include_bytes!("./testdata/01_wasm/01_wasm.wasm"), Default::default())
         .await
         .unwrap();
 
@@ -235,7 +288,7 @@ mod tests {
       "counter": 0,
     });
 
-    for i in 1..100 {
+    for i in 1..2 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
       let state = rt.call(&mut prev_state_bytes).await.unwrap();
@@ -253,7 +306,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
     let mut rt =
-      WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"))
+      WasmRuntime::new(include_bytes!("./testdata/02_wasm/02_wasm.wasm"), Default::default())
         .await
         .unwrap();
 

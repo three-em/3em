@@ -31,13 +31,13 @@ pub fn init() -> Extension {
     .build()
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct Tag {
   pub name: String,
   pub value: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct ContractTx {
   pub id: String,
   pub owner: String,
@@ -47,14 +47,14 @@ pub struct ContractTx {
   pub reward: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct ContractBlock {
   pub height: usize,
   pub indep_hash: String,
   pub timestamp: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct ContractInfo {
   pub transaction: ContractTx,
   pub block: ContractBlock,

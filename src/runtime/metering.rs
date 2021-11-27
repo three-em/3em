@@ -971,14 +971,14 @@ mod tests {
     let metering = Metering::new(test_cost_function);
     // (expected gas consumption, module bytes)
     let sources: [(usize, &[u8]); 2] = [
-      (4327, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
-      (16875, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
+      (26300, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
+      (38888, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
     ];
 
     for source in sources {
       let module = metering.inject(source.1).unwrap();
 
-      let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
+      let mut rt = WasmRuntime::new(&module.finish(), Default::default()).await.unwrap();
 
       let mut prev_state = json!({
         "counter": 0,
