@@ -212,13 +212,15 @@ impl Stack {
 
   pub fn swap(&mut self, index: usize) {
     let ptr = self.data.len() - 1;
-    println!("Swap {}", self.data[ptr]);
+
+    dbg!("Attempting swap ptr = {}, value = {}", ptr, self.data[ptr]);
 
     if ptr < index {
       return;
     }
     self.data.swap(ptr, ptr - index);
-    println!("SWAP: {}", self.data[ptr]);
+
+    dbg!("Swapped {}", self.data[ptr]);
   }
 
   pub fn dup(&mut self, index: usize) {
@@ -301,7 +303,6 @@ impl Machine {
 
       let cost = (self.cost_fn)(&inst);
 
-      println!("{:#?} {:#04x}", inst, opcode);
       pc += 1;
 
       match inst {
@@ -332,7 +333,33 @@ impl Machine {
           self.stack.push(lhs / rhs);
         }
         Instruction::SDiv => {
-          // TODO
+          fn to_signed(value: U256) -> U256 {
+            match value.bit(255) {
+              true => (!value).overflowing_add(U256::one()).0,
+              false => value,
+            }
+          }
+
+          let dividend = to_signed(self.stack.pop());
+          let divisor = to_signed(self.stack.pop());
+          const U256_ZERO: U256 = U256::zero();
+
+          let quotient = if divisor == U256_ZERO {
+            U256_ZERO
+          } else {
+            let min = (U256::one() << 255) - U256::one();
+            if dividend == min && divisor == !U256::one() {
+              min
+            } else {
+              let sign = dividend.bit(255) ^ divisor.bit(255);
+              match sign {
+                true => !(dividend / divisor),
+                false => dividend / divisor,
+              }
+            }
+          };
+
+          self.stack.push(quotient);
         }
         Instruction::Mod => {
           let lhs = self.stack.pop();
@@ -530,7 +557,7 @@ impl Machine {
           let len = self.stack.pop().low_u64() as usize;
 
           if code_offset > usize::max_value().into() {
-            println!("CODECOPY: offset too large");
+            dbg!("CODECOPY: offset too large");
           }
 
           let code_offset = code_offset.low_u64() as usize;
@@ -588,10 +615,9 @@ impl Machine {
           self.stack.pop();
         }
         Instruction::MLoad => {
-          println!("MLOAD");
           let offset = self.stack.pop();
           if offset > usize::max_value().into() {
-            println!("MLOAD: offset too large");
+            dbg!("MLOAD: offset too large");
           }
           let len = offset.low_u64() as usize;
           let mut data = vec![0u8; 32];
@@ -606,7 +632,7 @@ impl Machine {
           let offset = self.stack.pop();
           let val = self.stack.pop();
           if offset > usize::max_value().into() {
-            println!("MStore: offset too large");
+            dbg!("MStore: offset too large");
           }
           let offset = offset.low_u64() as usize;
           if self.memory.len() <= offset + 32 {
@@ -625,7 +651,7 @@ impl Machine {
           let offset = self.stack.pop();
           let val = self.stack.pop();
           if offset > usize::max_value().into() {
-            println!("MStore8: offset too large");
+            dbg!("MStore8: offset too large");
           }
           let mem_ptr = offset.low_u64() as usize;
           if mem_ptr >= self.memory.len() {
@@ -643,17 +669,12 @@ impl Machine {
         Instruction::Jump => {
           let offset = self.stack.pop();
           pc = offset.low_u64() as usize;
-          println!("JUMP: {}", offset);
         }
         Instruction::JumpI => {
           let offset = self.stack.pop();
           let condition = self.stack.pop();
           if condition != U256::zero() {
             pc = offset.low_u64() as usize;
-            println!(
-              "Jumping to: {:#?}",
-              Instruction::try_from(bytecode[pc + 1]).unwrap()
-            );
           }
         }
         Instruction::GetPc => {
@@ -765,7 +786,7 @@ impl Machine {
           let offset = self.stack.pop();
 
           if offset > usize::max_value().into() {
-            println!("Return: offset too large");
+            dbg!("Return: offset too large");
           }
           let offset = offset.low_u64() as usize;
           let size = self.stack.pop().low_u64() as usize;
@@ -867,6 +888,22 @@ mod tests {
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x03));
+  }
+
+  #[test]
+  fn test_sdiv() {
+    let mut machine = Machine::new(test_cost_fn);
+
+    let status = machine.execute(&[
+      Instruction::Push1 as u8,
+      0x02,
+      Instruction::Push1 as u8,
+      0x04,
+      Instruction::SDiv as u8,
+    ]);
+
+    assert_eq!(status, ExecutionState::Ok);
+    assert_eq!(machine.stack.pop(), U256::from(0x02));
   }
 
   #[test]
