@@ -4,11 +4,13 @@ use deno_core::include_js_files;
 use deno_core::op_async;
 use deno_core::op_sync;
 use deno_core::serde::Serialize;
+use deno_core::serde_json::Value;
 use deno_core::Extension;
 use deno_core::OpState;
 use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::thread;
 
 pub fn init() -> Extension {
   Extension::builder()
@@ -97,4 +99,24 @@ pub async fn op_smartweave_wallet_last_tx(
       .text()
       .await?;
   Ok(tx)
+}
+
+pub fn read_contract_state(id: String) -> Value {
+  // We want this to be a synchronous operation
+  // because of its use with v8::Function.
+  // But, Tokio will panic if we make blocking calls,
+  // so we need offload it to a thread.
+  thread::spawn(move || {
+    println!("Reading contract state for {}", id);
+    let state: Value = reqwest::blocking::get(format!(
+      "https://storage.googleapis.com/verto-exchange-contracts/{}/{}_state.json",
+      id, id,
+    ))
+    .unwrap()
+    .json()
+    .unwrap();
+    state
+  })
+  .join()
+  .unwrap()
 }
