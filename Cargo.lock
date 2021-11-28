@@ -2197,6 +2197,7 @@ dependencies = [
  "reqwest",
  "rsa",
  "serde",
+ "serde_json",
  "sha2",
  "tiny-keccak",
  "tokio",

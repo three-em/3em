@@ -11,7 +11,7 @@ use cli::parse::Flags;
 use deno_core::error::AnyError;
 
 use colored::Colorize;
-use std::env;
+use std::{env, thread};
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
@@ -50,6 +50,20 @@ async fn main() -> Result<(), AnyError> {
     }
     Flags::Unknown(cmd) => {
       print_cmd_error(&cmd);
+    }
+    Flags::Run {
+      arweave_port,
+      arweave_host,
+      arweave_protocol,
+      contract_id,
+    } => {
+      thread::spawn(move || {
+        let arweave =
+          runtime::core::arweave::Arweave::new(arweave_port, arweave_host);
+        arweave.get_interactions(contract_id, Some(820664 as usize));
+      })
+      .join()
+      .unwrap();
     }
   };
 

@@ -1,3 +1,4 @@
+pub mod core;
 mod evm;
 mod metering;
 mod module_loader;
