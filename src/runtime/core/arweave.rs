@@ -86,6 +86,7 @@ pub struct LoadedContract {
   contract_type: String, // application/javascript , application/solidity, application/wasm
   init_state: String,
   min_fee: String,
+  contract_transaction: TransactionData,
 }
 
 pub static MAX_REQUEST: &'static i32 = &100;
@@ -252,7 +253,8 @@ impl Arweave {
         let init_state_tx = self.get_transaction(init_state_tag_txid).unwrap();
         state = String::from_utf8(init_state_tx.data).unwrap();
       } else {
-        state = String::from_utf8(contract_transaction.data).unwrap();
+        state =
+          String::from_utf8(contract_transaction.data.to_owned()).unwrap();
       }
     }
 
@@ -263,6 +265,7 @@ impl Arweave {
       contract_type: String::from("application/javascript"), // TODO: Handle wasm, evm, etc.
       init_state: state,
       min_fee,
+      contract_transaction,
     }
   }
 
