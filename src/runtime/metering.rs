@@ -970,9 +970,10 @@ mod tests {
   async fn test_metering_contracts() {
     let metering = Metering::new(test_cost_function);
     // (expected gas consumption, module bytes)
-    let sources: [(usize, &[u8]); 2] = [
+    let sources: [(usize, &[u8]); 3] = [
       (4327, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
       (16875, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
+      (27276, include_bytes!("../../helpers/zig/contract.wasm")),
     ];
 
     for source in sources {
