@@ -1,3 +1,4 @@
+use crate::runtime::core::arweave_get_tag::get_tag;
 use crate::runtime::core::gql_result::{
   GQLEdgeInterface, GQLNodeParent, GQLTransactionsResultInterface,
 };
@@ -77,6 +78,16 @@ pub struct GraphqlQuery {
   variables: InteractionVariables,
 }
 
+#[derive(Deserialize, Serialize, Clone)]
+pub struct LoadedContract {
+  id: String,
+  contract_src_tx_id: String,
+  contract_src: Vec<u8>,
+  contract_type: String, // application/javascript , application/solidity, application/wasm
+  init_state: String,
+  min_fee: String,
+}
+
 pub static MAX_REQUEST: &'static i32 = &100;
 
 impl Arweave {
@@ -88,15 +99,17 @@ impl Arweave {
     };
   }
 
-  pub async fn get_transaction(
+  pub fn get_transaction(
     &self,
     transaction_id: String,
   ) -> reqwest::Result<TransactionData> {
-    let transaction =
-      reqwest::get(format!("{}/tx/{}", self.get_host(), transaction_id))
-        .await?
-        .json::<TransactionData>()
-        .await;
+    let transaction = reqwest::blocking::get(format!(
+      "{}/tx/{}",
+      self.get_host(),
+      transaction_id
+    ))
+    .unwrap()
+    .json::<TransactionData>();
     transaction
   }
 
@@ -202,6 +215,55 @@ impl Arweave {
     let data = result.json::<GQLTransactionsResultInterface>().unwrap();
 
     data
+  }
+
+  pub fn load_contract(
+    &self,
+    contract_id: String,
+    contract_src_tx_id: Option<String>,
+  ) -> LoadedContract {
+    // TODO: DON'T PANNIC
+    let contract_transaction =
+      self.get_transaction(contract_id.to_owned()).unwrap();
+
+    let contract_src = contract_src_tx_id
+      .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
+
+    if contract_src.len() <= 0 {
+      panic!("Contract contains invalid information for tag 'Contract-Src'");
+    }
+
+    let min_fee = get_tag(&contract_transaction, "Min-Fee");
+
+    // TODO: Don't panic
+    let contract_src_tx =
+      self.get_transaction(contract_src.to_owned()).unwrap();
+
+    let contract_src_data = contract_src_tx.data.to_owned();
+
+    let mut state = String::from("");
+
+    let init_state_tag = get_tag(&contract_transaction, "Init-State");
+    if init_state_tag.len() >= 1 {
+      state = init_state_tag;
+    } else {
+      let init_state_tag_txid = get_tag(&contract_transaction, "Init-State-TX");
+      if init_state_tag_txid.len() >= 1 {
+        let init_state_tx = self.get_transaction(init_state_tag_txid).unwrap();
+        state = String::from_utf8(init_state_tx.data).unwrap();
+      } else {
+        state = String::from_utf8(contract_transaction.data).unwrap();
+      }
+    }
+
+    LoadedContract {
+      id: contract_id,
+      contract_src_tx_id: contract_src,
+      contract_src: contract_src_data,
+      contract_type: String::from("application/javascript"), // TODO: Handle wasm, evm, etc.
+      init_state: state,
+      min_fee,
+    }
   }
 
   fn get_host(&self) -> String {
