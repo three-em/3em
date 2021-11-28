@@ -10,6 +10,10 @@ name = "01_wasm"
 path = "01_wasm.rs"
 crate-type = ["cdylib"]
 
+[profile.release]
+opt-level = 's'
+lto = true
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
