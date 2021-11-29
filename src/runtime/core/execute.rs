@@ -4,6 +4,12 @@ use crate::runtime::core::gql_result::{
 };
 use crate::runtime::Runtime;
 use serde_json::value::Value::Null;
+use deno_core::serde_json::Value;
+
+struct SmartweaveInput {
+  input: Value,
+  caller: String
+}
 
 pub async fn execute_contract(
   arweave: &Arweave,
@@ -26,7 +32,7 @@ pub async fn execute_contract(
       let source =
         &String::from_utf8(loaded_contract.contract_src).unwrap()[..];
       let mut rt = Runtime::new(source).await.unwrap();
-      let mut state: deno_core::serde_json::Value = Null;
+      let mut state: deno_core::serde_json::Value = deno_core::serde_json::from_str(&loaded_contract.init_state[..]).unwrap();
 
       for interaction in interactions {
         let tx = interaction.node;
@@ -35,8 +41,14 @@ pub async fn execute_contract(
         // TODO: has_multiple_interactions  https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
         let js_input: deno_core::serde_json::Value =
           deno_core::serde_json::from_str(&input).unwrap();
+
+        let call_input = serde_json::json!({
+          "input": js_input,
+          "caller": tx.owner.address
+        });
+
         let call: deno_core::serde_json::Value =
-          rt.call(&[js_input]).await.unwrap();
+          rt.call(&[state, call_input]).await.unwrap();
         state = call;
       }
 

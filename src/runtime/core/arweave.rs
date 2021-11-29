@@ -117,9 +117,7 @@ impl Arweave {
   }
 
   pub async fn get_transaction_data(&self, transaction_id: String) -> String {
-    let url = format!("{}/tx/{}/data", self.get_host(), transaction_id);
-    let request = reqwest::get(url).await.unwrap();
-
+    let request = reqwest::get(format!("{}/tx/{}/data", self.get_host(), transaction_id)).await.unwrap();
     request.text().await.unwrap()
   }
 
