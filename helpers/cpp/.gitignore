@@ -1,0 +1,4 @@
+*.o
+wasi-libc/
+libc/
+cJSON/
