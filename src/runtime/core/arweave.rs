@@ -3,6 +3,7 @@ use crate::runtime::core::gql_result::{
   GQLEdgeInterface, GQLNodeParent, GQLResultInterface,
   GQLTransactionsResultInterface,
 };
+use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
 use crate::utils::decode_base_64;
 use serde::{Deserialize, Serialize};
 
@@ -85,7 +86,7 @@ pub struct LoadedContract {
   pub id: String,
   pub contract_src_tx_id: String,
   pub contract_src: Vec<u8>,
-  pub contract_type: String, // application/javascript , application/solidity, application/wasm
+  pub contract_type: ContractType,
   pub init_state: String,
   pub min_fee: String,
   pub contract_transaction: TransactionData,
@@ -106,18 +107,20 @@ impl Arweave {
     &self,
     transaction_id: String,
   ) -> reqwest::Result<TransactionData> {
-    let url = format!("{}/tx/{}", self.get_host(), transaction_id);
-    println!("{}", url);
-    let request = reqwest::get(url.to_owned()).await.unwrap();
-    println!("{}", request.text().await.unwrap());
-    let request = reqwest::get(url).await.unwrap();
+    let request =
+      reqwest::get(format!("{}/tx/{}", self.get_host(), transaction_id))
+        .await
+        .unwrap();
     let transaction = request.json::<TransactionData>().await;
 
     transaction
   }
 
   pub async fn get_transaction_data(&self, transaction_id: String) -> String {
-    let request = reqwest::get(format!("{}/tx/{}/data", self.get_host(), transaction_id)).await.unwrap();
+    let request =
+      reqwest::get(format!("{}/tx/{}/data", self.get_host(), transaction_id))
+        .await
+        .unwrap();
     request.text().await.unwrap()
   }
 
@@ -235,6 +238,7 @@ impl Arweave {
     &self,
     contract_id: String,
     contract_src_tx_id: Option<String>,
+    contract_type: Option<String>,
   ) -> LoadedContract {
     // TODO: DON'T PANNIC
     let contract_transaction =
@@ -253,9 +257,12 @@ impl Arweave {
     let contract_src_tx =
       self.get_transaction(contract_src.to_owned()).await.unwrap();
 
-    let contract_src_data =
-      base64::decode(self.get_transaction_data(contract_src_tx.id).await)
-        .unwrap_or_else(|_| vec![]);
+    let contract_src_data = base64::decode(
+      self
+        .get_transaction_data(contract_src_tx.id.to_owned())
+        .await,
+    )
+    .unwrap_or_else(|_| vec![]);
 
     let mut state = String::from("");
 
@@ -281,11 +288,14 @@ impl Arweave {
       }
     }
 
+    let contract_type =
+      get_contract_type(contract_type, &contract_transaction, &contract_src_tx);
+
     LoadedContract {
       id: contract_id,
       contract_src_tx_id: contract_src,
       contract_src: contract_src_data,
-      contract_type: String::from("application/javascript"), // TODO: Handle wasm, evm, etc.
+      contract_type,
       init_state: state,
       min_fee,
       contract_transaction,

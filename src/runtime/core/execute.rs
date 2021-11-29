@@ -2,23 +2,29 @@ use crate::runtime::core::arweave::Arweave;
 use crate::runtime::core::gql_result::{
   GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
 };
+use crate::runtime::core::miscellaneous::ContractType;
 use crate::runtime::Runtime;
-use serde_json::value::Value::Null;
 use deno_core::serde_json::Value;
+use serde_json::value::Value::Null;
 
 struct SmartweaveInput {
   input: Value,
-  caller: String
+  caller: String,
 }
 
 pub async fn execute_contract(
   arweave: &Arweave,
   contract_id: String,
   contract_src_tx: Option<String>,
+  contract_content_type: Option<String>,
   height: Option<usize>,
 ) {
   let loaded_contract = arweave
-    .load_contract(contract_id.to_owned(), contract_src_tx)
+    .load_contract(
+      contract_id.to_owned(),
+      contract_src_tx,
+      contract_content_type,
+    )
     .await;
   let interactions = arweave
     .get_interactions(contract_id.to_owned(), height)
@@ -27,12 +33,14 @@ pub async fn execute_contract(
   // TODO: Sort interactions
 
   // Todo: handle wasm, evm, etc.
-  match &loaded_contract.contract_type[..] {
-    "application/javascript" => {
+  match loaded_contract.contract_type {
+    ContractType::JAVASCRIPT => {
       let source =
         &String::from_utf8(loaded_contract.contract_src).unwrap()[..];
       let mut rt = Runtime::new(source).await.unwrap();
-      let mut state: deno_core::serde_json::Value = deno_core::serde_json::from_str(&loaded_contract.init_state[..]).unwrap();
+      let mut state: deno_core::serde_json::Value =
+        deno_core::serde_json::from_str(&loaded_contract.init_state[..])
+          .unwrap();
 
       for interaction in interactions {
         let tx = interaction.node;
