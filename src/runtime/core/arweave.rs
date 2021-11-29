@@ -4,7 +4,7 @@ use crate::runtime::core::gql_result::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
   pub network: String,
   pub version: usize,
@@ -17,13 +17,13 @@ pub struct NetworkInfo {
   pub node_state_latency: usize,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Tag {
   pub name: String,
   pub value: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct TransactionData {
   pub format: usize,
   pub id: String,
@@ -80,13 +80,13 @@ pub struct GraphqlQuery {
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct LoadedContract {
-  id: String,
-  contract_src_tx_id: String,
-  contract_src: Vec<u8>,
-  contract_type: String, // application/javascript , application/solidity, application/wasm
-  init_state: String,
-  min_fee: String,
-  contract_transaction: TransactionData,
+  pub id: String,
+  pub contract_src_tx_id: String,
+  pub contract_src: Vec<u8>,
+  pub contract_type: String, // application/javascript , application/solidity, application/wasm
+  pub init_state: String,
+  pub min_fee: String,
+  pub contract_transaction: TransactionData,
 }
 
 pub static MAX_REQUEST: &'static i32 = &100;
