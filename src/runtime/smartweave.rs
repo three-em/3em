@@ -18,6 +18,7 @@ pub fn init() -> Extension {
       prefix "3em:smartweave",
       "src/runtime/bignumber.js",
       "src/runtime/smartweave.js",
+      "src/runtime/contract-assert.js",
     ))
     .ops(vec![
       ("op_smartweave_init", op_sync(op_smartweave_init)),
