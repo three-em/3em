@@ -57,13 +57,15 @@ async fn main() -> Result<(), AnyError> {
       arweave_protocol,
       contract_id,
     } => {
-      thread::spawn(move || {
-        let arweave =
-          runtime::core::arweave::Arweave::new(arweave_port, arweave_host);
-        arweave.get_interactions(contract_id, Some(820664 as usize));
-      })
-      .join()
-      .unwrap();
+      let arweave =
+        runtime::core::arweave::Arweave::new(arweave_port, arweave_host);
+      runtime::core::execute::execute_contract(
+        &arweave,
+        String::from("58Zr9c25v3tjXNFdu1YRsZXB0qIl7kCXfbnXQqHQxIY"),
+        None,
+        None,
+      )
+      .await;
     }
   };
 

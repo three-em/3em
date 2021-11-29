@@ -21,6 +21,11 @@ pub fn u8_array_to_usize(bytes: [u8; 4]) -> usize {
   u32::from_le_bytes(bytes) as usize
 }
 
+pub fn decode_base_64(data: String) -> String {
+  String::from_utf8(base64::decode(data).unwrap_or_else(|_| vec![]))
+    .unwrap_or(String::from(""))
+}
+
 #[cfg(test)]
 mod tests {
   use crate::utils::{u8_array_to_usize, usize_to_u8_array};

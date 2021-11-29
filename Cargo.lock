@@ -2184,6 +2184,7 @@ name = "three_em"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
  "colored",
  "deno_core",
  "deno_crypto",

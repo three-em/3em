@@ -1,7 +1,9 @@
 use crate::runtime::core::arweave_get_tag::get_tag;
 use crate::runtime::core::gql_result::{
-  GQLEdgeInterface, GQLNodeParent, GQLTransactionsResultInterface,
+  GQLEdgeInterface, GQLNodeParent, GQLResultInterface,
+  GQLTransactionsResultInterface,
 };
+use crate::utils::decode_base_64;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -32,7 +34,7 @@ pub struct TransactionData {
   pub tags: Vec<Tag>,
   pub target: String,
   pub quantity: String,
-  pub data: Vec<u8>,
+  pub data: String,
   pub reward: String,
   pub signature: String,
   pub data_size: String,
@@ -100,37 +102,48 @@ impl Arweave {
     };
   }
 
-  pub fn get_transaction(
+  pub async fn get_transaction(
     &self,
     transaction_id: String,
   ) -> reqwest::Result<TransactionData> {
-    let transaction = reqwest::blocking::get(format!(
-      "{}/tx/{}",
-      self.get_host(),
-      transaction_id
-    ))
-    .unwrap()
-    .json::<TransactionData>();
+    let url = format!("{}/tx/{}", self.get_host(), transaction_id);
+    println!("{}", url);
+    let request = reqwest::get(url.to_owned()).await.unwrap();
+    println!("{}", request.text().await.unwrap());
+    let request = reqwest::get(url).await.unwrap();
+    let transaction = request.json::<TransactionData>().await;
+
     transaction
   }
 
-  pub fn get_network_info(&self) -> NetworkInfo {
-    let info = reqwest::blocking::get(format!("{}/info", self.get_host()))
+  pub async fn get_transaction_data(&self, transaction_id: String) -> String {
+    let url = format!("{}/tx/{}/data", self.get_host(), transaction_id);
+    let request = reqwest::get(url).await.unwrap();
+
+    request.text().await.unwrap()
+  }
+
+  pub async fn get_network_info(&self) -> NetworkInfo {
+    let info = reqwest::get(format!("{}/info", self.get_host()))
+      .await
       .unwrap()
       .json::<NetworkInfo>()
+      .await
       .unwrap();
     info
   }
 
-  pub fn get_interactions(
+  pub async fn get_interactions(
     &self,
     contract_id: String,
     height: Option<usize>,
   ) -> Vec<GQLEdgeInterface> {
-    let variables =
-      self.get_default_gql_variables(contract_id.to_owned(), height.to_owned());
+    let variables = self
+      .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
+      .await;
 
-    let mut transactions = self.get_next_interaction_page(variables.clone());
+    let mut transactions =
+      self.get_next_interaction_page(variables.clone()).await;
 
     let mut tx_infos = transactions.edges.clone();
 
@@ -142,11 +155,12 @@ impl Arweave {
       let cursor = (&edge.cursor).to_owned();
 
       let variables = self
-        .get_default_gql_variables(contract_id.to_owned(), height.to_owned());
+        .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
+        .await;
       let mut new_variables: InteractionVariables = variables.clone();
       new_variables.after = Some(cursor);
 
-      transactions = self.get_next_interaction_page(new_variables);
+      transactions = self.get_next_interaction_page(new_variables).await;
       tx_infos.extend(transactions.edges.to_owned());
     }
 
@@ -167,7 +181,7 @@ impl Arweave {
     filtered
   }
 
-  fn get_next_interaction_page(
+  async fn get_next_interaction_page(
     &self,
     variables: InteractionVariables,
   ) -> GQLTransactionsResultInterface {
@@ -207,25 +221,26 @@ impl Arweave {
     };
 
     let req_url = format!("{}/graphql", self.get_host());
-    let result = reqwest::blocking::Client::new()
+    let result = reqwest::Client::new()
       .post(req_url)
       .json(&graphql_query)
       .send()
+      .await
       .unwrap();
 
-    let data = result.json::<GQLTransactionsResultInterface>().unwrap();
+    let data = result.json::<GQLResultInterface>().await.unwrap();
 
-    data
+    data.data.transactions
   }
 
-  pub fn load_contract(
+  pub async fn load_contract(
     &self,
     contract_id: String,
     contract_src_tx_id: Option<String>,
   ) -> LoadedContract {
     // TODO: DON'T PANNIC
     let contract_transaction =
-      self.get_transaction(contract_id.to_owned()).unwrap();
+      self.get_transaction(contract_id.to_owned()).await.unwrap();
 
     let contract_src = contract_src_tx_id
       .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
@@ -238,9 +253,11 @@ impl Arweave {
 
     // TODO: Don't panic
     let contract_src_tx =
-      self.get_transaction(contract_src.to_owned()).unwrap();
+      self.get_transaction(contract_src.to_owned()).await.unwrap();
 
-    let contract_src_data = contract_src_tx.data.to_owned();
+    let contract_src_data =
+      base64::decode(self.get_transaction_data(contract_src_tx.id).await)
+        .unwrap_or_else(|_| vec![]);
 
     let mut state = String::from("");
 
@@ -250,11 +267,19 @@ impl Arweave {
     } else {
       let init_state_tag_txid = get_tag(&contract_transaction, "Init-State-TX");
       if init_state_tag_txid.len() >= 1 {
-        let init_state_tx = self.get_transaction(init_state_tag_txid).unwrap();
-        state = String::from_utf8(init_state_tx.data).unwrap();
+        let init_state_tx =
+          self.get_transaction(init_state_tag_txid).await.unwrap();
+        state = String::from_utf8(
+          base64::decode(init_state_tx.data).unwrap_or_else(|_| vec![]),
+        )
+        .unwrap();
       } else {
-        state =
-          String::from_utf8(contract_transaction.data.to_owned()).unwrap();
+        state = String::from_utf8(
+          base64::decode(contract_transaction.data.to_owned())
+            .unwrap_or_else(|_| vec![])
+            .to_owned(),
+        )
+        .unwrap();
       }
     }
 
@@ -282,7 +307,7 @@ impl Arweave {
     }
   }
 
-  fn get_default_gql_variables(
+  async fn get_default_gql_variables(
     &self,
     contract_id: String,
     height: Option<usize>,
@@ -299,7 +324,7 @@ impl Arweave {
 
     let new_height = match height {
       Some(size) => size,
-      None => self.get_network_info().height,
+      None => self.get_network_info().await.height,
     };
 
     let variables: InteractionVariables = InteractionVariables {

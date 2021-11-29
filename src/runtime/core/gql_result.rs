@@ -9,13 +9,17 @@ pub struct GQLPageInfoInterface {
 #[derive(Deserialize, Debug, Clone)]
 pub struct GQLOwnerInterface {
   pub address: String,
-  pub key: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub key: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GQLAmountInterface {
   pub winston: String,
-  pub ar: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub ar: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -36,7 +40,9 @@ pub struct GQLBlockInterface {
   pub id: String,
   pub timestamp: usize,
   pub height: usize,
-  pub previous: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub previous: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -47,13 +53,19 @@ pub struct GQLNodeParent {
 #[derive(Deserialize, Debug, Clone)]
 pub struct GQLNodeInterface {
   pub id: String,
-  pub anchor: String,
-  pub signature: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub anchor: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub signature: Option<String>,
   pub recipient: String,
   pub owner: GQLOwnerInterface,
   pub fee: GQLAmountInterface,
   pub quantity: GQLAmountInterface,
-  pub data: GQLMetaDataInterface,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub data: Option<GQLMetaDataInterface>,
   pub tags: Vec<GQLTagInterface>,
   pub block: GQLBlockInterface,
   pub parent: Option<GQLNodeParent>,
