@@ -22,6 +22,7 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
 ) {
+  let start = Instant::now();
   let loaded_contract = arweave
     .load_contract(
       contract_id.to_owned(),
@@ -32,7 +33,7 @@ pub async fn execute_contract(
   let interactions = arweave
     .get_interactions(contract_id.to_owned(), height)
     .await;
-
+  println!("Loaded contract {} in {:?}", contract_id, start.elapsed());
   // TODO: Sort interactions
 
   // Todo: handle wasm, evm, etc.

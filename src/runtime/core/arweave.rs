@@ -5,6 +5,7 @@ use crate::runtime::core::gql_result::{
 };
 use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
 use crate::utils::decode_base_64;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -51,6 +52,7 @@ pub struct Arweave {
   host: String,
   port: i32,
   protocol: ArweaveProtocol,
+  client: Client,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -100,6 +102,7 @@ impl Arweave {
       port,
       host,
       protocol: ArweaveProtocol::HTTPS,
+      client: Client::new(),
     };
   }
 
@@ -107,25 +110,37 @@ impl Arweave {
     &self,
     transaction_id: &str,
   ) -> reqwest::Result<TransactionData> {
-    let request =
-      reqwest::get(format!("{}/tx/{}", self.get_host(), transaction_id))
-        .await
-        .unwrap();
+    let start = std::time::Instant::now();
+    let request = self
+      .client
+      .get(format!("{}/tx/{}", self.get_host(), transaction_id))
+      .send()
+      .await
+      .unwrap();
     let transaction = request.json::<TransactionData>().await;
-
+    let elapsed = start.elapsed();
+    println!("get_transaction: {}ms", elapsed.as_millis());
     transaction
   }
 
   pub async fn get_transaction_data(&self, transaction_id: &str) -> String {
-    let request =
-      reqwest::get(format!("{}/{}", self.get_host(), transaction_id))
-        .await
-        .unwrap();
+    let start = std::time::Instant::now();
+    let request = self
+      .client
+      .get(format!("{}/{}", self.get_host(), transaction_id))
+      .send()
+      .await
+      .unwrap();
+    let elapsed = start.elapsed();
+    println!("get_transaction_data: {}ms", elapsed.as_millis());
     request.text().await.unwrap()
   }
 
   pub async fn get_network_info(&self) -> NetworkInfo {
-    let info = reqwest::get(format!("{}/info", self.get_host()))
+    let info = self
+      .client
+      .get(format!("{}/info", self.get_host()))
+      .send()
       .await
       .unwrap()
       .json::<NetworkInfo>()
@@ -148,6 +163,9 @@ impl Arweave {
 
     let mut tx_infos = transactions.edges.clone();
 
+    let variables = self
+      .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
+      .await;
     while transactions.page_info.has_next_page {
       let edge = transactions
         .edges
@@ -155,9 +173,6 @@ impl Arweave {
         .unwrap();
       let cursor = (&edge.cursor).to_owned();
 
-      let variables = self
-        .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
-        .await;
       let mut new_variables: InteractionVariables = variables.clone();
       new_variables.after = Some(cursor);
 
@@ -186,6 +201,7 @@ impl Arweave {
     &self,
     variables: InteractionVariables,
   ) -> GQLTransactionsResultInterface {
+    let start = std::time::Instant::now();
     let query = r#"query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
       pageInfo {
@@ -222,7 +238,8 @@ impl Arweave {
     };
 
     let req_url = format!("{}/graphql", self.get_host());
-    let result = reqwest::Client::new()
+    let result = self
+      .client
       .post(req_url)
       .json(&graphql_query)
       .send()
@@ -230,7 +247,8 @@ impl Arweave {
       .unwrap();
 
     let data = result.json::<GQLResultInterface>().await.unwrap();
-
+    let elapsed = start.elapsed();
+    println!("get_next_interaction_page: {}ms", elapsed.as_millis());
     data.data.transactions
   }
 
@@ -240,7 +258,7 @@ impl Arweave {
     contract_src_tx_id: Option<String>,
     contract_type: Option<String>,
   ) -> LoadedContract {
-    // TODO: DON'T PANNIC
+    // TODO: DON'T PANIC
     let contract_transaction =
       self.get_transaction(&contract_id).await.unwrap();
 
