@@ -281,95 +281,98 @@ export async function handle() {
     assert_eq!(rand2, 0.16993119449737915);
   }
 
-  //   #[tokio::test]
-  //   async fn test_deterministic_crypto_random() {
-  //     let mut rt = Runtime::new(
-  //       r#"
-  // export async function handle(size) {
-  //   const u8 = new Uint8Array(size);
-  //   await crypto.getRandomValues(u8);
-  //   return { state: u8 };
-  // }
-  // "#,
-  //     )
-  //     .await
-  //     .unwrap();
+  #[tokio::test]
+  async fn test_deterministic_crypto_random() {
+    let mut rt = Runtime::new(
+      r#"
+  export async function handle(size) {
+    const u8 = new Uint8Array(size);
+    await crypto.getRandomValues(u8);
+    return { state: u8 };
+  }
+  "#,
+      8,
+    )
+    .await
+    .unwrap();
 
-  //     let rand1: ZeroCopyBuf = rt.call(&[8]).await.unwrap();
-  //     let rand2: ZeroCopyBuf = rt.call(&[8]).await.unwrap();
+    rt.call(()).await.unwrap();
+    let rand1 = rt.get_contract_state::<[u8; 8]>().unwrap();
+    assert_eq!(rand1.as_ref(), &[127, 111, 44, 205, 178, 63, 42, 187]);
 
-  //     assert_eq!(rand1.as_ref(), &[127, 111, 44, 205, 178, 63, 42, 187]);
-  //     assert_eq!(rand2.as_ref(), &[123, 105, 39, 142, 148, 124, 1, 198]);
-  //   }
+    rt.call(()).await.unwrap();
+    let rand2 = rt.get_contract_state::<[u8; 8]>().unwrap();
+    assert_eq!(rand2.as_ref(), &[123, 105, 39, 142, 148, 124, 1, 198]);
+  }
 
-  //   #[tokio::test]
-  //   async fn test_deterministic_gc() {
-  //     let mut rt = Runtime::new(
-  //       r#"
-  // let called = false;
-  // const registry = new FinalizationRegistry((_) => {
-  //   called = true;
-  // });
+  #[tokio::test]
+  async fn test_deterministic_gc() {
+    let mut rt = Runtime::new(
+      r#"
+  let called = false;
+  const registry = new FinalizationRegistry((_) => {
+    called = true;
+  });
 
-  // export async function handle() {
-  //   let x = new Uint8Array(1024 * 1024);
-  //   registry.register(x, "called!");
-  //   x = null;
-  //   return called;
-  // }
-  // "#,
-  //     )
-  //     .await
-  //     .unwrap();
+  export async function handle() {
+    let x = new Uint8Array(1024 * 1024);
+    registry.register(x, "called!");
+    x = null;
+    return { state: called };
+  }
+  "#,
+      (),
+    )
+    .await
+    .unwrap();
 
-  //     let gced: bool = rt.call(&[()]).await.unwrap();
-  //     assert_eq!(gced, false);
-  //   }
+    rt.call(&()).await.unwrap();
+    let gced = rt.get_contract_state::<bool>().unwrap();
+    assert_eq!(gced, false);
+  }
 
-  //   #[tokio::test]
-  //   async fn test_deterministic_weakref() {
-  //     let mut rt = Runtime::new(
-  //       r#"
-  // export async function handle() {
-  //   let obj = { value: true };
-  //   const weakRef = new WeakRef(obj);
-  //   {
-  //     const wrapper = (_) => { return weakRef.deref()?.value };
-  //   }
-  //   return weakRef.deref()?.value || false;
-  // }
-  // "#,
-  //     )
-  //     .await
-  //     .unwrap();
+  #[tokio::test]
+  async fn test_deterministic_weakref() {
+    let mut rt = Runtime::new(
+      r#"
+  export async function handle() {
+    let obj = { value: true };
+    const weakRef = new WeakRef(obj);
+    {
+      const wrapper = (_) => { return weakRef.deref()?.value };
+    }
+    return { state: weakRef.deref()?.value || false };
+  }
+  "#,
+      (),
+    )
+    .await
+    .unwrap();
 
-  //     let exists: bool = rt.call(&[()]).await.unwrap();
-  //     assert_eq!(exists, true);
-  //   }
+    rt.call(()).await.unwrap();
+    let exists = rt.get_contract_state::<bool>().unwrap();
+    assert_eq!(exists, true);
+  }
 
-  //   #[tokio::test]
-  //   async fn test_deterministic_allocation_failure() {
-  //     let mut rt = Runtime::new(
-  //       r#"
-  // export async function handle() {
-  //   return "Hello, World!".repeat(1024 * 1024 * 5).split("").reverse().join("");
-  // }
-  // "#,
-  //     )
-  //     .await
-  //     .unwrap();
+  #[tokio::test]
+  async fn test_deterministic_allocation_failure() {
+    let mut rt = Runtime::new(
+        r#"
+  export async function handle() {
+    return { state: "Hello, World!".repeat(1024 * 1024 * 5).split("").reverse().join("") };
+  }
+  "#,
+  (),
+      )
+      .await
+      .unwrap();
 
-  //     let err = rt
-  //       .call::<_, String>(&[()])
-  //       .await
-  //       .unwrap_err()
-  //       .downcast::<Error>()
-  //       .unwrap();
-  //     assert_eq!(err, Error::Terminated);
+    let err = rt.call(()).await.unwrap_err().downcast::<Error>().unwrap();
+    assert_eq!(err, Error::Terminated);
 
-  //     match rt.state() {
-  //       HeapLimitState::Exceeded(_current) => {}
-  //       _ => panic!("Expected heap limit to be exceeded"),
-  //     }
-  //   }
+    match rt.state() {
+      HeapLimitState::Exceeded(_current) => {}
+      _ => panic!("Expected heap limit to be exceeded"),
+    }
+  }
 }
