@@ -16,7 +16,9 @@ pub struct GQLOwnerInterface {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GQLAmountInterface {
-  pub winston: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub winston: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
   #[serde(default)]
   pub ar: Option<String>,
@@ -24,9 +26,13 @@ pub struct GQLAmountInterface {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GQLMetaDataInterface {
-  pub size: usize,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub size: Option<usize>,
   #[serde(rename = "type")]
-  pub ty: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub ty: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -59,15 +65,23 @@ pub struct GQLNodeInterface {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[serde(default)]
   pub signature: Option<String>,
-  pub recipient: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub recipient: Option<String>,
   pub owner: GQLOwnerInterface,
-  pub fee: GQLAmountInterface,
-  pub quantity: GQLAmountInterface,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub fee: Option<GQLAmountInterface>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub quantity: Option<GQLAmountInterface>,
   #[serde(skip_serializing_if = "Option::is_none")]
   #[serde(default)]
   pub data: Option<GQLMetaDataInterface>,
   pub tags: Vec<GQLTagInterface>,
   pub block: GQLBlockInterface,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub parent: Option<GQLNodeParent>,
 }
 
