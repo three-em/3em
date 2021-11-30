@@ -115,7 +115,6 @@ impl Arweave {
     &self,
     transaction_id: &str,
   ) -> reqwest::Result<TransactionData> {
-    let start = std::time::Instant::now();
     let request = self
       .client
       .get(format!("{}/tx/{}", self.get_host(), transaction_id))
@@ -123,21 +122,16 @@ impl Arweave {
       .await
       .unwrap();
     let transaction = request.json::<TransactionData>().await;
-    let elapsed = start.elapsed();
-    println!("get_transaction: {}ms", elapsed.as_millis());
     transaction
   }
 
   pub async fn get_transaction_data(&self, transaction_id: &str) -> String {
-    let start = std::time::Instant::now();
     let request = self
       .client
       .get(format!("{}/{}", self.get_host(), transaction_id))
       .send()
       .await
       .unwrap();
-    let elapsed = start.elapsed();
-    println!("get_transaction_data: {}ms", elapsed.as_millis());
     request.text().await.unwrap()
   }
 
@@ -227,7 +221,6 @@ impl Arweave {
     &self,
     variables: InteractionVariables,
   ) -> GQLTransactionsResultInterface {
-    let start = std::time::Instant::now();
     let query = r#"query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
       pageInfo {
@@ -273,8 +266,6 @@ impl Arweave {
       .unwrap();
 
     let data = result.json::<GQLResultInterface>().await.unwrap();
-    let elapsed = start.elapsed();
-    println!("get_next_interaction_page: {}ms", elapsed.as_millis());
     data.data.transactions
   }
 
