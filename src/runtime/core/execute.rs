@@ -22,7 +22,6 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
 ) {
-  let start = Instant::now();
   let loaded_contract = arweave
     .load_contract(
       contract_id.to_owned(),
@@ -33,8 +32,6 @@ pub async fn execute_contract(
   let interactions = arweave
     .get_interactions(contract_id.to_owned(), height)
     .await;
-  let duration = start.elapsed();
-  println!("Took {} to load and get interactions", duration.as_millis());
 
   // TODO: Sort interactions
 
@@ -48,7 +45,6 @@ pub async fn execute_contract(
           .unwrap();
       let mut validity: HashMap<String, bool> = HashMap::new();
 
-      let start = Instant::now();
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
@@ -81,8 +77,6 @@ pub async fn execute_contract(
 
         validity.insert(tx.id, is_valid);
       }
-      let duration = start.elapsed();
-      println!("Took {} to execute contract", duration.as_millis());
 
       // println!("{}", state);
       // println!("Interactions: {}", validity.len());
