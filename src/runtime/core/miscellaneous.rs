@@ -1,7 +1,7 @@
 use crate::runtime::core::arweave::TransactionData;
 use crate::runtime::core::arweave_get_tag::get_tag;
-use serde::{Deserialize, Serialize};
 use crate::utils::hasher;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone)]
 pub enum ContractType {
@@ -29,7 +29,11 @@ pub fn get_contract_type(
   }
 }
 
-pub fn get_sort_key(block_height: &usize, block_id: &String, transaction_id: &String) -> String {
+pub fn get_sort_key(
+  block_height: &usize,
+  block_id: &String,
+  transaction_id: &String,
+) -> String {
   let mut hasher_bytes = block_id.to_owned().into_bytes();
   hasher_bytes.append(&mut transaction_id.to_owned().into_bytes());
   let hashed = hex::encode(hasher(&hasher_bytes[..]));

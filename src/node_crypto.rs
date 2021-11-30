@@ -1,10 +1,10 @@
+use crate::utils::hasher;
 use deno_crypto::rand::rngs::OsRng;
 use rsa::pkcs1::{
   FromRsaPrivateKey, FromRsaPublicKey, ToRsaPrivateKey, ToRsaPublicKey,
 };
 use rsa::{PaddingScheme, PublicKey, RsaPrivateKey, RsaPublicKey};
 use sha2::Digest;
-use crate::utils::hasher;
 
 pub struct GeneratedPair {
   private_key: Vec<u8>,

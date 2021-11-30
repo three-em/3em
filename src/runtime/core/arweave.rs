@@ -5,12 +5,12 @@ use crate::runtime::core::gql_result::{
 };
 use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
 use crate::utils::decode_base_64;
+use bytes::Bytes;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
-use bytes::Bytes;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
@@ -321,7 +321,10 @@ impl Arweave {
         state = decode_base_64(contract_transaction.data.to_owned());
 
         if state.len() <= 0 {
-          state = String::from_utf8(self.get_transaction_data(&contract_transaction.id).await).unwrap();
+          state = String::from_utf8(
+            self.get_transaction_data(&contract_transaction.id).await,
+          )
+          .unwrap();
         }
       }
     }

@@ -1,3 +1,4 @@
+use crate::runtime::core::arweave::TransactionData;
 use deno_core::error::type_error;
 use deno_core::error::AnyError;
 use deno_core::include_js_files;
@@ -11,7 +12,6 @@ use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::thread;
-use crate::runtime::core::arweave::{TransactionData};
 
 pub fn init() -> Extension {
   Extension::builder()

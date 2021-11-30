@@ -2,15 +2,15 @@ use crate::runtime::core::arweave::Arweave;
 use crate::runtime::core::gql_result::{
   GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
 };
-use crate::runtime::core::miscellaneous::{ContractType, get_sort_key};
+use crate::runtime::core::miscellaneous::{get_sort_key, ContractType};
+use crate::runtime::smartweave::{ContractBlock, ContractInfo};
+use crate::runtime::wasm::WasmRuntime;
 use crate::runtime::Runtime;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
-use crate::runtime::smartweave::{ContractInfo, ContractBlock};
-use crate::runtime::wasm::WasmRuntime;
 
 struct ContractHandlerResult {
   result: Option<Value>,
@@ -42,8 +42,10 @@ pub async fn execute_contract(
   let mut interactions = interactions.unwrap();
 
   interactions.sort_by(|a, b| {
-    let a_sort_key = get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
-    let b_sort_key = get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
+    let a_sort_key =
+      get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
+    let b_sort_key =
+      get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
     a_sort_key.cmp(&b_sort_key)
   });
 
@@ -55,9 +57,12 @@ pub async fn execute_contract(
       let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
 
-      let mut rt = Runtime::new(&(String::from_utf8(loaded_contract.contract_src).unwrap()), state)
-        .await
-        .unwrap();
+      let mut rt = Runtime::new(
+        &(String::from_utf8(loaded_contract.contract_src).unwrap()),
+        state,
+      )
+      .await
+      .unwrap();
 
       for interaction in interactions {
         let tx = interaction.node;
@@ -74,7 +79,7 @@ pub async fn execute_contract(
         let valid = rt.call(call_input).await.is_ok();
         validity.insert(tx.id, valid);
       }
-    },
+    }
     ContractType::WASM => {
       let wasm = loaded_contract.contract_src.as_slice();
       let transaction = loaded_contract.contract_transaction;
@@ -83,10 +88,11 @@ pub async fn execute_contract(
         block: ContractBlock {
           height: 0,
           indep_hash: String::from(""),
-          timestamp: String::from("")
-        }
+          timestamp: String::from(""),
+        },
       };
-      let mut state: Value = deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
+      let mut state: Value =
+        deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
       let mut rt = WasmRuntime::new(wasm, contract_info).await.unwrap();
 
       for interaction in interactions {
@@ -99,7 +105,6 @@ pub async fn execute_contract(
         }
         validity.insert(tx.id, valid);
       }
-
     }
     _ => {}
   }
