@@ -9,6 +9,8 @@ use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
+use crate::runtime::smartweave::{ContractInfo, ContractBlock};
+use crate::runtime::wasm::WasmRuntime;
 
 struct ContractHandlerResult {
   result: Option<Value>,
@@ -45,6 +47,8 @@ pub async fn execute_contract(
     a_sort_key.cmp(&b_sort_key)
   });
 
+  let mut validity: HashMap<String, bool> = HashMap::new();
+
   // Todo: handle wasm, evm, etc.
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
@@ -54,7 +58,6 @@ pub async fn execute_contract(
       let mut rt = Runtime::new(&(String::from_utf8(loaded_contract.contract_src).unwrap()), state)
         .await
         .unwrap();
-      let mut validity: HashMap<String, bool> = HashMap::new();
 
       for interaction in interactions {
         let tx = interaction.node;
@@ -71,6 +74,32 @@ pub async fn execute_contract(
         let valid = rt.call(call_input).await.is_ok();
         validity.insert(tx.id, valid);
       }
+    },
+    ContractType::WASM => {
+      let wasm = loaded_contract.contract_src.as_slice();
+      let transaction = loaded_contract.contract_transaction;
+      let contract_info = ContractInfo {
+        transaction,
+        block: ContractBlock {
+          height: 0,
+          indep_hash: String::from(""),
+          timestamp: String::from("")
+        }
+      };
+      let mut state: Value = deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
+      let mut rt = WasmRuntime::new(wasm, contract_info).await.unwrap();
+
+      for interaction in interactions {
+        let tx = interaction.node;
+        let mut prev_state = deno_core::serde_json::to_vec(&state).unwrap();
+        let exec = rt.call(&mut prev_state).await;
+        let valid = exec.is_ok();
+        if valid {
+          state = deno_core::serde_json::from_slice(&(exec.unwrap())).unwrap();
+        }
+        validity.insert(tx.id, valid);
+      }
+
     }
     _ => {}
   }

@@ -25,13 +25,13 @@ pub struct NetworkInfo {
   pub node_state_latency: usize,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct Tag {
   pub name: String,
   pub value: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct TransactionData {
   pub format: usize,
   pub id: String,
@@ -171,8 +171,15 @@ impl Arweave {
       Next(String, InteractionVariables),
       End,
     }
-    let edge = transactions.edges.get(MAX_REQUEST - 1).unwrap();
-    let cursor = (&edge.cursor).to_owned();
+
+    let mut cursor = String::from("");
+    let maybe_edge = transactions.edges.get(MAX_REQUEST - 1);
+
+    if let Some(data) = maybe_edge {
+      cursor = data.cursor.to_owned();
+    } else {
+      cursor = String::from("null");
+    }
 
     let results =
       stream::unfold(State::Next(cursor, variables), |state| async move {
@@ -180,7 +187,11 @@ impl Arweave {
           State::End => return None,
           State::Next(cursor, variables) => {
             let mut new_variables: InteractionVariables = variables.clone();
-            new_variables.after = Some(cursor);
+
+            if !(cursor.eq("null")) {
+              new_variables.after = Some(cursor);
+            }
+
             let tx = self.get_next_interaction_page(new_variables).await;
 
             if !tx.page_info.has_next_page {

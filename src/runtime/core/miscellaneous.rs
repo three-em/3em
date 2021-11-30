@@ -16,9 +16,9 @@ pub fn get_contract_type(
   source_transaction: &TransactionData,
 ) -> ContractType {
   let mut contract_type = maybe_content_type
-    .unwrap_or_else(|| get_tag(&contract_transaction, "Content-Type"));
+    .unwrap_or_else(|| get_tag(&source_transaction, "Content-Type"));
   if contract_type.len() <= 0 {
-    contract_type = get_tag(&source_transaction, "Content-Type");
+    contract_type = get_tag(&contract_transaction, "Content-Type");
   }
 
   match &(contract_type.to_lowercase())[..] {

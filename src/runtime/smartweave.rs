@@ -11,6 +11,7 @@ use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::thread;
+use crate::runtime::core::arweave::{TransactionData};
 
 pub fn init() -> Extension {
   Extension::builder()
@@ -35,22 +36,6 @@ pub fn init() -> Extension {
 }
 
 #[derive(Serialize, Default)]
-pub struct Tag {
-  pub name: String,
-  pub value: String,
-}
-
-#[derive(Serialize, Default)]
-pub struct ContractTx {
-  pub id: String,
-  pub owner: String,
-  pub tags: Vec<Tag>,
-  pub target: String,
-  pub quantity: String,
-  pub reward: String,
-}
-
-#[derive(Serialize, Default)]
 pub struct ContractBlock {
   pub height: usize,
   pub indep_hash: String,
@@ -59,7 +44,7 @@ pub struct ContractBlock {
 
 #[derive(Serialize, Default)]
 pub struct ContractInfo {
-  pub transaction: ContractTx,
+  pub transaction: TransactionData,
   pub block: ContractBlock,
 }
 
