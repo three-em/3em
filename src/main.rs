@@ -7,11 +7,14 @@ mod runtime;
 mod start;
 mod utils;
 
+use crate::runtime::core::arweave::Arweave;
 use cli::parse::Flags;
 use deno_core::error::AnyError;
+use runtime::core::execute::execute_contract;
 
 use colored::Colorize;
-use std::{env, thread};
+use std::env;
+use std::thread;
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
@@ -52,21 +55,13 @@ async fn main() -> Result<(), AnyError> {
       print_cmd_error(&cmd);
     }
     Flags::Run {
-      arweave_port,
-      arweave_host,
-      arweave_protocol,
-      contract_id,
+      port,
+      host,
+      protocol,
+      tx,
     } => {
-      let arweave =
-        runtime::core::arweave::Arweave::new(arweave_port, arweave_host);
-      runtime::core::execute::execute_contract(
-        &arweave,
-        contract_id,
-        None,
-        None,
-        None,
-      )
-      .await;
+      let arweave = Arweave::new(port, host);
+      execute_contract(&arweave, tx, None, None, None).await;
     }
   };
 

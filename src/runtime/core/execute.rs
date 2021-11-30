@@ -38,19 +38,17 @@ pub async fn execute_contract(
   // Todo: handle wasm, evm, etc.
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
-      let source = &loaded_contract.contract_src[..];
-      let mut rt = Runtime::new(source).await.unwrap();
+      let mut rt = Runtime::new(&loaded_contract.contract_src).await.unwrap();
       let mut state: Value =
-        deno_core::serde_json::from_str(&loaded_contract.init_state[..])
-          .unwrap();
+        deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
       let mut validity: HashMap<String, bool> = HashMap::new();
 
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
 
-        // TODO: has_multiple_interactions  https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
-        let js_input: Value = deno_core::serde_json::from_str(&input).unwrap();
+        // TODO: has_multiple_interactions https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
+        let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
 
         let call_input = serde_json::json!({
           "input": js_input,
@@ -60,22 +58,18 @@ pub async fn execute_contract(
         let call: Result<Value, AnyError> =
           rt.call(&[state.to_owned(), call_input]).await;
 
-        let mut is_valid = false;
+        let valid = match call {
+          Ok(data) => match data.get("state") {
+            Some(data) => {
+              state = data.clone();
+              true
+            }
+            None => false,
+          },
+          Err(_) => false,
+        };
 
-        match call {
-          Ok(data) => {
-            match data.get("state") {
-              Some(data) => {
-                state = data.to_owned();
-                is_valid = true;
-              }
-              None => {}
-            };
-          }
-          Err(_) => {}
-        }
-
-        validity.insert(tx.id, is_valid);
+        validity.insert(tx.id, valid);
       }
 
       // println!("{}", state);
@@ -85,15 +79,15 @@ pub async fn execute_contract(
   }
 }
 
-pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> String {
+pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
   let tag = (&(&interaction_tx)
     .tags
     .iter()
-    .find(|data| data.name == String::from("Input")));
+    .find(|data| &data.name == "Input"));
 
   match tag {
-    Some(data) => String::from((&data.value)),
-    None => String::from(""),
+    Some(data) => &data.value,
+    None => "",
   }
 }
 

@@ -105,7 +105,7 @@ impl Arweave {
 
   pub async fn get_transaction(
     &self,
-    transaction_id: String,
+    transaction_id: &str,
   ) -> reqwest::Result<TransactionData> {
     let request =
       reqwest::get(format!("{}/tx/{}", self.get_host(), transaction_id))
@@ -116,7 +116,7 @@ impl Arweave {
     transaction
   }
 
-  pub async fn get_transaction_data(&self, transaction_id: String) -> String {
+  pub async fn get_transaction_data(&self, transaction_id: &str) -> String {
     let request =
       reqwest::get(format!("{}/{}", self.get_host(), transaction_id))
         .await
@@ -242,7 +242,7 @@ impl Arweave {
   ) -> LoadedContract {
     // TODO: DON'T PANNIC
     let contract_transaction =
-      self.get_transaction(contract_id.to_owned()).await.unwrap();
+      self.get_transaction(&contract_id).await.unwrap();
 
     let contract_src = contract_src_tx_id
       .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
@@ -254,12 +254,10 @@ impl Arweave {
     let min_fee = get_tag(&contract_transaction, "Min-Fee");
 
     // TODO: Don't panic
-    let contract_src_tx =
-      self.get_transaction(contract_src.to_owned()).await.unwrap();
+    let contract_src_tx = self.get_transaction(&contract_src).await.unwrap();
 
-    let contract_src_data = self
-      .get_transaction_data(contract_src_tx.id.to_owned())
-      .await;
+    let contract_src_data =
+      self.get_transaction_data(&contract_src_tx.id).await;
 
     let mut state = String::from("");
 
@@ -270,15 +268,13 @@ impl Arweave {
       let init_state_tag_txid = get_tag(&contract_transaction, "Init-State-TX");
       if init_state_tag_txid.len() >= 1 {
         let init_state_tx =
-          self.get_transaction(init_state_tag_txid).await.unwrap();
+          self.get_transaction(&init_state_tag_txid).await.unwrap();
         state = decode_base_64(init_state_tx.data);
       } else {
         state = decode_base_64(contract_transaction.data.to_owned());
 
         if state.len() <= 0 {
-          state = self
-            .get_transaction_data(contract_transaction.id.to_owned())
-            .await;
+          state = self.get_transaction_data(&contract_transaction.id).await;
         }
       }
     }

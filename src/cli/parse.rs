@@ -8,10 +8,10 @@ pub enum Flags {
     node_capacity: i32,
   },
   Run {
-    arweave_host: String,
-    arweave_protocol: String,
-    arweave_port: i32,
-    contract_id: String,
+    host: String,
+    protocol: String,
+    port: i32,
+    tx: String,
   },
   Unknown(String),
 }
@@ -38,17 +38,17 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       node_capacity: parse_node_limit(&mut pargs).unwrap(),
     },
     "run" | _ => Flags::Run {
-      arweave_protocol: pargs
+      protocol: pargs
         .opt_value_from_str("--arweave-protocol")?
         .unwrap_or(String::from("https")),
-      arweave_host: pargs
+      host: pargs
         .opt_value_from_str("--arweave-host")?
         .unwrap_or(String::from("arweave.net")),
-      arweave_port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
-      contract_id: pargs
+      port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
+      tx: pargs
         .opt_value_from_str("--contract-id")?
         .unwrap_or(String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")),
-    }, // any => Flags::Unknown(String::from(any)),
+    },
   };
 
   Ok(flags)
