@@ -3,7 +3,6 @@
 * `wasi-libc`
 
 ```bash
-$ git clone https://github.com/CraneStation/wasi-libc.git
 $ cd wasi-libc
 $ make install INSTALL_DIR=../libc
 ```
@@ -18,10 +17,6 @@ $ mv path/to/libcland_rt.builtins.wasm32.a /path/to/llvm/lib/clang/VERSION/lib/w
 ```
 
 * `cJSON`
-
-```bash
-$ git clone https://github.com/DaveGamble/cJSON
-```
 
 ### Compiling
 

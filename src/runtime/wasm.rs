@@ -89,6 +89,46 @@ impl WasmRuntime {
       let ns_str = v8::String::new(scope, "3em").unwrap();
       imports.set(scope, ns_str.into(), ns.into());
 
+      // wasi_snapshot_preview1
+      let wasi_ns = v8::Object::new(scope);
+      let wasi_snapshot_preview1_str =
+        v8::String::new(scope, "wasi_snapshot_preview1").unwrap();
+
+      let wasi_fd_close = v8::String::new(scope, "fd_close").unwrap();
+      let wasi_fd_close_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+      let wasi_fd_close_callback =
+        v8::Function::new(scope, wasi_fd_close_callback).unwrap();
+      wasi_ns.set(scope, wasi_fd_close.into(), wasi_fd_close_callback.into());
+
+      let wasi_fd_seek = v8::String::new(scope, "fd_seek").unwrap();
+      let wasi_fd_seek_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+      let wasi_fd_seek_callback =
+        v8::Function::new(scope, wasi_fd_seek_callback).unwrap();
+      wasi_ns.set(scope, wasi_fd_seek.into(), wasi_fd_seek_callback.into());
+
+      let wasi_fd_write = v8::String::new(scope, "fd_write").unwrap();
+      let wasi_fd_write_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+      let wasi_fd_write_callback =
+        v8::Function::new(scope, wasi_fd_write_callback).unwrap();
+      wasi_ns.set(scope, wasi_fd_write.into(), wasi_fd_write_callback.into());
+
+      imports.set(scope, wasi_snapshot_preview1_str.into(), wasi_ns.into());
+
       let instance = instance_constructor
         .new_instance(scope, &[module.into(), imports.into()])
         .unwrap();

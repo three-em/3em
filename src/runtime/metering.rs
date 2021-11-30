@@ -974,7 +974,7 @@ mod tests {
       (4327, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
       (16875, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
       (27276, include_bytes!("../../helpers/zig/contract.wasm")),
-      (0, include_bytes!("../../helpers/cpp/contract.wasm")),
+      (38443, include_bytes!("../../helpers/cpp/contract.wasm")),
     ];
 
     for source in sources {
@@ -987,7 +987,7 @@ mod tests {
       });
       let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();
       let state = rt.call(&mut prev_state_bytes).await.unwrap();
-
+      println!("{}", std::str::from_utf8(&state).unwrap());
       let state: Value = serde_json::from_slice(&state).unwrap();
       assert_eq!(state.get("counter").unwrap(), 1);
 
