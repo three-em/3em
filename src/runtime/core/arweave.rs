@@ -5,8 +5,11 @@ use crate::runtime::core::gql_result::{
 };
 use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
 use crate::utils::decode_base_64;
+use deno_core::futures::stream;
+use deno_core::futures::StreamExt;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
@@ -43,11 +46,13 @@ pub struct TransactionData {
   pub data_root: String,
 }
 
+#[derive(Clone)]
 pub enum ArweaveProtocol {
   HTTP,
   HTTPS,
 }
 
+#[derive(Clone)]
 pub struct Arweave {
   host: String,
   port: i32,
@@ -94,7 +99,7 @@ pub struct LoadedContract {
   pub contract_transaction: TransactionData,
 }
 
-pub static MAX_REQUEST: &'static i32 = &100;
+pub static MAX_REQUEST: usize = 100;
 
 impl Arweave {
   pub fn new(port: i32, host: String) -> Arweave {
@@ -166,18 +171,39 @@ impl Arweave {
     let variables = self
       .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
       .await;
-    while transactions.page_info.has_next_page {
-      let edge = transactions
-        .edges
-        .get((self.get_max_requests() - 1) as usize)
-        .unwrap();
-      let cursor = (&edge.cursor).to_owned();
 
-      let mut new_variables: InteractionVariables = variables.clone();
-      new_variables.after = Some(cursor);
+    enum State {
+      Next(String, InteractionVariables),
+      End,
+    }
+    let edge = transactions.edges.get(MAX_REQUEST - 1).unwrap();
+    let cursor = (&edge.cursor).to_owned();
 
-      transactions = self.get_next_interaction_page(new_variables).await;
-      tx_infos.extend(transactions.edges.to_owned());
+    let results =
+      stream::unfold(State::Next(cursor, variables), |state| async move {
+        match state {
+          State::End => return None,
+          State::Next(cursor, variables) => {
+            let mut new_variables: InteractionVariables = variables.clone();
+            new_variables.after = Some(cursor);
+            let tx = self.get_next_interaction_page(new_variables).await;
+
+            if !tx.page_info.has_next_page {
+              return None;
+            } else {
+              let edge = tx.edges.get(MAX_REQUEST - 1).unwrap();
+              let cursor = (&edge.cursor).to_owned();
+              return Some((tx, State::Next(cursor, variables)));
+            }
+          }
+        }
+      })
+      .collect::<Vec<GQLTransactionsResultInterface>>()
+      .await;
+
+    for result in results {
+      let mut new_tx_infos = result.edges.clone();
+      tx_infos.append(&mut new_tx_infos);
     }
 
     let filtered: Vec<GQLEdgeInterface> = tx_infos
@@ -351,14 +377,10 @@ impl Arweave {
     let variables: InteractionVariables = InteractionVariables {
       tags: vec![app_name_tag, contract_tag],
       block_filter: BlockFilter { max: new_height },
-      first: self.get_max_requests() as usize,
+      first: MAX_REQUEST,
       after: None,
     };
 
     variables
-  }
-
-  fn get_max_requests(&self) -> i32 {
-    MAX_REQUEST.to_owned()
   }
 }

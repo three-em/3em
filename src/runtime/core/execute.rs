@@ -16,34 +16,46 @@ struct ContractHandlerResult {
 }
 
 pub async fn execute_contract(
-  arweave: &Arweave,
+  arweave: Arweave,
   contract_id: String,
   contract_src_tx: Option<String>,
   contract_content_type: Option<String>,
   height: Option<usize>,
 ) {
   let start = Instant::now();
-  let loaded_contract = arweave
-    .load_contract(
-      contract_id.to_owned(),
-      contract_src_tx,
-      contract_content_type,
+
+  let shared_id = contract_id.clone();
+  let shared_client = arweave.clone();
+
+  let (loaded_contract, interactions) = tokio::join!(
+    tokio::spawn(async move {
+      shared_client
+        .load_contract(shared_id, contract_src_tx, contract_content_type)
+        .await
+    }),
+    tokio::spawn(
+      async move { arweave.get_interactions(contract_id, height).await }
     )
-    .await;
-  let interactions = arweave
-    .get_interactions(contract_id.to_owned(), height)
-    .await;
-  println!("Loaded contract {} in {:?}", contract_id, start.elapsed());
+  );
+
+  let loaded_contract = loaded_contract.unwrap();
+  let interactions = interactions.unwrap();
+
+  println!("Loaded contract {:?}", start.elapsed());
   // TODO: Sort interactions
 
   // Todo: handle wasm, evm, etc.
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
-      let mut rt = Runtime::new(&loaded_contract.contract_src).await.unwrap();
       let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
+
+      let mut rt = Runtime::new(&loaded_contract.contract_src, state)
+        .await
+        .unwrap();
       let mut validity: HashMap<String, bool> = HashMap::new();
 
+      let start = Instant::now();
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
@@ -56,22 +68,11 @@ pub async fn execute_contract(
           "caller": tx.owner.address
         });
 
-        let call: Result<Value, AnyError> =
-          rt.call(&[state.to_owned(), call_input]).await;
-
-        let valid = match call {
-          Ok(data) => match data.get("state") {
-            Some(data) => {
-              state = data.clone();
-              true
-            }
-            None => false,
-          },
-          Err(_) => false,
-        };
-
+        let valid = rt.call(call_input).await.is_ok();
         validity.insert(tx.id, valid);
       }
+
+      println!("Executed contract {:?}", start.elapsed());
 
       // println!("{}", state);
       // println!("Interactions: {}", validity.len());

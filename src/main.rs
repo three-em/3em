@@ -61,7 +61,7 @@ async fn main() -> Result<(), AnyError> {
       tx,
     } => {
       let arweave = Arweave::new(port, host);
-      execute_contract(&arweave, tx, None, None, None).await;
+      execute_contract(arweave, tx, None, None, None).await;
     }
   };
 
