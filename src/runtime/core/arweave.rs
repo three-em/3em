@@ -85,7 +85,7 @@ pub struct GraphqlQuery {
 pub struct LoadedContract {
   pub id: String,
   pub contract_src_tx_id: String,
-  pub contract_src: Vec<u8>,
+  pub contract_src: String,
   pub contract_type: ContractType,
   pub init_state: String,
   pub min_fee: String,
@@ -118,7 +118,7 @@ impl Arweave {
 
   pub async fn get_transaction_data(&self, transaction_id: String) -> String {
     let request =
-      reqwest::get(format!("{}/tx/{}/data", self.get_host(), transaction_id))
+      reqwest::get(format!("{}/{}", self.get_host(), transaction_id))
         .await
         .unwrap();
     request.text().await.unwrap()
@@ -257,12 +257,9 @@ impl Arweave {
     let contract_src_tx =
       self.get_transaction(contract_src.to_owned()).await.unwrap();
 
-    let contract_src_data = base64::decode(
-      self
-        .get_transaction_data(contract_src_tx.id.to_owned())
-        .await,
-    )
-    .unwrap_or_else(|_| vec![]);
+    let contract_src_data = self
+      .get_transaction_data(contract_src_tx.id.to_owned())
+      .await;
 
     let mut state = String::from("");
 
@@ -274,18 +271,20 @@ impl Arweave {
       if init_state_tag_txid.len() >= 1 {
         let init_state_tx =
           self.get_transaction(init_state_tag_txid).await.unwrap();
-        state = String::from_utf8(
-          base64::decode(init_state_tx.data).unwrap_or_else(|_| vec![]),
-        )
-        .unwrap();
+        state = decode_base_64(init_state_tx.data);
       } else {
-        state = String::from_utf8(
-          base64::decode(contract_transaction.data.to_owned())
-            .unwrap_or_else(|_| vec![])
-            .to_owned(),
-        )
-        .unwrap();
+        state = decode_base_64(contract_transaction.data.to_owned());
+
+        if state.len() <= 0 {
+          state = self
+            .get_transaction_data(contract_transaction.id.to_owned())
+            .await;
+        }
       }
+    }
+
+    if state.len() <= 0 {
+      panic!("Contract does not have an initial state or an error has occurred while reading it.");
     }
 
     let contract_type =

@@ -46,7 +46,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         .unwrap_or(String::from("arweave.net")),
       arweave_port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
       contract_id: pargs
-        .opt_value_from_str("--arweave-host")?
+        .opt_value_from_str("--contract-id")?
         .unwrap_or(String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")),
     }, // any => Flags::Unknown(String::from(any)),
   };

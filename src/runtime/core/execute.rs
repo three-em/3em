@@ -4,12 +4,14 @@ use crate::runtime::core::gql_result::{
 };
 use crate::runtime::core::miscellaneous::ContractType;
 use crate::runtime::Runtime;
+use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
+use std::collections::HashMap;
 
-struct SmartweaveInput {
-  input: Value,
-  caller: String,
+struct ContractHandlerResult {
+  result: Option<Value>,
+  state: Option<Value>,
 }
 
 pub async fn execute_contract(
@@ -35,29 +37,47 @@ pub async fn execute_contract(
   // Todo: handle wasm, evm, etc.
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
-      let source =
-        &String::from_utf8(loaded_contract.contract_src).unwrap()[..];
+      let source = &loaded_contract.contract_src[..];
       let mut rt = Runtime::new(source).await.unwrap();
-      let mut state: deno_core::serde_json::Value =
+      let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state[..])
           .unwrap();
+      let mut validity: HashMap<String, bool> = HashMap::new();
 
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
 
         // TODO: has_multiple_interactions  https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
-        let js_input: deno_core::serde_json::Value =
-          deno_core::serde_json::from_str(&input).unwrap();
+        let js_input: Value = deno_core::serde_json::from_str(&input).unwrap();
 
         let call_input = serde_json::json!({
           "input": js_input,
           "caller": tx.owner.address
         });
 
-        let call: deno_core::serde_json::Value =
-          rt.call(&[state, call_input]).await.unwrap();
-        state = call;
+        let call: Result<Value, AnyError> =
+          rt.call(&[state.to_owned(), call_input]).await;
+
+        let mut is_valid = true;
+
+        match call {
+          Ok(data) => {
+            match data.get("state") {
+              Some(data) => {
+                state = data.to_owned();
+              }
+              None => {
+                is_valid = false;
+              }
+            };
+          }
+          Err(_) => {
+            is_valid = false;
+          }
+        }
+
+        validity.insert(tx.id, is_valid);
       }
 
       println!("{}", state);

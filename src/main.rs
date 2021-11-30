@@ -61,7 +61,7 @@ async fn main() -> Result<(), AnyError> {
         runtime::core::arweave::Arweave::new(arweave_port, arweave_host);
       runtime::core::execute::execute_contract(
         &arweave,
-        String::from("58Zr9c25v3tjXNFdu1YRsZXB0qIl7kCXfbnXQqHQxIY"),
+        contract_id,
         None,
         None,
         None,
