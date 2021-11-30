@@ -105,8 +105,10 @@ pub async fn execute_contract(
         }
         validity.insert(tx.id, valid);
       }
+    },
+    ContractType::EVM => {
+
     }
-    _ => {}
   }
 }
 
