@@ -10,6 +10,7 @@ use deno_core::futures::StreamExt;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
+use bytes::Bytes;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
@@ -92,7 +93,7 @@ pub struct GraphqlQuery {
 pub struct LoadedContract {
   pub id: String,
   pub contract_src_tx_id: String,
-  pub contract_src: String,
+  pub contract_src: Vec<u8>,
   pub contract_type: ContractType,
   pub init_state: String,
   pub min_fee: String,
@@ -125,14 +126,14 @@ impl Arweave {
     transaction
   }
 
-  pub async fn get_transaction_data(&self, transaction_id: &str) -> String {
+  pub async fn get_transaction_data(&self, transaction_id: &str) -> Vec<u8> {
     let request = self
       .client
       .get(format!("{}/{}", self.get_host(), transaction_id))
       .send()
       .await
       .unwrap();
-    request.text().await.unwrap()
+    request.bytes().await.unwrap().to_vec()
   }
 
   pub async fn get_network_info(&self) -> NetworkInfo {
@@ -309,7 +310,7 @@ impl Arweave {
         state = decode_base_64(contract_transaction.data.to_owned());
 
         if state.len() <= 0 {
-          state = self.get_transaction_data(&contract_transaction.id).await;
+          state = String::from_utf8(self.get_transaction_data(&contract_transaction.id).await).unwrap();
         }
       }
     }

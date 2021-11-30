@@ -51,7 +51,7 @@ pub async fn execute_contract(
       let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
 
-      let mut rt = Runtime::new(&loaded_contract.contract_src, state)
+      let mut rt = Runtime::new(&(String::from_utf8(loaded_contract.contract_src).unwrap()), state)
         .await
         .unwrap();
       let mut validity: HashMap<String, bool> = HashMap::new();
