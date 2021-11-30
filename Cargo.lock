@@ -2191,6 +2191,7 @@ dependencies = [
  "deno_url",
  "deno_web",
  "deno_webidl",
+ "hex",
  "hex-literal",
  "local_ipaddress",
  "pico-args",

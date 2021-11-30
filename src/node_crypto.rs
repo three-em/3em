@@ -4,6 +4,7 @@ use rsa::pkcs1::{
 };
 use rsa::{PaddingScheme, PublicKey, RsaPrivateKey, RsaPublicKey};
 use sha2::Digest;
+use crate::utils::hasher;
 
 pub struct GeneratedPair {
   private_key: Vec<u8>,
@@ -12,12 +13,6 @@ pub struct GeneratedPair {
 
 fn get_scheme() -> PaddingScheme {
   PaddingScheme::new_pkcs1v15_sign(Some(rsa::hash::Hash::SHA2_256))
-}
-
-fn hasher(data: &[u8]) -> Vec<u8> {
-  let mut hasher = sha2::Sha256::new();
-  hasher.update(data);
-  hasher.finalize()[..].to_vec()
 }
 
 pub async fn generate_keypair() -> GeneratedPair {

@@ -2,7 +2,7 @@ use crate::runtime::core::arweave::Arweave;
 use crate::runtime::core::gql_result::{
   GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
 };
-use crate::runtime::core::miscellaneous::ContractType;
+use crate::runtime::core::miscellaneous::{ContractType, get_sort_key};
 use crate::runtime::Runtime;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
@@ -37,9 +37,13 @@ pub async fn execute_contract(
   );
 
   let loaded_contract = loaded_contract.unwrap();
-  let interactions = interactions.unwrap();
+  let mut interactions = interactions.unwrap();
 
-  // TODO: Sort interactions
+  interactions.sort_by(|a, b| {
+    let a_sort_key = get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
+    let b_sort_key = get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
+    a_sort_key.cmp(&b_sort_key)
+  });
 
   // Todo: handle wasm, evm, etc.
   match loaded_contract.contract_type {
