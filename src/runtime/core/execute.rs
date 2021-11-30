@@ -8,6 +8,7 @@ use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
+use std::time::Instant;
 
 struct ContractHandlerResult {
   result: Option<Value>,
@@ -21,6 +22,7 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
 ) {
+  let start = Instant::now();
   let loaded_contract = arweave
     .load_contract(
       contract_id.to_owned(),
@@ -31,6 +33,8 @@ pub async fn execute_contract(
   let interactions = arweave
     .get_interactions(contract_id.to_owned(), height)
     .await;
+  let duration = start.elapsed();
+  println!("Took {} to load and get interactions", duration.as_millis());
 
   // TODO: Sort interactions
 
@@ -44,6 +48,7 @@ pub async fn execute_contract(
           .unwrap();
       let mut validity: HashMap<String, bool> = HashMap::new();
 
+      let start = Instant::now();
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
@@ -59,26 +64,25 @@ pub async fn execute_contract(
         let call: Result<Value, AnyError> =
           rt.call(&[state.to_owned(), call_input]).await;
 
-        let mut is_valid = true;
+        let mut is_valid = false;
 
         match call {
           Ok(data) => {
             match data.get("state") {
               Some(data) => {
                 state = data.to_owned();
+                is_valid = true;
               }
-              None => {
-                is_valid = false;
-              }
+              None => {}
             };
           }
-          Err(_) => {
-            is_valid = false;
-          }
+          Err(_) => {}
         }
 
         validity.insert(tx.id, is_valid);
       }
+      let duration = start.elapsed();
+      println!("Took {} to execute contract", duration.as_millis());
 
       // println!("{}", state);
       // println!("Interactions: {}", validity.len());
@@ -88,17 +92,15 @@ pub async fn execute_contract(
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> String {
-  let tags = (&interaction_tx.tags)
-    .to_owned()
-    .into_iter()
-    .find(|data| data.name == String::from("Input"))
-    .unwrap_or_else(|| GQLTagInterface {
-      name: String::from(""),
-      value: String::from(""),
-    })
-    .value;
+  let tag = (&(&interaction_tx)
+    .tags
+    .iter()
+    .find(|data| data.name == String::from("Input")));
 
-  String::from(tags)
+  match tag {
+    Some(data) => String::from((&data.value)),
+    None => String::from(""),
+  }
 }
 
 pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
