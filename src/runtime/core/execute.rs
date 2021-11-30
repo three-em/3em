@@ -80,7 +80,8 @@ pub async fn execute_contract(
         validity.insert(tx.id, is_valid);
       }
 
-      println!("{}", state);
+      // println!("{}", state);
+      // println!("Interactions: {}", validity.len());
     }
     _ => {}
   }
