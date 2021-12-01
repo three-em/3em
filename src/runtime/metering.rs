@@ -962,8 +962,11 @@ mod tests {
   use deno_core::serde_json::Value;
   use wasm_encoder::Instruction;
 
-  fn test_cost_function(_: &Instruction) -> i32 {
-    1
+  fn test_cost_function(inst: &Instruction) -> i32 {
+    match inst {
+      Instruction::Return => 0,
+      _ => 1,
+    }
   }
 
   #[tokio::test]
@@ -980,7 +983,9 @@ mod tests {
     for source in sources {
       let module = metering.inject(source.1).unwrap();
 
-      let mut rt = WasmRuntime::new(&module.finish()).await.unwrap();
+      let mut rt = WasmRuntime::new(&module.finish(), Default::default())
+        .await
+        .unwrap();
 
       let mut prev_state = json!({
         "counter": 0,
