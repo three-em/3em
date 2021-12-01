@@ -64,9 +64,20 @@ async fn main() -> Result<(), AnyError> {
       show_validity,
       save,
       save_path,
-      benchmark
+      benchmark,
     } => {
-      run::run(port, host, tx, pretty_print, no_print, show_validity, save, benchmark, save_path).await;
+      run::run(
+        port,
+        host,
+        tx,
+        pretty_print,
+        no_print,
+        show_validity,
+        save,
+        benchmark,
+        save_path,
+      )
+      .await;
     }
   };
 
