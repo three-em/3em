@@ -1,0 +1,7 @@
+[package]
+name = "three_em"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+three_em_macro = { path = "./proc_macro", version = "0.1.0" }

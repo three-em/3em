@@ -7,7 +7,7 @@ use wasmer::{
 fn wasmer_bench(
   state: &mut [u8],
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-  let wasm_bytes = include_bytes!("./testdata/01_wasm/01_wasm.wasm");
+  let wasm_bytes = include_bytes!("../../helpers/rust/example/contract.wasm");
 
   let store = Store::default();
 
@@ -51,14 +51,21 @@ fn wasmer_bench(
     deno_core::serde_json::to_vec(&ContractInfo::default()).unwrap();
   let info_ptr = alloc.call(info.len() as u32)?;
 
+  let mut action =
+    deno_core::serde_json::to_vec(&deno_core::serde_json::json!({})).unwrap();
+  let action_ptr = alloc.call(action.len() as u32)?;
+
   raw_mem[info_ptr as usize..info_ptr as usize + info.len()]
     .swap_with_slice(&mut info);
+
+  raw_mem[action_ptr as usize..action_ptr as usize + action.len()]
+    .swap_with_slice(&mut action);
 
   let result_ptr = handle.call(
     ptr,
     state.len() as u32,
-    ptr,
-    state.len() as u32,
+    action_ptr,
+    action.len() as u32,
     info_ptr,
     info.len() as u32,
   )? as usize;
@@ -98,22 +105,27 @@ pub async fn bench() {
       "counter": 0,
   });
   let mut state_bytes = deno_core::serde_json::to_vec(&state).unwrap();
+
+  let action = json!({});
+  let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
+
   {
     let now = Instant::now();
 
     for i in 0..iters {
       let mut rt = wasm::WasmRuntime::new(
-        include_bytes!("./testdata/01_wasm/01_wasm.wasm"),
+        include_bytes!("../../helpers/rust/example/contract.wasm"),
         Default::default(),
       )
       .await
       .unwrap();
 
-      rt.call(&mut state_bytes).await.unwrap();
+      rt.call(&mut state_bytes, &mut action_bytes).await.unwrap();
     }
     println!("V8 {} ms", now.elapsed().as_millis());
   }
 }
+
 #[cfg(test)]
 mod tests {
   use crate::runtime::wasmer::bench;
