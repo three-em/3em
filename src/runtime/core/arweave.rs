@@ -5,6 +5,7 @@ use crate::runtime::core::gql_result::{
 };
 use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
 use crate::utils::decode_base_64;
+use bytes::Bytes;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
 use reqwest::Client;
@@ -24,13 +25,13 @@ pub struct NetworkInfo {
   pub node_state_latency: usize,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct Tag {
   pub name: String,
   pub value: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct TransactionData {
   pub format: usize,
   pub id: String,
@@ -92,7 +93,7 @@ pub struct GraphqlQuery {
 pub struct LoadedContract {
   pub id: String,
   pub contract_src_tx_id: String,
-  pub contract_src: String,
+  pub contract_src: Vec<u8>,
   pub contract_type: ContractType,
   pub init_state: String,
   pub min_fee: String,
@@ -115,7 +116,6 @@ impl Arweave {
     &self,
     transaction_id: &str,
   ) -> reqwest::Result<TransactionData> {
-    let start = std::time::Instant::now();
     let request = self
       .client
       .get(format!("{}/tx/{}", self.get_host(), transaction_id))
@@ -123,22 +123,17 @@ impl Arweave {
       .await
       .unwrap();
     let transaction = request.json::<TransactionData>().await;
-    let elapsed = start.elapsed();
-    println!("get_transaction: {}ms", elapsed.as_millis());
     transaction
   }
 
-  pub async fn get_transaction_data(&self, transaction_id: &str) -> String {
-    let start = std::time::Instant::now();
+  pub async fn get_transaction_data(&self, transaction_id: &str) -> Vec<u8> {
     let request = self
       .client
       .get(format!("{}/{}", self.get_host(), transaction_id))
       .send()
       .await
       .unwrap();
-    let elapsed = start.elapsed();
-    println!("get_transaction_data: {}ms", elapsed.as_millis());
-    request.text().await.unwrap()
+    request.bytes().await.unwrap().to_vec()
   }
 
   pub async fn get_network_info(&self) -> NetworkInfo {
@@ -176,8 +171,15 @@ impl Arweave {
       Next(String, InteractionVariables),
       End,
     }
-    let edge = transactions.edges.get(MAX_REQUEST - 1).unwrap();
-    let cursor = (&edge.cursor).to_owned();
+
+    let mut cursor = String::from("");
+    let maybe_edge = transactions.edges.get(MAX_REQUEST - 1);
+
+    if let Some(data) = maybe_edge {
+      cursor = data.cursor.to_owned();
+    } else {
+      cursor = String::from("null");
+    }
 
     let results =
       stream::unfold(State::Next(cursor, variables), |state| async move {
@@ -185,7 +187,11 @@ impl Arweave {
           State::End => return None,
           State::Next(cursor, variables) => {
             let mut new_variables: InteractionVariables = variables.clone();
-            new_variables.after = Some(cursor);
+
+            if !(cursor.eq("null")) {
+              new_variables.after = Some(cursor);
+            }
+
             let tx = self.get_next_interaction_page(new_variables).await;
 
             if !tx.page_info.has_next_page {
@@ -227,7 +233,6 @@ impl Arweave {
     &self,
     variables: InteractionVariables,
   ) -> GQLTransactionsResultInterface {
-    let start = std::time::Instant::now();
     let query = r#"query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
       pageInfo {
@@ -273,8 +278,6 @@ impl Arweave {
       .unwrap();
 
     let data = result.json::<GQLResultInterface>().await.unwrap();
-    let elapsed = start.elapsed();
-    println!("get_next_interaction_page: {}ms", elapsed.as_millis());
     data.data.transactions
   }
 
@@ -318,7 +321,10 @@ impl Arweave {
         state = decode_base_64(contract_transaction.data.to_owned());
 
         if state.len() <= 0 {
-          state = self.get_transaction_data(&contract_transaction.id).await;
+          state = String::from_utf8(
+            self.get_transaction_data(&contract_transaction.id).await,
+          )
+          .unwrap();
         }
       }
     }

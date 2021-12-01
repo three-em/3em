@@ -1,3 +1,4 @@
+use crate::utils::hasher;
 use deno_crypto::rand::rngs::OsRng;
 use rsa::pkcs1::{
   FromRsaPrivateKey, FromRsaPublicKey, ToRsaPrivateKey, ToRsaPublicKey,
@@ -12,12 +13,6 @@ pub struct GeneratedPair {
 
 fn get_scheme() -> PaddingScheme {
   PaddingScheme::new_pkcs1v15_sign(Some(rsa::hash::Hash::SHA2_256))
-}
-
-fn hasher(data: &[u8]) -> Vec<u8> {
-  let mut hasher = sha2::Sha256::new();
-  hasher.update(data);
-  hasher.finalize()[..].to_vec()
 }
 
 pub async fn generate_keypair() -> GeneratedPair {

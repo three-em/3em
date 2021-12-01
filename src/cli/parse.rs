@@ -47,7 +47,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
       tx: pargs
         .opt_value_from_str("--contract-id")?
-        .unwrap_or(String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")),
+        .unwrap_or(String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")),
     },
   };
 

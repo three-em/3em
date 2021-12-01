@@ -1,5 +1,6 @@
 use crate::runtime::core::arweave::TransactionData;
 use crate::runtime::core::arweave_get_tag::get_tag;
+use crate::utils::hasher;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -15,9 +16,9 @@ pub fn get_contract_type(
   source_transaction: &TransactionData,
 ) -> ContractType {
   let mut contract_type = maybe_content_type
-    .unwrap_or_else(|| get_tag(&contract_transaction, "Content-Type"));
+    .unwrap_or_else(|| get_tag(&source_transaction, "Content-Type"));
   if contract_type.len() <= 0 {
-    contract_type = get_tag(&source_transaction, "Content-Type");
+    contract_type = get_tag(&contract_transaction, "Content-Type");
   }
 
   match &(contract_type.to_lowercase())[..] {
@@ -26,6 +27,19 @@ pub fn get_contract_type(
     "application/evm" => ContractType::EVM,
     _ => ContractType::JAVASCRIPT,
   }
+}
+
+pub fn get_sort_key(
+  block_height: &usize,
+  block_id: &String,
+  transaction_id: &String,
+) -> String {
+  let mut hasher_bytes = block_id.to_owned().into_bytes();
+  hasher_bytes.append(&mut transaction_id.to_owned().into_bytes());
+  let hashed = hex::encode(hasher(&hasher_bytes[..]));
+  let height = format!("000000{}", block_height);
+
+  format!("{},{}", height, hashed)
 }
 
 #[cfg(test)]

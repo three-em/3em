@@ -2,7 +2,9 @@ use crate::runtime::core::arweave::Arweave;
 use crate::runtime::core::gql_result::{
   GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
 };
-use crate::runtime::core::miscellaneous::ContractType;
+use crate::runtime::core::miscellaneous::{get_sort_key, ContractType};
+use crate::runtime::smartweave::{ContractBlock, ContractInfo};
+use crate::runtime::wasm::WasmRuntime;
 use crate::runtime::Runtime;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
@@ -22,8 +24,6 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
 ) {
-  let start = Instant::now();
-
   let shared_id = contract_id.clone();
   let shared_client = arweave.clone();
 
@@ -39,10 +39,17 @@ pub async fn execute_contract(
   );
 
   let loaded_contract = loaded_contract.unwrap();
-  let interactions = interactions.unwrap();
+  let mut interactions = interactions.unwrap();
 
-  println!("Loaded contract {:?}", start.elapsed());
-  // TODO: Sort interactions
+  interactions.sort_by(|a, b| {
+    let a_sort_key =
+      get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
+    let b_sort_key =
+      get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
+    a_sort_key.cmp(&b_sort_key)
+  });
+
+  let mut validity: HashMap<String, bool> = HashMap::new();
 
   // Todo: handle wasm, evm, etc.
   match loaded_contract.contract_type {
@@ -50,12 +57,13 @@ pub async fn execute_contract(
       let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
 
-      let mut rt = Runtime::new(&loaded_contract.contract_src, state)
-        .await
-        .unwrap();
-      let mut validity: HashMap<String, bool> = HashMap::new();
+      let mut rt = Runtime::new(
+        &(String::from_utf8(loaded_contract.contract_src).unwrap()),
+        state,
+      )
+      .await
+      .unwrap();
 
-      let start = Instant::now();
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
@@ -71,13 +79,36 @@ pub async fn execute_contract(
         let valid = rt.call(call_input).await.is_ok();
         validity.insert(tx.id, valid);
       }
-
-      println!("Executed contract {:?}", start.elapsed());
-
-      // println!("{}", state);
-      // println!("Interactions: {}", validity.len());
     }
-    _ => {}
+    ContractType::WASM => {
+      let wasm = loaded_contract.contract_src.as_slice();
+      let transaction = loaded_contract.contract_transaction;
+      let contract_info = ContractInfo {
+        transaction,
+        block: ContractBlock {
+          height: 0,
+          indep_hash: String::from(""),
+          timestamp: String::from(""),
+        },
+      };
+      let mut state: Value =
+        deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
+      let mut rt = WasmRuntime::new(wasm, contract_info).await.unwrap();
+
+      for interaction in interactions {
+        let tx = interaction.node;
+        let mut prev_state = deno_core::serde_json::to_vec(&state).unwrap();
+        let exec = rt.call(&mut prev_state).await;
+        let valid = exec.is_ok();
+        if valid {
+          state = deno_core::serde_json::from_slice(&(exec.unwrap())).unwrap();
+        }
+        validity.insert(tx.id, valid);
+      }
+    },
+    ContractType::EVM => {
+
+    }
   }
 }
 
