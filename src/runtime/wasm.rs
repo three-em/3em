@@ -171,7 +171,7 @@ impl WasmRuntime {
     COST.load(Ordering::SeqCst)
   }
 
-  pub async fn call(&mut self, state: &mut [u8]) -> Result<Vec<u8>, AnyError> {
+  pub async fn call(&mut self, state: &mut [u8], action: &mut [u8]) -> Result<Vec<u8>, AnyError> {
     let result = {
       let scope = &mut self.rt.handle_scope();
       let undefined = v8::undefined(scope);
@@ -180,12 +180,17 @@ impl WasmRuntime {
       let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
 
       let state_len = v8::Number::new(scope, state.len() as f64);
+      let action_len = v8::Number::new(scope, action.len() as f64);
 
       // Offset in memory for start of the block.
       let local_ptr = alloc
         .call(scope, undefined.into(), &[state_len.into()])
         .unwrap();
       let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
+      let action_ptr = alloc
+        .call(scope, undefined.into(), &[action_len.into()])
+        .unwrap();
+      let action_ptr_u32 = action_ptr.uint32_value(scope).unwrap();
 
       let exports_obj = self.exports.get(scope).to_object(scope).unwrap();
 
@@ -205,8 +210,13 @@ impl WasmRuntime {
         get_backing_store_slice_mut(&store, local_ptr_u32 as usize, state.len())
       };
 
-      assert_eq!(raw_mem.len(), state.len());
       raw_mem.swap_with_slice(state);
+
+      let mut action_region = unsafe {
+        get_backing_store_slice_mut(&store, action_ptr_u32 as usize, action.len())
+      };
+
+      action_region.swap_with_slice(action);
 
       let handler_obj = self.handle.get(scope).to_object(scope).unwrap();
       let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
@@ -215,7 +225,7 @@ impl WasmRuntime {
         .call(
           scope,
           undefined.into(),
-          &[local_ptr, state_len.into(), local_ptr, state_len.into()],
+          &[local_ptr, state_len.into(), action_ptr, action_len.into()],
         )
         .unwrap();
       let result_ptr_u32 = result_ptr.uint32_value(scope).unwrap();
@@ -232,8 +242,6 @@ impl WasmRuntime {
           result_len as usize,
         )
       };
-
-      assert_eq!(result_mem.len(), result_len as usize);
 
       result_mem.to_vec()
     };
