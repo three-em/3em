@@ -3,6 +3,7 @@ mod core_nodes;
 mod messages;
 mod node;
 mod node_crypto;
+mod run;
 mod runtime;
 mod start;
 mod utils;
@@ -57,11 +58,15 @@ async fn main() -> Result<(), AnyError> {
     Flags::Run {
       port,
       host,
-      protocol,
       tx,
+      pretty_print,
+      no_print,
+      show_validity,
+      save,
+      save_path,
+      benchmark
     } => {
-      let arweave = Arweave::new(port, host);
-      execute_contract(arweave, tx, None, None, None).await;
+      run::run(port, host, tx, pretty_print, no_print, show_validity, save, benchmark, save_path).await;
     }
   };
 

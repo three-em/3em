@@ -9,9 +9,14 @@ pub enum Flags {
   },
   Run {
     host: String,
-    protocol: String,
     port: i32,
     tx: String,
+    pretty_print: bool,
+    no_print: bool,
+    show_validity: bool,
+    save: bool,
+    benchmark: bool,
+    save_path: String,
   },
   Unknown(String),
 }
@@ -38,9 +43,6 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       node_capacity: parse_node_limit(&mut pargs).unwrap(),
     },
     "run" | _ => Flags::Run {
-      protocol: pargs
-        .opt_value_from_str("--arweave-protocol")?
-        .unwrap_or(String::from("https")),
       host: pargs
         .opt_value_from_str("--arweave-host")?
         .unwrap_or(String::from("arweave.net")),
@@ -48,6 +50,14 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       tx: pargs
         .opt_value_from_str("--contract-id")?
         .unwrap_or(String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")),
+      pretty_print: pargs.contains("--pretty-print"),
+      no_print: pargs.contains("--no-print"),
+      show_validity: pargs.contains("--show-validity"),
+      save: pargs.contains("--save"),
+      benchmark: pargs.contains("--benchmark"),
+      save_path: pargs
+        .opt_value_from_str("--save")?
+        .unwrap_or(String::from("")),
     },
   };
 

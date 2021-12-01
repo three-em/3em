@@ -17,13 +17,20 @@ struct ContractHandlerResult {
   state: Option<Value>,
 }
 
+pub type ValidityTable = HashMap<String, bool>;
+
+pub enum ExecuteResult {
+  V8(Value, ValidityTable),
+  Evm(Vec<u8>, ValidityTable),
+}
+
 pub async fn execute_contract(
   arweave: Arweave,
   contract_id: String,
   contract_src_tx: Option<String>,
   contract_content_type: Option<String>,
   height: Option<usize>,
-) {
+) -> ExecuteResult {
   let shared_id = contract_id.clone();
   let shared_client = arweave.clone();
 
@@ -79,6 +86,9 @@ pub async fn execute_contract(
         let valid = rt.call(call_input).await.is_ok();
         validity.insert(tx.id, valid);
       }
+
+      let state_val: Value = rt.get_contract_state().unwrap();
+      ExecuteResult::V8(state_val, validity)
     }
     ContractType::WASM => {
       let wasm = loaded_contract.contract_src.as_slice();
@@ -114,8 +124,10 @@ pub async fn execute_contract(
         }
         validity.insert(tx.id, valid);
       }
+
+      ExecuteResult::V8(state, validity)
     }
-    ContractType::EVM => {}
+    ContractType::EVM => ExecuteResult::V8(Null, validity),
   }
 }
 
