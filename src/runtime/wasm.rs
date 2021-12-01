@@ -162,13 +162,23 @@ impl WasmRuntime {
         let mut tx_id = String::from_utf8_lossy(tx_bytes).to_string();
 
         let state = smartweave::read_contract_state(tx_id);
-        let state = deno_core::serde_json::to_vec(&state).unwrap();
+        let mut state = deno_core::serde_json::to_vec(&state).unwrap();
 
         let mut state_len = (state.len() as u32).to_le_bytes();
         len_bytes.swap_with_slice(&mut state_len);
 
         let state_len = v8::Number::new(scope, state.len() as f64);
         let state_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
+
+        let mut state_region = unsafe {
+          get_backing_store_slice_mut(
+            &store,
+            state_ptr.uint32_value(scope).unwrap() as usize,
+            state.len(),
+          )
+        };
+
+        state_region.swap_with_slice(&mut state);
 
         rv.set(state_ptr);
       };
@@ -204,6 +214,46 @@ impl WasmRuntime {
 
       let ns_str = v8::String::new(scope, "3em").unwrap();
       imports.set(scope, ns_str.into(), ns.into());
+
+      // wasi_snapshot_preview1
+      let wasi_ns = v8::Object::new(scope);
+      let wasi_snapshot_preview1_str =
+        v8::String::new(scope, "wasi_snapshot_preview1").unwrap();
+
+      let wasi_fd_close = v8::String::new(scope, "fd_close").unwrap();
+      let wasi_fd_close_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+      let wasi_fd_close_callback =
+        v8::Function::new(scope, wasi_fd_close_callback).unwrap();
+      wasi_ns.set(scope, wasi_fd_close.into(), wasi_fd_close_callback.into());
+
+      let wasi_fd_seek = v8::String::new(scope, "fd_seek").unwrap();
+      let wasi_fd_seek_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+      let wasi_fd_seek_callback =
+        v8::Function::new(scope, wasi_fd_seek_callback).unwrap();
+      wasi_ns.set(scope, wasi_fd_seek.into(), wasi_fd_seek_callback.into());
+
+      let wasi_fd_write = v8::String::new(scope, "fd_write").unwrap();
+      let wasi_fd_write_callback =
+        |_: &mut v8::HandleScope,
+         _: v8::FunctionCallbackArguments,
+         _: v8::ReturnValue| {
+          // No-op.
+        };
+      let wasi_fd_write_callback =
+        v8::Function::new(scope, wasi_fd_write_callback).unwrap();
+      wasi_ns.set(scope, wasi_fd_write.into(), wasi_fd_write_callback.into());
+
+      imports.set(scope, wasi_snapshot_preview1_str.into(), wasi_ns.into());
 
       let instance = instance_constructor
         .new_instance(scope, &[module.into(), imports.into()])
@@ -275,7 +325,11 @@ impl WasmRuntime {
     cost as usize
   }
 
-  pub async fn call(&mut self, state: &mut [u8]) -> Result<Vec<u8>, AnyError> {
+  pub async fn call(
+    &mut self,
+    state: &mut [u8],
+    action: &mut [u8],
+  ) -> Result<Vec<u8>, AnyError> {
     let result = {
       let scope = &mut self.rt.handle_scope();
       let undefined = v8::undefined(scope);
@@ -284,14 +338,16 @@ impl WasmRuntime {
       let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
 
       let state_len = v8::Number::new(scope, state.len() as f64);
+      let action_len = v8::Number::new(scope, action.len() as f64);
+
       let contract_ptr = v8::Number::new(scope, self.sw_contract.1 as f64);
       let contract_info_len = v8::Number::new(scope, self.sw_contract.2 as f64);
 
       // Offset in memory for start of the block.
       let local_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
       let local_ptr_u32 = local_ptr.uint32_value(scope).unwrap();
-      // let action_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
-      // let action_ptr_u32 = action_ptr.uint32_value(scope).unwrap();
+      let action_ptr = wasm_alloc!(scope, alloc, undefined, action_len);
+      let action_ptr_u32 = action_ptr.uint32_value(scope).unwrap();
 
       let exports_obj = self.exports.get(scope).to_object(scope).unwrap();
 
@@ -313,11 +369,15 @@ impl WasmRuntime {
 
       state_mem_region.swap_with_slice(state);
 
-      // let action_mem_region = unsafe {
-      //   get_backing_store_slice_mut(&store, action_ptr_u32 as usize, state.len())
-      // };
+      let mut action_region = unsafe {
+        get_backing_store_slice_mut(
+          &store,
+          action_ptr_u32 as usize,
+          action.len(),
+        )
+      };
 
-      // action_mem_region.swap_with_slice(state);
+      action_region.swap_with_slice(action);
 
       let contract_mem_region = unsafe {
         get_backing_store_slice_mut(
@@ -339,8 +399,8 @@ impl WasmRuntime {
           &[
             local_ptr,
             state_len.into(),
-            local_ptr,
-            state_len.into(),
+            action_ptr,
+            action_len.into(),
             contract_ptr.into(),
             contract_info_len.into(),
           ],
@@ -360,8 +420,6 @@ impl WasmRuntime {
           result_len as usize,
         )
       };
-
-      assert_eq!(result_mem.len(), result_len as usize);
 
       result_mem.to_vec()
     };
@@ -397,13 +455,18 @@ mod tests {
     .await
     .unwrap();
 
+    let action = json!({});
+    let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
     let mut prev_state = json!({
       "counter": 0,
     });
 
     let mut prev_state_bytes =
       deno_core::serde_json::to_vec(&prev_state).unwrap();
-    let state = rt.call(&mut prev_state_bytes).await.unwrap();
+    let state = rt
+      .call(&mut prev_state_bytes, &mut action_bytes)
+      .await
+      .unwrap();
 
     let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
@@ -426,10 +489,15 @@ mod tests {
       "counter": 0,
     });
 
+    let action = json!({});
+    let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
     for i in 1..100 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
-      let state = rt.call(&mut prev_state_bytes).await.unwrap();
+      let state = rt
+        .call(&mut prev_state_bytes, &mut action_bytes)
+        .await
+        .unwrap();
 
       let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 

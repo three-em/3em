@@ -973,13 +973,22 @@ mod tests {
   async fn test_metering_contracts() {
     let metering = Metering::new(test_cost_function);
     // (expected gas consumption, module bytes)
-    let sources: [(usize, &[u8]); 2] = [
-      (1284275, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
-      (12025, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
+    let sources: [(usize, &[u8]); 5] = [
+      (9810469, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
+      (
+        3263,
+        include_bytes!("../../helpers/rust/example/contract.wasm"),
+      ),
+      (11545, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
+      (11975, include_bytes!("../../helpers/zig/contract.wasm")),
+      (9901, include_bytes!("../../helpers/cpp/contract.wasm")),
     ];
 
     for source in sources {
       let module = metering.inject(source.1).unwrap();
+
+      let action = json!({});
+      let mut action_bytes = serde_json::to_vec(&action).unwrap();
 
       let mut rt = WasmRuntime::new(&module.finish(), Default::default())
         .await
@@ -989,8 +998,10 @@ mod tests {
         "counter": 0,
       });
       let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();
-      let state = rt.call(&mut prev_state_bytes).await.unwrap();
-
+      let state = rt
+        .call(&mut prev_state_bytes, &mut action_bytes)
+        .await
+        .unwrap();
       let state: Value = serde_json::from_slice(&state).unwrap();
       assert_eq!(state.get("counter").unwrap(), 1);
 

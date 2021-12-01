@@ -73,10 +73,8 @@ fn neat_read_state(tx_id: &[u8]) -> Value {
     smartweave_read_state(tx_id.as_ptr(), tx_id.len(), len.as_mut_ptr())
   };
 
-  let mut state = vec![0u8; u32::from_le_bytes(len) as usize];
-  unsafe {
-    std::ptr::copy_nonoverlapping(state_ptr, state.as_mut_ptr(), state.len());
-  }
+  let len = u32::from_le_bytes(len) as usize;
+  let state = unsafe { Vec::from_raw_parts(state_ptr, len, len) };
 
   serde_json::from_slice(&state).unwrap()
 }
@@ -146,6 +144,7 @@ pub extern "C" fn handle(
   }
 
   std::mem::forget(state_buf);
+  std::mem::forget(action_buf);
   std::mem::forget(contract_info_buf);
 
   output
