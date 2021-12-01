@@ -1,6 +1,6 @@
-use three_em::handler;
 use serde::Deserialize;
 use serde::Serialize;
+use three_em::handler;
 
 #[derive(Serialize, Deserialize)]
 pub struct State {

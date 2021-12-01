@@ -44,6 +44,8 @@ pub fn handler(_attr: TokenStream, input: TokenStream) -> TokenStream {
       state_size: usize,
       action: *mut u8,
       action_size: usize,
+      contract_info: *mut u8,
+      contract_info_size: usize,
     ) -> *const u8 {
       let state_buf = unsafe { Vec::from_raw_parts(state, state_size, state_size) };
       let action_buf = unsafe { Vec::from_raw_parts(action, action_size, action_size) };

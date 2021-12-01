@@ -162,13 +162,23 @@ impl WasmRuntime {
         let mut tx_id = String::from_utf8_lossy(tx_bytes).to_string();
 
         let state = smartweave::read_contract_state(tx_id);
-        let state = deno_core::serde_json::to_vec(&state).unwrap();
+        let mut state = deno_core::serde_json::to_vec(&state).unwrap();
 
         let mut state_len = (state.len() as u32).to_le_bytes();
         len_bytes.swap_with_slice(&mut state_len);
 
         let state_len = v8::Number::new(scope, state.len() as f64);
         let state_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
+
+        let mut state_region = unsafe {
+          get_backing_store_slice_mut(
+            &store,
+            state_ptr.uint32_value(scope).unwrap() as usize,
+            state.len(),
+          )
+        };
+
+        state_region.swap_with_slice(&mut state);
 
         rv.set(state_ptr);
       };
@@ -359,7 +369,7 @@ impl WasmRuntime {
 
       state_mem_region.swap_with_slice(state);
 
-      let action_mem_region = unsafe {
+      let mut action_region = unsafe {
         get_backing_store_slice_mut(
           &store,
           action_ptr_u32 as usize,
@@ -367,7 +377,7 @@ impl WasmRuntime {
         )
       };
 
-      action_mem_region.swap_with_slice(state);
+      action_region.swap_with_slice(action);
 
       let contract_mem_region = unsafe {
         get_backing_store_slice_mut(
@@ -378,16 +388,6 @@ impl WasmRuntime {
       };
 
       contract_mem_region.swap_with_slice(&mut self.sw_contract.0);
-
-      let mut action_region = unsafe {
-        get_backing_store_slice_mut(
-          &store,
-          action_ptr_u32 as usize,
-          action.len(),
-        )
-      };
-
-      action_region.swap_with_slice(action);
 
       let handler_obj = self.handle.get(scope).to_object(scope).unwrap();
       let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
@@ -400,7 +400,7 @@ impl WasmRuntime {
             local_ptr,
             state_len.into(),
             action_ptr,
-            action_ptr.into(),
+            action_len.into(),
             contract_ptr.into(),
             contract_info_len.into(),
           ],
@@ -455,13 +455,18 @@ mod tests {
     .await
     .unwrap();
 
+    let action = json!({});
+    let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
     let mut prev_state = json!({
       "counter": 0,
     });
 
     let mut prev_state_bytes =
       deno_core::serde_json::to_vec(&prev_state).unwrap();
-    let state = rt.call(&mut prev_state_bytes, &mut []).await.unwrap();
+    let state = rt
+      .call(&mut prev_state_bytes, &mut action_bytes)
+      .await
+      .unwrap();
 
     let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
@@ -484,10 +489,15 @@ mod tests {
       "counter": 0,
     });
 
+    let action = json!({});
+    let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
     for i in 1..100 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
-      let state = rt.call(&mut prev_state_bytes, &mut []).await.unwrap();
+      let state = rt
+        .call(&mut prev_state_bytes, &mut action_bytes)
+        .await
+        .unwrap();
 
       let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
