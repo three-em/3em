@@ -1,7 +1,9 @@
 use crate::runtime::smartweave;
 use crate::runtime::smartweave::ContractInfo;
+use crate::runtime::snapshot;
 use deno_core::error::AnyError;
 use deno_core::JsRuntime;
+use deno_core::RuntimeOptions;
 use deno_core::ZeroCopyBuf;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -50,7 +52,10 @@ impl WasmRuntime {
     wasm: &[u8],
     contract: ContractInfo,
   ) -> Result<WasmRuntime, AnyError> {
-    let mut rt = JsRuntime::new(Default::default());
+    let mut rt = JsRuntime::new(RuntimeOptions {
+      startup_snapshot: Some(snapshot::snapshot()),
+      ..Default::default()
+    });
     let contract = deno_core::serde_json::to_vec(&contract)?;
     // Get hold of the WebAssembly object.
     let wasm_obj = rt.execute_script("<anon>", "WebAssembly").unwrap();

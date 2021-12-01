@@ -3,11 +3,12 @@ mod core_nodes;
 mod messages;
 mod node;
 mod node_crypto;
-mod runtime;
+pub mod runtime;
 mod start;
 mod utils;
 
-use cli::parse::Flags;
+use crate::cli::parse;
+use crate::cli::parse::Flags;
 use deno_core::error::AnyError;
 
 use colored::Colorize;
@@ -38,7 +39,7 @@ async fn main() -> Result<(), AnyError> {
   println!("Version: {}", env!("CARGO_PKG_VERSION"));
   println!();
 
-  let flags = cli::parse::parse()?;
+  let flags = parse::parse()?;
 
   match flags {
     Flags::Start {
@@ -46,7 +47,7 @@ async fn main() -> Result<(), AnyError> {
       port,
       node_capacity,
     } => {
-      start::start(host, port, node_capacity).await?;
+      crate::start::start(host, port, node_capacity).await?;
     }
     Flags::Unknown(cmd) => {
       print_cmd_error(&cmd);

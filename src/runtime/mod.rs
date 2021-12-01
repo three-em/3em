@@ -1,9 +1,9 @@
 mod evm;
-mod metering;
+pub mod metering;
 mod module_loader;
-mod smartweave;
+pub mod smartweave;
 mod snapshot;
-mod wasm;
+pub mod wasm;
 mod wasmer;
 
 use crate::runtime::module_loader::EmbeddedModuleLoader;
