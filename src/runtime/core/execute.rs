@@ -152,3 +152,55 @@ pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
     .collect::<Vec<GQLTagInterface>>();
   filtered_tags.len() > 1
 }
+
+#[cfg(test)]
+mod test {
+  use crate::runtime::Error;
+  use crate::runtime::HeapLimitState;
+  use crate::runtime::Runtime;
+  use deno_core::ZeroCopyBuf;
+  use crate::runtime::core::arweave::Arweave;
+  use crate::runtime::core::execute::{execute_contract, ExecuteResult};
+  use serde::Deserialize;
+  use serde::Serialize;
+
+  #[derive(Deserialize, Serialize)]
+  struct People {
+    username: String
+  }
+
+  #[tokio::test]
+  async fn test_execute_wasm() {
+    let arweave = Arweave::new(80, String::from("arweave.net"));
+    let result = execute_contract(arweave, String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ"), None, None, None).await;
+    if let ExecuteResult::V8(value, validity) = result {
+      assert!(!(value.is_null()));
+      assert!(value.get("counter").is_some());
+      let counter = value.get("counter").unwrap().as_i64().unwrap();
+      assert!(counter >= 3);
+      assert!(validity.get("HBHsDDeWrEmAlkg_mFzYjOsEgG3I6j4id_Aqd1fERgA").is_some());
+      assert!(validity.get("IlAr0h0rl7oI7FesF1Oy-E_a-K6Al4Avc2pu6CEZkog").is_some());
+      assert!(validity.get("mxAuYqsTP8RItfaw5tY_gV4Z98MlAObzG_uhLe9tx3c").is_some());
+    } else {
+      assert!(false);
+    }
+  }
+
+  #[tokio::test]
+  async fn test_execute_javascript() {
+    let arweave = Arweave::new(80, String::from("arweave.net"));
+    let result = execute_contract(arweave, String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE"), None, None, None).await;
+    if let ExecuteResult::V8(value, validity) = result {
+      assert!(!(value.is_null()));
+      assert!(value.get("people").is_some());
+      assert!(value.get("people").unwrap().is_array());
+      let people = value.get("people").unwrap();
+      let people_struct: Vec<People> = serde_json::from_value(people.to_owned()).unwrap();
+      let is_marton_here = people_struct.iter().find(|data| data.username == String::from("martonlederer"));
+      assert!(is_marton_here.is_some());
+    } else {
+      assert!(false);
+    }
+  }
+
+}
