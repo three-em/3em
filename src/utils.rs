@@ -1,4 +1,5 @@
 use crate::node::Node;
+use sha2::Digest;
 
 pub fn parse_node_ip(node: &Node) -> String {
   parse_basic_ip(node.ip.to_owned(), node.port)
@@ -19,6 +20,17 @@ pub fn usize_to_u8_array(num: u32) -> [u8; 4] {
 
 pub fn u8_array_to_usize(bytes: [u8; 4]) -> usize {
   u32::from_le_bytes(bytes) as usize
+}
+
+pub fn decode_base_64(data: String) -> String {
+  String::from_utf8(base64::decode(data).unwrap_or_else(|_| vec![]))
+    .unwrap_or(String::from(""))
+}
+
+pub fn hasher(data: &[u8]) -> Vec<u8> {
+  let mut hasher = sha2::Sha256::new();
+  hasher.update(data);
+  hasher.finalize()[..].to_vec()
 }
 
 #[cfg(test)]

@@ -1,3 +1,4 @@
+use crate::runtime::core::arweave::TransactionData;
 use deno_core::error::type_error;
 use deno_core::error::AnyError;
 use deno_core::include_js_files;
@@ -18,6 +19,7 @@ pub fn init() -> Extension {
       prefix "3em:smartweave",
       "src/runtime/bignumber.js",
       "src/runtime/smartweave.js",
+      "src/runtime/contract-assert.js",
     ))
     .ops(vec![
       ("op_smartweave_init", op_sync(op_smartweave_init)),
@@ -34,22 +36,6 @@ pub fn init() -> Extension {
 }
 
 #[derive(Serialize, Default)]
-pub struct Tag {
-  pub name: String,
-  pub value: String,
-}
-
-#[derive(Serialize, Default)]
-pub struct ContractTx {
-  pub id: String,
-  pub owner: String,
-  pub tags: Vec<Tag>,
-  pub target: String,
-  pub quantity: String,
-  pub reward: String,
-}
-
-#[derive(Serialize, Default)]
 pub struct ContractBlock {
   pub height: usize,
   pub indep_hash: String,
@@ -58,7 +44,7 @@ pub struct ContractBlock {
 
 #[derive(Serialize, Default)]
 pub struct ContractInfo {
-  pub transaction: ContractTx,
+  pub transaction: TransactionData,
   pub block: ContractBlock,
 }
 
