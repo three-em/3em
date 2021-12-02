@@ -2443,6 +2443,8 @@ name = "three_em"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
+ "bytes",
  "colored",
  "criterion",
  "deno_core",
@@ -2450,6 +2452,7 @@ dependencies = [
  "deno_url",
  "deno_web",
  "deno_webidl",
+ "hex",
  "hex-literal",
  "local_ipaddress",
  "pico-args",
@@ -2457,6 +2460,7 @@ dependencies = [
  "reqwest",
  "rsa",
  "serde",
+ "serde_json",
  "sha2",
  "tiny-keccak",
  "tokio",

@@ -3,6 +3,7 @@ mod core_nodes;
 mod messages;
 mod node;
 mod node_crypto;
+mod run;
 pub mod runtime;
 mod start;
 mod utils;
@@ -10,9 +11,11 @@ mod utils;
 use crate::cli::parse;
 use crate::cli::parse::Flags;
 use deno_core::error::AnyError;
+use runtime::core::execute::execute_contract;
 
 use colored::Colorize;
 use std::env;
+use std::thread;
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
@@ -51,6 +54,30 @@ async fn main() -> Result<(), AnyError> {
     }
     Flags::Unknown(cmd) => {
       print_cmd_error(&cmd);
+    }
+    Flags::Run {
+      port,
+      host,
+      tx,
+      pretty_print,
+      no_print,
+      show_validity,
+      save,
+      save_path,
+      benchmark,
+    } => {
+      run::run(
+        port,
+        host,
+        tx,
+        pretty_print,
+        no_print,
+        show_validity,
+        save,
+        benchmark,
+        save_path,
+      )
+      .await;
     }
   };
 
