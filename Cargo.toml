@@ -7,7 +7,7 @@ resolver = "2"
 build = "build.rs"
 
 [[bench]]
-name = "v8_wasmer"
+name = "wasm"
 harness = false
 
 [dependencies]
