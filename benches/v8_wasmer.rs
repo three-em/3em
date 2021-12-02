@@ -12,31 +12,15 @@ use deno_core::serde_json;
 use deno_core::serde_json::json;
 use std::time::Duration;
 use three_em::runtime::wasm::WasmRuntime;
+use wasmer::Universal;
 use wasmer::{
   imports, Function, FunctionType, Instance, MemoryView, Module, Store, Type,
 };
 
 fn wasmer_bench(
+  instance: Instance,
   state: &mut [u8],
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-  let store = Store::default();
-
-  let module = Module::new(&store, BENCH_CONTRACT1)?;
-  let read_state =
-    FunctionType::new(vec![Type::I32, Type::I32, Type::I32], vec![Type::I32]);
-  let read_state_function = Function::new(&store, &read_state, |_args| {
-    // TODO: How do I even access memory from here?
-    Ok(vec![wasmer::Value::I32(0)])
-  });
-
-  let import_object = imports! {
-    "3em" => {
-      "smartweave_read_state" => read_state_function,
-    }
-  };
-
-  let instance = Instance::new(&module, &import_object)?;
-
   let handle =
     instance
       .exports
@@ -94,23 +78,70 @@ fn wasmer_bench(
 static BENCH_CONTRACT1: &[u8] =
   include_bytes!("../helpers/rust/example/contract.wasm");
 
+fn setup_wasmer(store: Store) -> Result<Instance, Box<dyn std::error::Error>> {
+  let module = Module::new(&store, BENCH_CONTRACT1)?;
+  let read_state =
+    FunctionType::new(vec![Type::I32, Type::I32, Type::I32], vec![Type::I32]);
+  let read_state_function = Function::new(&store, &read_state, |_args| {
+    // TODO: How do I even access memory from here?
+    Ok(vec![wasmer::Value::I32(0)])
+  });
+  let abort =
+    FunctionType::new(vec![Type::I32, Type::I32, Type::I32, Type::I32], vec![]);
+  let abort = Function::new(&store, &abort, |_args| Ok(vec![]));
+
+  let import_object = imports! {
+    "3em" => {
+      "smartweave_read_state" => read_state_function,
+    },
+    "env" => {
+      "abort" => abort,
+    }
+  };
+
+  let instance = Instance::new(&module, &import_object)?;
+  Ok(instance)
+}
+
 fn wasm_benchmark(c: &mut Criterion) {
   let rt = tokio::runtime::Runtime::new().unwrap();
 
   let mut group = c.benchmark_group("WASM");
 
   group.measurement_time(Duration::from_secs(20));
-  group.bench_function("wasmer", |b| {
+  group.bench_function("wasmer (default)", |b| {
     b.to_async(&rt).iter_with_setup(
       || {
         let mut state = json!({
           "counter": 0,
         });
-        deno_core::serde_json::to_vec(&state).unwrap()
+
+        let store = Store::default();
+        (deno_core::serde_json::to_vec(&state).unwrap(), store)
       },
-      |state_bytes| async {
+      |(state_bytes, store)| async {
         let mut state = state_bytes;
-        black_box(wasmer_bench(&mut state).unwrap());
+        let instance = setup_wasmer(store).unwrap();
+        black_box(wasmer_bench(instance, &mut state).unwrap());
+      },
+    )
+  });
+
+  group.bench_function("wasmer (singlepass)", |b| {
+    b.to_async(&rt).iter_with_setup(
+      || {
+        let mut state = json!({
+          "counter": 0,
+        });
+        let compiler = wasmer_compiler_singlepass::Singlepass::new();
+        let store = Store::new(&Universal::new(compiler).engine());
+
+        (deno_core::serde_json::to_vec(&state).unwrap(), store)
+      },
+      |(state_bytes, store)| async {
+        let mut state = state_bytes;
+        let instance = setup_wasmer(store).unwrap();
+        black_box(wasmer_bench(instance, &mut state).unwrap());
       },
     )
   });
@@ -125,15 +156,14 @@ fn wasm_benchmark(c: &mut Criterion) {
 
         let action = json!({});
         let action_bytes = serde_json::to_vec(&action).unwrap();
-        (state_bytes, action_bytes)
+        let mut rt =
+          WasmRuntime::new(BENCH_CONTRACT1, Default::default()).unwrap();
+        (state_bytes, action_bytes, rt)
       },
-      |(state_bytes, action_bytes)| async {
+      |(state_bytes, action_bytes, mut rt)| async move {
         let mut state = state_bytes;
         let mut action = action_bytes;
-        let mut rt = WasmRuntime::new(BENCH_CONTRACT1, Default::default())
-          .await
-          .unwrap();
-        black_box(rt.call(&mut state, &mut action).await.unwrap());
+        black_box(rt.call(&mut state, &mut action).unwrap());
       },
     )
   });

@@ -48,7 +48,7 @@ pub struct WasmRuntime {
 }
 
 impl WasmRuntime {
-  pub async fn new(
+  pub fn new(
     wasm: &[u8],
     contract: ContractInfo,
   ) -> Result<WasmRuntime, AnyError> {
@@ -330,7 +330,7 @@ impl WasmRuntime {
     cost as usize
   }
 
-  pub async fn call(
+  pub fn call(
     &mut self,
     state: &mut [u8],
     action: &mut [u8],
@@ -457,7 +457,6 @@ mod tests {
       include_bytes!("./testdata/01_wasm/01_wasm.wasm"),
       Default::default(),
     )
-    .await
     .unwrap();
 
     let action = json!({});
@@ -468,10 +467,7 @@ mod tests {
 
     let mut prev_state_bytes =
       deno_core::serde_json::to_vec(&prev_state).unwrap();
-    let state = rt
-      .call(&mut prev_state_bytes, &mut action_bytes)
-      .await
-      .unwrap();
+    let state = rt.call(&mut prev_state_bytes, &mut action_bytes).unwrap();
 
     let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
@@ -487,7 +483,6 @@ mod tests {
       include_bytes!("./testdata/02_wasm/02_wasm.wasm"),
       Default::default(),
     )
-    .await
     .unwrap();
 
     let mut prev_state = json!({
@@ -499,10 +494,7 @@ mod tests {
     for i in 1..100 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
-      let state = rt
-        .call(&mut prev_state_bytes, &mut action_bytes)
-        .await
-        .unwrap();
+      let state = rt.call(&mut prev_state_bytes, &mut action_bytes).unwrap();
 
       let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 

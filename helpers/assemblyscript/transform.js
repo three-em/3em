@@ -75,6 +75,8 @@ export function handle(
     state_size: usize,
     action_ptr: usize,
     action_size: usize,
+    contract_info_ptr: usize,
+    contract_info_size: usize,
 ): usize {
     const state = read_buf(state_ptr, state_size);
     const _action = read_buf(action_ptr, action_size);
