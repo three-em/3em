@@ -65,6 +65,7 @@ async fn main() -> Result<(), AnyError> {
       save,
       save_path,
       benchmark,
+      height
     } => {
       run::run(
         port,
@@ -76,6 +77,7 @@ async fn main() -> Result<(), AnyError> {
         save,
         benchmark,
         save_path,
+        height
       )
       .await;
     }
