@@ -1,11 +1,10 @@
 pub mod core;
 mod evm;
-mod metering;
+pub mod metering;
 mod module_loader;
-mod smartweave;
+pub mod smartweave;
 mod snapshot;
-mod wasm;
-mod wasmer;
+pub mod wasm;
 
 use crate::runtime::module_loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;

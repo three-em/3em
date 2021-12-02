@@ -1,14 +1,14 @@
 {
-    "name": "sample_contract",
-    "version": "1.0.0",
-    "main": "index.js",
-    "license": "MIT",
-    "scripts": {
-      "build": "asc contract.ts --runtime stub --converge -O --noAssert --trapMode clamp --transform ../transform -o contract.wasm"
-    },
-    "dependencies": {
-      "assemblyscript": "^0.19.20",
-      "assemblyscript-json": "^1.1.0"
-    }
+  "name": "sample_contract",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "asc contract.ts --runtime stub --converge -O --noAssert --trapMode clamp --transform ../transform -o contract.wasm"
+  },
+  "dependencies": {
+    "assemblyscript": "^0.19.20",
+    "assemblyscript-json": "^1.1.0",
+    "visitor-as": "^0.6.0"
   }
-  
+}
