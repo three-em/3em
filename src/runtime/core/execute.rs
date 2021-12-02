@@ -103,7 +103,7 @@ pub async fn execute_contract(
       };
       let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
-      let mut rt = WasmRuntime::new(wasm, contract_info).await.unwrap();
+      let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
 
       for interaction in interactions {
         let tx = interaction.node;
@@ -117,7 +117,7 @@ pub async fn execute_contract(
         });
 
         let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
-        let exec = rt.call(&mut prev_state, &mut input).await;
+        let exec = rt.call(&mut prev_state, &mut input);
         let valid = exec.is_ok();
         if valid {
           state = deno_core::serde_json::from_slice(&(exec.unwrap())).unwrap();
