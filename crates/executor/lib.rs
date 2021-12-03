@@ -107,30 +107,28 @@ pub async fn execute_contract(
     ContractType::WASM => {
       let wasm = loaded_contract.contract_src.as_slice();
 
-      let mut state: Value =
-        deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
+      let mut state = loaded_contract.init_state.as_bytes().to_vec();
       let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
 
       for interaction in interactions {
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
         let wasm_input: Value = deno_core::serde_json::from_str(input).unwrap();
-
-        let mut prev_state = deno_core::serde_json::to_vec(&state).unwrap();
         let call_input = serde_json::json!({
           "input": wasm_input,
           "caller": tx.owner.address,
         });
 
         let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
-        let exec = rt.call(&mut prev_state, &mut input);
+        let exec = rt.call(&mut state, &mut input);
         let valid = exec.is_ok();
         if valid {
-          state = deno_core::serde_json::from_slice(&(exec.unwrap())).unwrap();
+          state = exec.unwrap();
         }
         validity.insert(tx.id, valid);
       }
 
+      let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
       ExecuteResult::V8(state, validity)
     }
     ContractType::EVM => ExecuteResult::V8(Null, validity),
