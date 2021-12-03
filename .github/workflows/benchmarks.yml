@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Install Deno
+        run: curl -fsSL https://deno.land/x/install/install.sh | sh
+      - name: Install Cargo
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: nightly
+          components: rustfmt
+      - name: Install Hyperfine
+        run: cargo install hyperfine
+      - name: Run benchmark
+        run: deno run --allow-all tools/benchmarks/run_benchmark.js
+      - name: Commit report
+        run: |
+          git config --global user.name 'BenchBot'
+          git config --global user.email '3em-benchmark@users.noreply.github.com'
+          git commit -am "Benchmark Report"
+          git push
