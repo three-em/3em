@@ -1733,6 +1733,7 @@ dependencies = [
  "reqwest",
  "serde",
  "sha2",
+ "tokio",
 ]
 
 [[package]]
@@ -1779,6 +1780,9 @@ dependencies = [
 name = "three_em_metering"
 version = "0.1.0"
 dependencies = [
+ "deno_core",
+ "three_em_wasm",
+ "tokio",
  "wasm-encoder",
  "wasmparser",
 ]
@@ -1807,6 +1811,7 @@ dependencies = [
  "serde",
  "three_em_js",
  "three_em_smartweave",
+ "tokio",
  "v8",
 ]
 

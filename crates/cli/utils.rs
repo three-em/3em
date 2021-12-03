@@ -1,5 +1,5 @@
-use sha2::Digest;
 use crate::node::Node;
+use sha2::Digest;
 
 pub fn parse_node_ip(node: &Node) -> String {
   parse_basic_ip(node.ip.to_string(), node.port)

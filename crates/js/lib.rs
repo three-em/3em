@@ -206,9 +206,9 @@ impl Runtime {
 
 #[cfg(test)]
 mod test {
-  use crate::runtime::Error;
-  use crate::runtime::HeapLimitState;
-  use crate::runtime::Runtime;
+  use crate::Error;
+  use crate::HeapLimitState;
+  use crate::Runtime;
   use deno_core::ZeroCopyBuf;
 
   #[tokio::test]

@@ -33,4 +33,3 @@ fn main() {
 
   create_snapshot(&runtime_snapshot_path);
 }
-

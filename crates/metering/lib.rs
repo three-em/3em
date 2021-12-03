@@ -453,7 +453,7 @@ impl Metering {
             data: &input[range.start..range.end],
           });
         }
-        Payload::ExportSection(mut reader) => {
+        Payload::ExportSection(reader) => {
           let mut section = wasm_encoder::ExportSection::new();
 
           for export in reader {
@@ -952,11 +952,11 @@ fn map_memarg(memarg: &MemoryImmediate) -> MemArg {
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::metering::Metering;
-  use crate::runtime::wasm::WasmRuntime;
+  use crate::Metering;
   use deno_core::serde_json;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
+  use three_em_wasm::WasmRuntime;
   use wasm_encoder::Instruction;
 
   fn test_cost_function(inst: &Instruction) -> i32 {
@@ -971,12 +971,15 @@ mod tests {
     let metering = Metering::new(test_cost_function);
     // (expected gas consumption, module bytes)
     let sources: [(usize, &[u8]); 5] = [
-      (9942032, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
+      (
+        9942032,
+        include_bytes!("../../testdata/01_wasm/01_wasm.wasm"),
+      ),
       (
         3263,
         include_bytes!("../../helpers/rust/example/contract.wasm"),
       ),
-      (11545, include_bytes!("./testdata/02_wasm/02_wasm.wasm")),
+      (11545, include_bytes!("../../testdata/02_wasm/02_wasm.wasm")),
       (11975, include_bytes!("../../helpers/zig/contract.wasm")),
       (9901, include_bytes!("../../helpers/cpp/contract.wasm")),
     ];
@@ -1006,12 +1009,12 @@ mod tests {
   fn test_metering_general() {
     let metering = Metering::new(test_cost_function);
     let module = metering
-      .inject(include_bytes!("./testdata/metering/add.wasm"))
+      .inject(include_bytes!("../../testdata/metering/add.wasm"))
       .unwrap();
     // Deterministic codegen.
     assert_eq!(
       &module.finish(),
-      include_bytes!("./testdata/metering/add.metering.wasm")
+      include_bytes!("../../testdata/metering/add.metering.wasm")
     );
   }
 

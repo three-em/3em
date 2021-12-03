@@ -454,7 +454,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
     let mut rt = WasmRuntime::new(
-      include_bytes!("./testdata/01_wasm/01_wasm.wasm"),
+      include_bytes!("../../testdata/01_wasm/01_wasm.wasm"),
       Default::default(),
     )
     .unwrap();
@@ -480,7 +480,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
     let mut rt = WasmRuntime::new(
-      include_bytes!("./testdata/02_wasm/02_wasm.wasm"),
+      include_bytes!("../../testdata/02_wasm/02_wasm.wasm"),
       Default::default(),
     )
     .unwrap();

@@ -45,8 +45,8 @@ pub fn get_sort_key(
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::core::arweave::{Tag, TransactionData};
-  use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
+  use crate::arweave::{Tag, TransactionData};
+  use crate::miscellaneous::{get_contract_type, ContractType};
 
   #[tokio::test]
   async fn get_contract_type_test() {

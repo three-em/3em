@@ -830,6 +830,7 @@ mod tests {
     U256::zero()
   }
 
+  #[allow(dead_code)]
   fn print_vm_memory(vm: &Machine) {
     let mem = &vm.memory;
     println!("{:?}", mem);
@@ -908,7 +909,7 @@ mod tests {
 
   #[test]
   fn test_add_solidity() {
-    let mut machine = Machine::new(test_cost_fn);
+    let machine = Machine::new(test_cost_fn);
     // label_0000:
     // 	// Inputs[1] { @0005  msg.value }
     // 	0000    60  PUSH1 0x80
