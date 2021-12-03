@@ -12,10 +12,8 @@ const smartweave = SmartWeaveSdk.SmartWeaveNodeFactory.memCached(
   749180,
 );
 (async () => {
-  console.log(
-    await smartweave.contract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")
-      .setEvaluationOptions({
-        fcpOptimization: true,
-      }).readState(),
-  );
+  await smartweave.contract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")
+    .setEvaluationOptions({
+      fcpOptimization: true,
+    }).readState(749180);
 })();
