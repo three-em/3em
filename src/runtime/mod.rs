@@ -7,6 +7,7 @@ mod snapshot;
 pub mod wasm;
 
 use crate::runtime::module_loader::EmbeddedModuleLoader;
+use crate::runtime::smartweave::ContractInfo;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
@@ -67,7 +68,11 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T>(source: &str, init: T) -> Result<Self, AnyError>
+  pub async fn new<T>(
+    source: &str,
+    init: T,
+    contract_info: ContractInfo,
+  ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
   {
@@ -97,7 +102,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        smartweave::init(),
+        smartweave::init(contract_info),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -211,6 +216,7 @@ impl Runtime {
 
 #[cfg(test)]
 mod test {
+  use crate::runtime::smartweave::ContractInfo;
   use crate::runtime::Error;
   use crate::runtime::HeapLimitState;
   use crate::runtime::Runtime;
@@ -221,6 +227,7 @@ mod test {
     let mut rt = Runtime::new(
       "export async function handle() { return { state: -69 } }",
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -243,6 +250,7 @@ export async function handle(slice) {
 }
 "#,
       ZeroCopyBuf::from(buf),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -267,6 +275,7 @@ export async function handle() {
 }
 "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -291,6 +300,7 @@ export async function handle() {
   }
   "#,
       8,
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -321,6 +331,7 @@ export async function handle() {
   }
   "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -344,6 +355,7 @@ export async function handle() {
   }
   "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -362,6 +374,7 @@ export async function handle() {
   }
   "#,
   (),
+  ContractInfo::default(),
       )
       .await
       .unwrap();
