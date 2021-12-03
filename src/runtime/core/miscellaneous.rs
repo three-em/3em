@@ -69,8 +69,8 @@ mod tests {
     assert!(matches!(contract_type, ContractType::JAVASCRIPT));
     let contract_type = get_contract_type(
       None,
-      &get_fake_transaction("application/wasm"),
       &get_fake_transaction("whatever"),
+      &get_fake_transaction("application/wasm"),
     );
     assert!(matches!(contract_type, ContractType::WASM));
     let contract_type = get_contract_type(

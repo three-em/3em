@@ -132,10 +132,10 @@ pub async fn execute_contract(
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
-  let tag = (&(&interaction_tx)
+  let tag = &(&interaction_tx)
     .tags
     .iter()
-    .find(|data| &data.name == "Input"));
+    .find(|data| &data.name == "Input");
 
   match tag {
     Some(data) => &data.value,
@@ -177,22 +177,19 @@ mod test {
       String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ"),
       None,
       None,
-      None,
+      Some(822062),
     )
     .await;
     if let ExecuteResult::V8(value, validity) = result {
       assert!(!(value.is_null()));
       assert!(value.get("counter").is_some());
       let counter = value.get("counter").unwrap().as_i64().unwrap();
-      assert!(counter >= 3);
+      assert_eq!(counter, 2);
       assert!(validity
         .get("HBHsDDeWrEmAlkg_mFzYjOsEgG3I6j4id_Aqd1fERgA")
         .is_some());
       assert!(validity
         .get("IlAr0h0rl7oI7FesF1Oy-E_a-K6Al4Avc2pu6CEZkog")
-        .is_some());
-      assert!(validity
-        .get("mxAuYqsTP8RItfaw5tY_gV4Z98MlAObzG_uhLe9tx3c")
         .is_some());
     } else {
       assert!(false);

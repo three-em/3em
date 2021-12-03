@@ -12,7 +12,7 @@ pub async fn run(
   save: bool,
   benchmark: bool,
   save_path: String,
-  height: Option<usize>
+  height: Option<usize>,
 ) {
   let arweave = Arweave::new(port, host);
   let start = std::time::Instant::now();
