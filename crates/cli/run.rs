@@ -1,6 +1,7 @@
-use crate::runtime::core::arweave::Arweave;
-use crate::runtime::core::execute::{execute_contract, ExecuteResult};
 use std::io::Write;
+use three_em_arweave::arweave::Arweave;
+use three_em_executor::execute_contract;
+use three_em_executor::ExecuteResult;
 
 pub async fn run(
   port: i32,
@@ -12,7 +13,7 @@ pub async fn run(
   save: bool,
   benchmark: bool,
   save_path: String,
-  height: Option<usize>
+  height: Option<usize>,
 ) {
   let arweave = Arweave::new(port, host);
   let start = std::time::Instant::now();

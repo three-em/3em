@@ -3,8 +3,6 @@
 /node_modules
 ./node_modules
 /snapshot-bin
-/src/runtime/testdata/01_wasm/target
-/src/runtime/testdata/02_wasm/node_modules
 ./3em-js-benchmark.json
 ./3em-wasm-benchmark.json
 ./smartweave-js-benchmark.json
@@ -14,3 +12,5 @@
 smartweave-js-benchmark.json
 redstone-js-benchmark.json
 package-lock.json
+/testdata/01_wasm/target
+/testdata/02_wasm/node_modules

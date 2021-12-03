@@ -1,4 +1,4 @@
-use crate::runtime::core::arweave::TransactionData;
+use crate::arweave::TransactionData;
 use crate::utils::decode_base_64;
 
 pub fn get_tag(transaction: &TransactionData, tag: &str) -> String {

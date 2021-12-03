@@ -1,4 +1,3 @@
-use crate::runtime::core::arweave::TransactionData;
 use deno_core::error::type_error;
 use deno_core::error::AnyError;
 use deno_core::include_js_files;
@@ -12,14 +11,15 @@ use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::thread;
+use three_em_arweave::arweave::TransactionData;
 
-pub fn init() -> Extension {
+pub fn init(info: ContractInfo) -> Extension {
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
-      "src/runtime/bignumber.js",
-      "src/runtime/smartweave.js",
-      "src/runtime/contract-assert.js",
+      "bignumber.js",
+      "smartweave.js",
+      "contract-assert.js",
     ))
     .ops(vec![
       ("op_smartweave_init", op_sync(op_smartweave_init)),
@@ -32,17 +32,21 @@ pub fn init() -> Extension {
         op_async(op_smartweave_wallet_last_tx),
       ),
     ])
+    .state(move |state| {
+      state.put(info.clone());
+      Ok(())
+    })
     .build()
 }
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Clone)]
 pub struct ContractBlock {
   pub height: usize,
   pub indep_hash: String,
   pub timestamp: String,
 }
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Clone)]
 pub struct ContractInfo {
   pub transaction: TransactionData,
   pub block: ContractBlock,

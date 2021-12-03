@@ -1,0 +1,16 @@
+[package]
+name = "three_em_evm"
+version = "0.1.0"
+authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
+edition = "2021"
+resolver = "2"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+primitive-types = "0.10.1"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
+
+[dev-dependencies]
+hex-literal = "0.3.4"

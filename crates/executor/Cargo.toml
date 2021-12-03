@@ -1,0 +1,21 @@
+[package]
+name = "three_em_executor"
+version = "0.1.0"
+authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
+edition = "2021"
+resolver = "2"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+deno_core = "0.107.0"
+sha2 = "0.9.5"
+serde = { version = "1", features = ["derive"] }
+three_em_smartweave = { path = "../smartweave" }
+three_em_js = { path = "../js" }
+three_em_wasm = { path = "../wasm" }
+tokio = { version = "1.10.1", features = ["full"] }
+three_em_arweave = { path = "../arweave" }
+base64 = "0.13.0"

@@ -1,12 +1,7 @@
-pub mod core;
-mod evm;
-pub mod metering;
-mod module_loader;
-pub mod smartweave;
-mod snapshot;
-pub mod wasm;
+mod loader;
+pub mod snapshot;
 
-use crate::runtime::module_loader::EmbeddedModuleLoader;
+use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
@@ -21,6 +16,7 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
+use three_em_smartweave::ContractInfo;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -67,7 +63,11 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T>(source: &str, init: T) -> Result<Self, AnyError>
+  pub async fn new<T>(
+    source: &str,
+    init: T,
+    contract_info: ContractInfo,
+  ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
   {
@@ -78,7 +78,8 @@ impl Runtime {
     let flags = concat!(
       "--predictable",
       " --predictable-gc-schedule",
-      " --hash-seed=42"
+      " --hash-seed=42",
+      " --random-seed=42",
     );
     v8::V8::set_flags_from_string(flags);
 
@@ -97,7 +98,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        smartweave::init(),
+        three_em_smartweave::init(contract_info),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -211,16 +212,18 @@ impl Runtime {
 
 #[cfg(test)]
 mod test {
-  use crate::runtime::Error;
-  use crate::runtime::HeapLimitState;
-  use crate::runtime::Runtime;
+  use crate::Error;
+  use crate::HeapLimitState;
+  use crate::Runtime;
   use deno_core::ZeroCopyBuf;
+  use three_em_smartweave::ContractInfo;
 
   #[tokio::test]
   async fn test_runtime() {
     let mut rt = Runtime::new(
       "export async function handle() { return { state: -69 } }",
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -243,6 +246,7 @@ export async function handle(slice) {
 }
 "#,
       ZeroCopyBuf::from(buf),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -267,17 +271,18 @@ export async function handle() {
 }
 "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
 
     rt.call(()).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand1, 0.14617804087311326);
+    assert_eq!(rand1, 0.7939112874678715);
 
     rt.call(()).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand2, 0.16993119449737915);
+    assert_eq!(rand2, 0.5254990606499601);
   }
 
   #[tokio::test]
@@ -291,6 +296,7 @@ export async function handle() {
   }
   "#,
       8,
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -321,6 +327,7 @@ export async function handle() {
   }
   "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -344,6 +351,7 @@ export async function handle() {
   }
   "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -362,6 +370,7 @@ export async function handle() {
   }
   "#,
   (),
+  ContractInfo::default(),
       )
       .await
       .unwrap();
