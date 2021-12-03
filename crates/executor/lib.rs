@@ -39,25 +39,29 @@ pub async fn execute_contract(
 
   let (loaded_contract, interactions) = tokio::join!(
     tokio::spawn(async move {
-      shared_client
+      let mut contract = shared_client
         .load_contract(shared_id, contract_src_tx, contract_content_type)
-        .await
+        .await;
+
+      contract
     }),
-    tokio::spawn(
-      async move { arweave.get_interactions(contract_id, height).await }
-    )
+    tokio::spawn(async move {
+      let mut interactions =
+        arweave.get_interactions(contract_id, height).await;
+      interactions.sort_by(|a, b| {
+        let a_sort_key =
+          get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
+        let b_sort_key =
+          get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
+        a_sort_key.cmp(&b_sort_key)
+      });
+
+      interactions
+    })
   );
 
   let loaded_contract = loaded_contract.unwrap();
   let mut interactions = interactions.unwrap();
-
-  interactions.sort_by(|a, b| {
-    let a_sort_key =
-      get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
-    let b_sort_key =
-      get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
-    a_sort_key.cmp(&b_sort_key)
-  });
 
   let mut validity: HashMap<String, bool> = HashMap::new();
   let transaction = loaded_contract.contract_transaction;
