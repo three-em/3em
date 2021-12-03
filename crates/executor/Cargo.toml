@@ -1,7 +1,7 @@
 [package]
 name = "three_em_executor"
 version = "0.1.0"
-authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
+authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 resolver = "2"
 
