@@ -11,6 +11,5 @@
 3em-wasm-benchmark.json
 smartweave-js-benchmark.json
 redstone-js-benchmark.json
-package-lock.json
 /testdata/01_wasm/target
 /testdata/02_wasm/node_modules
