@@ -1,9 +1,4 @@
-use crate::node::Node;
 use sha2::Digest;
-
-pub fn parse_node_ip(node: &Node) -> String {
-  parse_basic_ip(node.ip.to_owned(), node.port)
-}
 
 pub fn parse_basic_ip(ip: String, port: i32) -> String {
   format!("{}:{}", ip, port)

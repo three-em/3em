@@ -1,7 +1,8 @@
-use crate::runtime::core::arweave::TransactionData;
-use crate::runtime::core::arweave_get_tag::get_tag;
+use crate::arweave::TransactionData;
+use crate::arweave_get_tag::get_tag;
 use crate::utils::hasher;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub enum ContractType {

@@ -1,16 +1,19 @@
-use crate::runtime::core::arweave::Arweave;
-use crate::runtime::core::gql_result::{
-  GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
-};
-use crate::runtime::core::miscellaneous::{get_sort_key, ContractType};
-use crate::runtime::smartweave::{ContractBlock, ContractInfo};
-use crate::runtime::wasm::WasmRuntime;
-use crate::runtime::Runtime;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
+use deno_core::serde_json;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
+use three_em_arweave::arweave::Arweave;
+use three_em_arweave::gql_result::{
+  GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
+};
+use three_em_arweave::miscellaneous::get_sort_key;
+use three_em_arweave::miscellaneous::ContractType;
+use three_em_js::Runtime;
+use three_em_smartweave::ContractBlock;
+use three_em_smartweave::ContractInfo;
+use three_em_wasm::WasmRuntime;
 
 struct ContractHandlerResult {
   result: Option<Value>,

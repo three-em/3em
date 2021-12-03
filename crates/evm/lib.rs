@@ -191,7 +191,7 @@ pub struct Stack {
 
 impl Default for Stack {
   fn default() -> Self {
-    let mut data = Vec::with_capacity(MAX_STACK_SIZE);
+    let data = Vec::with_capacity(MAX_STACK_SIZE);
 
     Stack { data }
   }

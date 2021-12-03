@@ -27,8 +27,8 @@ use wasmparser::Type;
 use wasmparser::TypeDef;
 use wasmparser::TypeOrFuncType;
 
-pub use wasmparser;
 pub use wasm_encoder;
+pub use wasmparser;
 
 /// 3EM's WebAssembly metering module.
 pub struct Metering(
@@ -58,14 +58,12 @@ impl Metering {
 
     loop {
       let (payload, consumed) = match parser.parse(source, true)? {
-        Chunk::NeedMoreData(hint) => unreachable!(),
+        Chunk::NeedMoreData(_) => unreachable!(),
         Chunk::Parsed { consumed, payload } => (payload, consumed),
       };
 
       match payload {
-        Payload::ImportSection(mut reader) => {
-          let range = reader.range();
-
+        Payload::ImportSection(reader) => {
           let mut imports = ImportSection::new();
 
           for import in reader {
@@ -127,9 +125,7 @@ impl Metering {
 
           module.section(&imports);
         }
-        Payload::TypeSection(mut reader) => {
-          let range = reader.range();
-
+        Payload::TypeSection(reader) => {
           let mut types = TypeSection::new();
 
           for ty in reader {
@@ -364,7 +360,7 @@ impl Metering {
 
     for payload in pending_payloads {
       match payload {
-        Payload::StartSection { func, range } => {
+        Payload::StartSection { func, range: _ } => {
           let function_index = if func >= func_idx as u32 {
             func + 1
           } else {
@@ -381,7 +377,7 @@ impl Metering {
         } => {
           let section = &input[range.start..range.end];
 
-          let mut reader = CodeSectionReader::new(section, 0)?;
+          let reader = CodeSectionReader::new(section, 0)?;
           let mut section = CodeSection::new();
 
           for body in reader {
@@ -397,7 +393,7 @@ impl Metering {
               locals.into_iter().map(|(i, t)| (i, map_type(t))).collect();
             let mut func = Function::new(locals);
 
-            let mut operators = body.get_operators_reader()?;
+            let operators = body.get_operators_reader()?;
             let operators =
               operators.into_iter().collect::<Result<Vec<Operator>>>()?;
 
@@ -429,7 +425,7 @@ impl Metering {
             data: &input[range.start..range.end],
           });
         }
-        Payload::FunctionSection(mut reader) => {
+        Payload::FunctionSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Function as u8,
@@ -450,7 +446,7 @@ impl Metering {
             data: &input[range.start..range.end],
           });
         }
-        Payload::GlobalSection(mut reader) => {
+        Payload::GlobalSection(reader) => {
           let range = reader.range();
           module.section(&RawSection {
             id: SectionId::Global as u8,
@@ -458,7 +454,6 @@ impl Metering {
           });
         }
         Payload::ExportSection(mut reader) => {
-          let range = reader.range();
           let mut section = wasm_encoder::ExportSection::new();
 
           for export in reader {
@@ -497,7 +492,6 @@ impl Metering {
           module.section(&section);
         }
         Payload::ElementSection(reader) => {
-          let range = reader.range();
           let mut section = ElementSection::new();
           for element in reader {
             let element = element?;
