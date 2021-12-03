@@ -6,7 +6,7 @@ use wasm_encoder::ElementSection;
 use wasm_encoder::EntityType;
 use wasm_encoder::Function;
 use wasm_encoder::ImportSection;
-use wasm_encoder::Instruction;
+pub use wasm_encoder::Instruction;
 use wasm_encoder::MemArg;
 use wasm_encoder::Module;
 use wasm_encoder::RawSection;
@@ -26,6 +26,9 @@ use wasmparser::SectionReader;
 use wasmparser::Type;
 use wasmparser::TypeDef;
 use wasmparser::TypeOrFuncType;
+
+pub use wasmparser;
+pub use wasm_encoder;
 
 /// 3EM's WebAssembly metering module.
 pub struct Metering(

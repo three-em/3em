@@ -1,12 +1,7 @@
-pub mod core;
-mod evm;
-pub mod metering;
-mod module_loader;
-pub mod smartweave;
-mod snapshot;
-pub mod wasm;
+mod loader;
+pub mod snapshot;
 
-use crate::runtime::module_loader::EmbeddedModuleLoader;
+use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
@@ -97,7 +92,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        smartweave::init(),
+        three_em_smartweave::init(),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),

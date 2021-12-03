@@ -818,10 +818,10 @@ impl Machine {
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::evm::ExecutionState;
-  use crate::runtime::evm::Instruction;
-  use crate::runtime::evm::Machine;
-  use crate::runtime::evm::Stack;
+  use crate::ExecutionState;
+  use crate::Instruction;
+  use crate::Machine;
+  use crate::Stack;
 
   use hex_literal::hex;
   use primitive_types::U256;

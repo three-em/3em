@@ -20,7 +20,7 @@ fn create_snapshot(snapshot_path: &Path) {
     ..Default::default()
   });
 
-  let files = get_js_files("src/runtime");
+  let files = get_js_files("src/crates/smartweave");
   let display_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
   for file in files {
     println!("cargo:rerun-if-changed={}", file.display());

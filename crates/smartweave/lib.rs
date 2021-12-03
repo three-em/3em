@@ -17,9 +17,9 @@ pub fn init() -> Extension {
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
-      "src/runtime/bignumber.js",
-      "src/runtime/smartweave.js",
-      "src/runtime/contract-assert.js",
+      "src/crates/smartweave/bignumber.js",
+      "src/crates/smartweave/smartweave.js",
+      "src/crates/smartweave/contract-assert.js",
     ))
     .ops(vec![
       ("op_smartweave_init", op_sync(op_smartweave_init)),

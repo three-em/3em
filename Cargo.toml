@@ -10,6 +10,10 @@ build = "build.rs"
 name = "wasm"
 harness = false
 
+[features]
+wasm = ["js-sys", "wasm-bindgen"]
+default = []
+
 [dependencies]
 v8 = "0.34.0"
 deno_core = "0.107.0"
@@ -34,6 +38,9 @@ serde_json = "1.0"
 base64 = "0.13.0"
 hex = "0.4.3"
 bytes = "1.1.0"
+
+js-sys = { version = "0.3.55", optional = true }
+wasm-bindgen = { version = "0.2.78", optional = true }
 
 [dev-dependencies]
 hex-literal = "0.3.4"
