@@ -40,3 +40,25 @@ export const EM3_JS_CMD = (runs: number, filePath: string) => {
     filePath,
   );
 };
+
+export const SMARTWEAVE_JS_CMD = (runs: number, filePath: string) => {
+  return buildCommand(
+    [
+      "node",
+      "tools/benchmarks/smartweave/index.js",
+    ],
+    runs,
+    filePath,
+  );
+};
+
+export const REDSTONE_JS_CMD = (runs: number, filePath: string) => {
+  return buildCommand(
+    [
+      "node",
+      "tools/benchmarks/redstone/index.js",
+    ],
+    runs,
+    filePath,
+  );
+};
