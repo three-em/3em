@@ -12,11 +12,12 @@ pub async fn run(
   save: bool,
   benchmark: bool,
   save_path: String,
+  height: Option<usize>
 ) {
   let arweave = Arweave::new(port, host);
   let start = std::time::Instant::now();
 
-  let execution = execute_contract(arweave, tx, None, None, None).await;
+  let execution = execute_contract(arweave, tx, None, None, height).await;
 
   if benchmark {
     let elapsed = start.elapsed();

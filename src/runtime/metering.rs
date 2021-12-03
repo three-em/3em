@@ -974,7 +974,7 @@ mod tests {
     let metering = Metering::new(test_cost_function);
     // (expected gas consumption, module bytes)
     let sources: [(usize, &[u8]); 5] = [
-      (9810469, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
+      (9942032, include_bytes!("./testdata/01_wasm/01_wasm.wasm")),
       (
         3263,
         include_bytes!("../../helpers/rust/example/contract.wasm"),
