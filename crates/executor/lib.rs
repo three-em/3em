@@ -1,18 +1,19 @@
-use crate::runtime::core::arweave::Arweave;
-use crate::runtime::core::gql_result::GQLEdgeInterface;
-use crate::runtime::core::gql_result::GQLNodeInterface;
-use crate::runtime::core::gql_result::GQLTagInterface;
-use crate::runtime::core::miscellaneous::get_sort_key;
-use crate::runtime::core::miscellaneous::ContractType;
-use crate::runtime::smartweave::ContractBlock;
-use crate::runtime::smartweave::ContractInfo;
-use crate::runtime::wasm::WasmRuntime;
-use crate::runtime::Runtime;
 use deno_core::error::AnyError;
+use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
+use three_em_arweave::arweave::Arweave;
+use three_em_arweave::gql_result::{
+  GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
+};
+use three_em_arweave::miscellaneous::get_sort_key;
+use three_em_arweave::miscellaneous::ContractType;
+use three_em_js::Runtime;
+use three_em_smartweave::ContractBlock;
+use three_em_smartweave::ContractInfo;
+use three_em_wasm::WasmRuntime;
 
 struct ContractHandlerResult {
   result: Option<Value>,
@@ -137,10 +138,10 @@ pub async fn execute_contract(
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
-  let tag = (&(&interaction_tx)
+  let tag = &(&interaction_tx)
     .tags
     .iter()
-    .find(|data| &data.name == "Input"));
+    .find(|data| &data.name == "Input");
 
   match tag {
     Some(data) => &data.value,
@@ -160,14 +161,12 @@ pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
 
 #[cfg(test)]
 mod test {
-  use crate::runtime::core::arweave::Arweave;
-  use crate::runtime::core::execute::{execute_contract, ExecuteResult};
-  use crate::runtime::Error;
-  use crate::runtime::HeapLimitState;
-  use crate::runtime::Runtime;
-  use deno_core::ZeroCopyBuf;
+  use crate::execute_contract;
+  use crate::ExecuteResult;
+  use deno_core::serde_json;
   use serde::Deserialize;
   use serde::Serialize;
+  use three_em_arweave::arweave::Arweave;
 
   #[derive(Deserialize, Serialize)]
   struct People {
@@ -182,22 +181,19 @@ mod test {
       String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ"),
       None,
       None,
-      None,
+      Some(822062),
     )
     .await;
     if let ExecuteResult::V8(value, validity) = result {
       assert!(!(value.is_null()));
       assert!(value.get("counter").is_some());
       let counter = value.get("counter").unwrap().as_i64().unwrap();
-      assert!(counter >= 3);
+      assert_eq!(counter, 2);
       assert!(validity
         .get("HBHsDDeWrEmAlkg_mFzYjOsEgG3I6j4id_Aqd1fERgA")
         .is_some());
       assert!(validity
         .get("IlAr0h0rl7oI7FesF1Oy-E_a-K6Al4Avc2pu6CEZkog")
-        .is_some());
-      assert!(validity
-        .get("mxAuYqsTP8RItfaw5tY_gV4Z98MlAObzG_uhLe9tx3c")
         .is_some());
     } else {
       assert!(false);

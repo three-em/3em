@@ -4,14 +4,13 @@ mod messages;
 mod node;
 mod node_crypto;
 mod run;
-pub mod runtime;
 mod start;
 mod utils;
 
 use crate::cli::parse;
 use crate::cli::parse::Flags;
 use deno_core::error::AnyError;
-use runtime::core::execute::execute_contract;
+use three_em_executor::execute_contract;
 
 use colored::Colorize;
 use std::env;

@@ -1,0 +1,19 @@
+[package]
+name = "three_em_metering"
+version = "0.1.0"
+authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
+edition = "2021"
+resolver = "2"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+wasmparser = "0.81.0"
+wasm-encoder = "0.8.0"
+
+[dev-dependencies]
+deno_core = "0.107.0"
+three_em_wasm = { path = "../wasm" }
+tokio = { version = "1.10.1", features = ["full"] }
+

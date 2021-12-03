@@ -1,13 +1,8 @@
-pub mod core;
-mod evm;
-pub mod metering;
-mod module_loader;
-pub mod smartweave;
-mod snapshot;
-pub mod wasm;
+mod loader;
+pub mod snapshot;
 
-use crate::runtime::module_loader::EmbeddedModuleLoader;
-use crate::runtime::smartweave::ContractInfo;
+use crate::loader::EmbeddedModuleLoader;
+use three_em_smartweave::ContractInfo;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
@@ -83,7 +78,8 @@ impl Runtime {
     let flags = concat!(
       "--predictable",
       " --predictable-gc-schedule",
-      " --hash-seed=42"
+      " --hash-seed=42",
+      " --random-seed=42",
     );
     v8::V8::set_flags_from_string(flags);
 
@@ -102,7 +98,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        smartweave::init(contract_info),
+        three_em_smartweave::init(contract_info),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -216,10 +212,10 @@ impl Runtime {
 
 #[cfg(test)]
 mod test {
-  use crate::runtime::smartweave::ContractInfo;
-  use crate::runtime::Error;
-  use crate::runtime::HeapLimitState;
-  use crate::runtime::Runtime;
+  use crate::Error;
+  use crate::HeapLimitState;
+  use crate::Runtime;
+  use three_em_smartweave::ContractInfo;
   use deno_core::ZeroCopyBuf;
 
   #[tokio::test]
@@ -282,11 +278,11 @@ export async function handle() {
 
     rt.call(()).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand1, 0.14617804087311326);
+    assert_eq!(rand1, 0.7939112874678715);
 
     rt.call(()).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand2, 0.16993119449737915);
+    assert_eq!(rand2, 0.5254990606499601);
   }
 
   #[tokio::test]

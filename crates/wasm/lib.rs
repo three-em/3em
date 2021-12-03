@@ -1,6 +1,3 @@
-use crate::runtime::smartweave;
-use crate::runtime::smartweave::ContractInfo;
-use crate::runtime::snapshot;
 use deno_core::error::AnyError;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
@@ -14,6 +11,9 @@ use std::rc::Rc;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use three_em_js::snapshot;
+use three_em_smartweave::read_contract_state;
+use three_em_smartweave::ContractInfo;
 
 macro_rules! wasm_alloc {
   ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {
@@ -166,7 +166,7 @@ impl WasmRuntime {
 
         let mut tx_id = String::from_utf8_lossy(tx_bytes).to_string();
 
-        let state = smartweave::read_contract_state(tx_id);
+        let state = read_contract_state(tx_id);
         let mut state = deno_core::serde_json::to_vec(&state).unwrap();
 
         let mut state_len = (state.len() as u32).to_le_bytes();
@@ -446,7 +446,7 @@ unsafe fn get_backing_store_slice_mut(
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::wasm::WasmRuntime;
+  use crate::WasmRuntime;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
   use std::sync::atomic::Ordering;
@@ -454,7 +454,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
     let mut rt = WasmRuntime::new(
-      include_bytes!("./testdata/01_wasm/01_wasm.wasm"),
+      include_bytes!("../../testdata/01_wasm/01_wasm.wasm"),
       Default::default(),
     )
     .unwrap();
@@ -480,7 +480,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
     let mut rt = WasmRuntime::new(
-      include_bytes!("./testdata/02_wasm/02_wasm.wasm"),
+      include_bytes!("../../testdata/02_wasm/02_wasm.wasm"),
       Default::default(),
     )
     .unwrap();

@@ -1,7 +1,8 @@
-use crate::runtime::core::arweave::TransactionData;
-use crate::runtime::core::arweave_get_tag::get_tag;
+use crate::arweave::TransactionData;
+use crate::arweave_get_tag::get_tag;
 use crate::utils::hasher;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub enum ContractType {
@@ -44,8 +45,8 @@ pub fn get_sort_key(
 
 #[cfg(test)]
 mod tests {
-  use crate::runtime::core::arweave::{Tag, TransactionData};
-  use crate::runtime::core::miscellaneous::{get_contract_type, ContractType};
+  use crate::arweave::{Tag, TransactionData};
+  use crate::miscellaneous::{get_contract_type, ContractType};
 
   #[tokio::test]
   async fn get_contract_type_test() {
@@ -69,8 +70,8 @@ mod tests {
     assert!(matches!(contract_type, ContractType::JAVASCRIPT));
     let contract_type = get_contract_type(
       None,
-      &get_fake_transaction("application/wasm"),
       &get_fake_transaction("whatever"),
+      &get_fake_transaction("application/wasm"),
     );
     assert!(matches!(contract_type, ContractType::WASM));
     let contract_type = get_contract_type(

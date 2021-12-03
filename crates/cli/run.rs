@@ -1,6 +1,7 @@
-use crate::runtime::core::arweave::Arweave;
-use crate::runtime::core::execute::{execute_contract, ExecuteResult};
 use std::io::Write;
+use three_em_arweave::arweave::Arweave;
+use three_em_executor::execute_contract;
+use three_em_executor::ExecuteResult;
 
 pub async fn run(
   port: i32,
