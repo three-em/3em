@@ -13,7 +13,7 @@ use std::rc::Rc;
 use std::thread;
 use three_em_arweave::arweave::TransactionData;
 
-pub fn init() -> Extension {
+pub fn init(info: ContractInfo) -> Extension {
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
@@ -32,17 +32,21 @@ pub fn init() -> Extension {
         op_async(op_smartweave_wallet_last_tx),
       ),
     ])
+    .state(move |state| {
+      state.put(info.clone());
+      Ok(())
+    })
     .build()
 }
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Clone)]
 pub struct ContractBlock {
   pub height: usize,
   pub indep_hash: String,
   pub timestamp: String,
 }
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Clone)]
 pub struct ContractInfo {
   pub transaction: TransactionData,
   pub block: ContractBlock,

@@ -60,8 +60,17 @@ pub async fn execute_contract(
   });
 
   let mut validity: HashMap<String, bool> = HashMap::new();
+  let transaction = loaded_contract.contract_transaction;
+  let contract_info = ContractInfo {
+    transaction,
+    block: ContractBlock {
+      height: 0,
+      indep_hash: String::from(""),
+      timestamp: String::from(""),
+    },
+  };
 
-  // Todo: handle wasm, evm, etc.
+  // TODO: handle evm.
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
       let mut state: Value =
@@ -70,6 +79,7 @@ pub async fn execute_contract(
       let mut rt = Runtime::new(
         &(String::from_utf8(loaded_contract.contract_src).unwrap()),
         state,
+        contract_info,
       )
       .await
       .unwrap();
@@ -78,7 +88,8 @@ pub async fn execute_contract(
         let tx = interaction.node;
         let input = get_input_from_interaction(&tx);
 
-        // TODO: has_multiple_interactions https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
+        // TODO: has_multiple_interactions
+        // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
         let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
 
         let call_input = serde_json::json!({
@@ -95,15 +106,7 @@ pub async fn execute_contract(
     }
     ContractType::WASM => {
       let wasm = loaded_contract.contract_src.as_slice();
-      let transaction = loaded_contract.contract_transaction;
-      let contract_info = ContractInfo {
-        transaction,
-        block: ContractBlock {
-          height: 0,
-          indep_hash: String::from(""),
-          timestamp: String::from(""),
-        },
-      };
+
       let mut state: Value =
         deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
       let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();

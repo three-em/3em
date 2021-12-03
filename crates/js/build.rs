@@ -4,6 +4,7 @@ use deno_web::BlobStore;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
+use three_em_smartweave::ContractInfo;
 
 // Adapted from deno_runtime
 // https://github.com/denoland/deno/blob/fdf890a68d3d54d40c766fd78faeccb20bd2e2c6/runtime/build.rs#L37-L41
@@ -14,7 +15,7 @@ fn create_snapshot(snapshot_path: &Path) {
       deno_url::init(),
       deno_web::init(BlobStore::default(), None),
       deno_crypto::init(None),
-      three_em_smartweave::init(),
+      three_em_smartweave::init(ContractInfo::default()),
     ],
     will_snapshot: true,
     ..Default::default()

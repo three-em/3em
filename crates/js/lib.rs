@@ -16,6 +16,7 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
+use three_em_smartweave::ContractInfo;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -62,7 +63,11 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T>(source: &str, init: T) -> Result<Self, AnyError>
+  pub async fn new<T>(
+    source: &str,
+    init: T,
+    contract_info: ContractInfo,
+  ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
   {
@@ -93,7 +98,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(),
+        three_em_smartweave::init(contract_info),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -211,12 +216,14 @@ mod test {
   use crate::HeapLimitState;
   use crate::Runtime;
   use deno_core::ZeroCopyBuf;
+  use three_em_smartweave::ContractInfo;
 
   #[tokio::test]
   async fn test_runtime() {
     let mut rt = Runtime::new(
       "export async function handle() { return { state: -69 } }",
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -239,6 +246,7 @@ export async function handle(slice) {
 }
 "#,
       ZeroCopyBuf::from(buf),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -263,6 +271,7 @@ export async function handle() {
 }
 "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -287,6 +296,7 @@ export async function handle() {
   }
   "#,
       8,
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -317,6 +327,7 @@ export async function handle() {
   }
   "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -340,6 +351,7 @@ export async function handle() {
   }
   "#,
       (),
+      ContractInfo::default(),
     )
     .await
     .unwrap();
@@ -358,6 +370,7 @@ export async function handle() {
   }
   "#,
   (),
+  ContractInfo::default(),
       )
       .await
       .unwrap();
