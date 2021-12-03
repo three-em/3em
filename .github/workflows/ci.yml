@@ -17,6 +17,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: nightly
+          components: rustfmt
 
       - uses: Swatinem/rust-cache@v1
 
