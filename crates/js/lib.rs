@@ -2,7 +2,6 @@ mod loader;
 pub mod snapshot;
 
 use crate::loader::EmbeddedModuleLoader;
-use three_em_smartweave::ContractInfo;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
@@ -17,6 +16,7 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
+use three_em_smartweave::ContractInfo;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -215,8 +215,8 @@ mod test {
   use crate::Error;
   use crate::HeapLimitState;
   use crate::Runtime;
-  use three_em_smartweave::ContractInfo;
   use deno_core::ZeroCopyBuf;
+  use three_em_smartweave::ContractInfo;
 
   #[tokio::test]
   async fn test_runtime() {
