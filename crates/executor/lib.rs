@@ -1,16 +1,19 @@
-use crate::runtime::core::arweave::Arweave;
-use crate::runtime::core::gql_result::{
-  GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
-};
-use crate::runtime::core::miscellaneous::{get_sort_key, ContractType};
-use crate::runtime::smartweave::{ContractBlock, ContractInfo};
-use crate::runtime::wasm::WasmRuntime;
-use crate::runtime::Runtime;
 use deno_core::error::AnyError;
+use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
+use three_em_arweave::arweave::Arweave;
+use three_em_arweave::gql_result::{
+  GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
+};
+use three_em_arweave::miscellaneous::get_sort_key;
+use three_em_arweave::miscellaneous::ContractType;
+use three_em_js::Runtime;
+use three_em_smartweave::ContractBlock;
+use three_em_smartweave::ContractInfo;
+use three_em_wasm::WasmRuntime;
 
 struct ContractHandlerResult {
   result: Option<Value>,
@@ -155,14 +158,12 @@ pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
 
 #[cfg(test)]
 mod test {
-  use crate::runtime::core::arweave::Arweave;
-  use crate::runtime::core::execute::{execute_contract, ExecuteResult};
-  use crate::runtime::Error;
-  use crate::runtime::HeapLimitState;
-  use crate::runtime::Runtime;
-  use deno_core::ZeroCopyBuf;
+  use crate::execute_contract;
+  use crate::ExecuteResult;
+  use deno_core::serde_json;
   use serde::Deserialize;
   use serde::Serialize;
+  use three_em_arweave::arweave::Arweave;
 
   #[derive(Deserialize, Serialize)]
   struct People {
