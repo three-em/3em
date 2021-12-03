@@ -1,45 +1,33 @@
-import { benchmark, JS_CMD, maxMinAvg, WASM_CMD } from "./util.ts";
-import { StatsResult } from "./model.ts";
+import { benchmark } from "./util.ts";
+import { BenchmarkOptions, ContractTypes, StatsResult } from "./model.ts";
+import { EM3_JS_CMD, EM3_WASM_CMD } from "./commands.ts";
 
 const getRuns = (defaultRuns?: number): number => {
-  const benchmarkRuns = Deno.env.get("WASM_RUNS");
+  const benchmarkRuns = Deno.env.get("RUNS");
   return defaultRuns || (benchmarkRuns ? parseInt(benchmarkRuns) : undefined) ||
     10;
 };
 
 export const benchmark3em = async (
-  extraParameters: Array<string> = [],
-  nruns: number | undefined,
-  type: "wasm" | "js" | "evm",
+  config: BenchmarkOptions,
 ): Promise<StatsResult> => {
-  const benchmarkRuns = getRuns(nruns);
-  const results: Array<number> = [];
+  const benchmarkRuns = getRuns(config.runs);
+  let results: StatsResult;
 
   let params = [];
-  switch (type) {
-    case "wasm":
-      params = WASM_CMD;
+
+  switch (config.type) {
+    case ContractTypes.WASM:
+      params = EM3_WASM_CMD(benchmarkRuns, config.file);
       break;
-    case "js":
-      params = JS_CMD;
+    case ContractTypes.JS:
+      params = EM3_JS_CMD(benchmarkRuns, config.file);
       break;
   }
 
-  for (let i = 0; i < benchmarkRuns; i++) {
-    results.push(
-      await benchmark([
-        ...params,
-        ...extraParameters,
-      ]),
-    );
-  }
+  results = await benchmark([
+    ...params,
+  ], config.file);
 
-  const [max, min, avg] = maxMinAvg(results);
-
-  return {
-    max,
-    min,
-    avg,
-    runs: benchmarkRuns,
-  } as StatsResult;
+  return results;
 };
