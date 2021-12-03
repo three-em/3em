@@ -1,4 +1,4 @@
-import { benchmark3em } from "./benchmark_wasm.ts";
+import { benchmark3em } from "./benchmark_provider";
 
 const benchmarksRuns = {
   wasm: await benchmark3em([], 10, "wasm"),
