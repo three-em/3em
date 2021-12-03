@@ -78,7 +78,8 @@ impl Runtime {
     let flags = concat!(
       "--predictable",
       " --predictable-gc-schedule",
-      " --hash-seed=42"
+      " --hash-seed=42",
+      " --random-seed=42",
     );
     v8::V8::set_flags_from_string(flags);
 
@@ -273,11 +274,11 @@ export async function handle() {
 
     rt.call(()).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand1, 0.14617804087311326);
+    assert_eq!(rand1, 0.7939112874678715);
 
     rt.call(()).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand2, 0.16993119449737915);
+    assert_eq!(rand2, 0.5254990606499601);
   }
 
   #[tokio::test]

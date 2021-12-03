@@ -132,10 +132,10 @@ pub async fn execute_contract(
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
-  let tag = (&(&interaction_tx)
+  let tag = &(&interaction_tx)
     .tags
     .iter()
-    .find(|data| &data.name == "Input"));
+    .find(|data| &data.name == "Input");
 
   match tag {
     Some(data) => &data.value,
