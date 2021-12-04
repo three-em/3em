@@ -24,6 +24,10 @@ jobs:
         run: cargo install hyperfine
       - name: Create release
         run: cargo build --release
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: npm install
       - name: Run benchmark
         run: deno run --allow-all tools/benchmarks/run_benchmark.js
       - name: Commit report
