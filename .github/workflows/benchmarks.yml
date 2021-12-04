@@ -36,3 +36,5 @@ jobs:
           git config --global user.email '3em-benchmark@users.noreply.github.com'
           git commit -am "Benchmark Report"
           git push
+        env:
+          ENV: GITHUB

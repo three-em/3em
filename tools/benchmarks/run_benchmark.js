@@ -9,7 +9,7 @@ const convertTZ = (date, tzString) => {
 };
 
 const appendBenchmarks = async () => {
-  const benchmarkPath = "./data/benchmark.json";
+  const benchmarkPath = Deno.env.get("ENV") === "GITHUB" ? "./data/benchmark.json" : "./data/benchmark_dev.json";
   const currentBenchmarks = JSON.parse(await Deno.readTextFile(benchmarkPath));
   const currentDate = convertTZ(new Date(), "America/New_York");
   const currentDateMs = currentDate.getTime();

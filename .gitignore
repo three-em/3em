@@ -13,3 +13,4 @@ smartweave-js-benchmark.json
 redstone-js-benchmark.json
 /testdata/01_wasm/target
 /testdata/02_wasm/node_modules
+/data/benchmark_dev.json

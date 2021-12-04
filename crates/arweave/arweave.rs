@@ -1,4 +1,5 @@
 use crate::arweave_get_tag::get_tag;
+use crate::cache::ArweaveCache;
 use crate::gql_result::{
   GQLEdgeInterface, GQLNodeParent, GQLResultInterface,
   GQLTransactionsResultInterface,
@@ -285,64 +286,91 @@ impl Arweave {
     contract_id: String,
     contract_src_tx_id: Option<String>,
     contract_type: Option<String>,
+    cache: bool,
   ) -> LoadedContract {
-    // TODO: DON'T PANIC
-    let contract_transaction =
-      self.get_transaction(&contract_id).await.unwrap();
+    let arweave_cache = ArweaveCache::new().await;
 
-    let contract_src = contract_src_tx_id
-      .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
+    let mut result: Option<LoadedContract> = None;
 
-    if contract_src.len() <= 0 {
-      panic!("Contract contains invalid information for tag 'Contract-Src'");
-    }
-
-    let min_fee = get_tag(&contract_transaction, "Min-Fee");
-
-    // TODO: Don't panic
-    let contract_src_tx = self.get_transaction(&contract_src).await.unwrap();
-
-    let contract_src_data =
-      self.get_transaction_data(&contract_src_tx.id).await;
-
-    let mut state = String::from("");
-
-    let init_state_tag = get_tag(&contract_transaction, "Init-State");
-    if init_state_tag.len() >= 1 {
-      state = init_state_tag;
-    } else {
-      let init_state_tag_txid = get_tag(&contract_transaction, "Init-State-TX");
-      if init_state_tag_txid.len() >= 1 {
-        let init_state_tx =
-          self.get_transaction(&init_state_tag_txid).await.unwrap();
-        state = decode_base_64(init_state_tx.data);
-      } else {
-        state = decode_base_64(contract_transaction.data.to_owned());
-
-        if state.len() <= 0 {
-          state = String::from_utf8(
-            self.get_transaction_data(&contract_transaction.id).await,
-          )
-          .unwrap();
-        }
+    if cache {
+      let cached_contract =
+        arweave_cache.find_contract(contract_id.to_owned()).await;
+      if let Some(contract) = cached_contract {
+        result = Some(contract);
       }
     }
 
-    if state.len() <= 0 {
-      panic!("Contract does not have an initial state or an error has occurred while reading it.");
-    }
+    if result.is_some() {
+      result.unwrap()
+    } else {
+      // TODO: DON'T PANIC
+      let contract_transaction =
+        self.get_transaction(&contract_id).await.unwrap();
 
-    let contract_type =
-      get_contract_type(contract_type, &contract_transaction, &contract_src_tx);
+      let contract_src = contract_src_tx_id
+        .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
 
-    LoadedContract {
-      id: contract_id,
-      contract_src_tx_id: contract_src,
-      contract_src: contract_src_data,
-      contract_type,
-      init_state: state,
-      min_fee,
-      contract_transaction,
+      if contract_src.len() <= 0 {
+        panic!("Contract contains invalid information for tag 'Contract-Src'");
+      }
+
+      let min_fee = get_tag(&contract_transaction, "Min-Fee");
+
+      // TODO: Don't panic
+      let contract_src_tx = self.get_transaction(&contract_src).await.unwrap();
+
+      let contract_src_data =
+        self.get_transaction_data(&contract_src_tx.id).await;
+
+      let mut state = String::from("");
+
+      let init_state_tag = get_tag(&contract_transaction, "Init-State");
+      if init_state_tag.len() >= 1 {
+        state = init_state_tag;
+      } else {
+        let init_state_tag_txid =
+          get_tag(&contract_transaction, "Init-State-TX");
+        if init_state_tag_txid.len() >= 1 {
+          let init_state_tx =
+            self.get_transaction(&init_state_tag_txid).await.unwrap();
+          state = decode_base_64(init_state_tx.data);
+        } else {
+          state = decode_base_64(contract_transaction.data.to_owned());
+
+          if state.len() <= 0 {
+            state = String::from_utf8(
+              self.get_transaction_data(&contract_transaction.id).await,
+            )
+            .unwrap();
+          }
+        }
+      }
+
+      if state.len() <= 0 {
+        panic!("Contract does not have an initial state or an error has occurred while reading it.");
+      }
+
+      let contract_type = get_contract_type(
+        contract_type,
+        &contract_transaction,
+        &contract_src_tx,
+      );
+
+      let final_result = LoadedContract {
+        id: contract_id,
+        contract_src_tx_id: contract_src,
+        contract_src: contract_src_data,
+        contract_type,
+        init_state: state,
+        min_fee,
+        contract_transaction,
+      };
+
+      if cache {
+        arweave_cache.cache_contract(&final_result).await;
+      }
+
+      final_result
     }
   }
 
