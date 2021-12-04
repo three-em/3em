@@ -8,5 +8,14 @@ members = [
   "./crates/metering",
   "./crates/smartweave",
   "./crates/wasm",
+  "./tools/benchmarks/3em",
 ]
 resolver = "2"
+
+[profile.release]
+lto = true
+
+[profile.release.package.bench]
+opt-level = 3
+codegen-units = 1
+
