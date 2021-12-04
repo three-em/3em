@@ -1,0 +1,24 @@
+[package]
+name = "bench"
+version = "0.1.0"
+authors = ["andresspirela <abdresspirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
+edition = "2021"
+
+[[bin]]
+name = "bench"
+path = "main.rs"
+
+[[bin]]
+name = "bench_wasm"
+path = "wasm.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[dependencies]
+three_em_executor = { path = "../../../crates/executor" }
+three_em_arweave = { path = "../../../crates/arweave" }
+tokio = { version = "1.10.1", features = ["full"] }
+
