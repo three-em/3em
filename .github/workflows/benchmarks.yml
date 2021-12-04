@@ -22,6 +22,7 @@ jobs:
           components: rustfmt
       - name: Install Hyperfine
         run: cargo install hyperfine
+      - uses: Swatinem/rust-cache@v1
       - name: Run benchmark
         run: deno run --allow-all tools/benchmarks/run_benchmark.js
       - name: Commit report
