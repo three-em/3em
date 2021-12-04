@@ -1,4 +1,4 @@
-name: ci
+name: Benchmark
 
 on:
   push:
@@ -12,7 +12,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v2
       - name: Install Deno
-        run: curl -fsSL https://deno.land/x/install/install.sh | sh
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
       - name: Install Cargo
         uses: hecrj/setup-rust-action@v1
         with:
