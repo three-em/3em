@@ -48,7 +48,7 @@ pub async fn execute_contract(
     }),
     tokio::spawn(async move {
       let mut interactions =
-        arweave.get_interactions(contract_id, height).await;
+        arweave.get_interactions(contract_id, height, cache).await;
       interactions.sort_by(|a, b| {
         let a_sort_key =
           get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
@@ -185,7 +185,7 @@ mod test {
       None,
       None,
       Some(822062),
-      false
+      false,
     )
     .await;
     if let ExecuteResult::V8(value, validity) = result {
@@ -213,7 +213,7 @@ mod test {
       None,
       None,
       None,
-      false
+      false,
     )
     .await;
     if let ExecuteResult::V8(value, validity) = result {
