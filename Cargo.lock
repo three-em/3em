@@ -1769,6 +1769,7 @@ dependencies = [
  "deno_core",
  "dirs",
  "hex",
+ "lazy_static",
  "local_ipaddress",
  "reqwest",
  "serde",

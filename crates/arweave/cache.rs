@@ -10,7 +10,7 @@ pub struct ArweaveCache {
 }
 
 impl ArweaveCache {
-  pub async fn new() -> ArweaveCache {
+  pub fn new() -> ArweaveCache {
     if let Some(cache_dir) = dirs::cache_dir() {
       let root_cache_dir = cache_dir.join("3em").join("contracts");
       let interactions_cache_dir = cache_dir.join("3em").join("interactions");
