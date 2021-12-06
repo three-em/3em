@@ -49,6 +49,7 @@ pub async fn execute_contract(
     tokio::spawn(async move {
       let mut interactions =
         arweave.get_interactions(contract_id, height, cache).await;
+
       interactions.sort_by(|a, b| {
         let a_sort_key =
           get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);

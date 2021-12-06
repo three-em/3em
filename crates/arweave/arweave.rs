@@ -4,7 +4,7 @@ use crate::gql_result::{
   GQLEdgeInterface, GQLNodeParent, GQLResultInterface,
   GQLTransactionsResultInterface,
 };
-use crate::miscellaneous::{get_contract_type, ContractType};
+use crate::miscellaneous::{get_contract_type, get_sort_key, ContractType};
 use crate::utils::decode_base_64;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
@@ -244,8 +244,8 @@ impl Arweave {
       new_transactions = true;
     }
 
-    if cache && new_transactions {
-      let filtered: Vec<GQLEdgeInterface> = final_result
+    if new_transactions {
+      let mut filtered: Vec<GQLEdgeInterface> = final_result
         .into_iter()
         .filter(|p| {
           (p.node.parent.is_none())
@@ -259,9 +259,11 @@ impl Arweave {
         })
         .collect();
 
-      ARWEAVE_CACHE
-        .cache_interactions(contract_id, &filtered)
-        .await;
+      if cache {
+        ARWEAVE_CACHE
+          .cache_interactions(contract_id, &filtered)
+          .await;
+      }
 
       filtered
     } else {
