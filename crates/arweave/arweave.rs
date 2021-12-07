@@ -109,7 +109,7 @@ enum State {
 pub static MAX_REQUEST: usize = 100;
 
 lazy_static! {
-  static ref ARWEAVE_CACHE: ArweaveCache = ArweaveCache::new();
+  pub static ref ARWEAVE_CACHE: ArweaveCache = ArweaveCache::new();
 }
 
 impl Arweave {
@@ -164,7 +164,7 @@ impl Arweave {
     contract_id: String,
     height: Option<usize>,
     cache: bool,
-  ) -> Vec<GQLEdgeInterface> {
+  ) -> (Vec<GQLEdgeInterface>, usize, bool) {
     let mut interactions: Option<Vec<GQLEdgeInterface>> = None;
 
     let height_result = match height {
@@ -187,6 +187,7 @@ impl Arweave {
 
     let mut final_result: Vec<GQLEdgeInterface> = Vec::new();
     let mut new_transactions = false;
+    let mut new_interactions_index: usize = 0;
 
     if interactions.is_some() {
       let mut cache_interactions = interactions.unwrap();
@@ -196,6 +197,8 @@ impl Arweave {
         .await;
 
       if has_more_from_last_interaction {
+        // Start from what's going to be the next interaction. if doing len - 1, that would mean we will also include the last interaction cached: not ideal.
+        new_interactions_index = cache_interactions.len();
         let mut fetch_more_interactions = self
           .stream_interactions(
             Some(last_transaction_edge.cursor.to_owned()),
@@ -238,6 +241,8 @@ impl Arweave {
       new_transactions = true;
     }
 
+    let mut to_return: Vec<GQLEdgeInterface> = Vec::new();
+
     if new_transactions {
       let mut filtered: Vec<GQLEdgeInterface> = final_result
         .into_iter()
@@ -259,10 +264,18 @@ impl Arweave {
           .await;
       }
 
-      filtered
+      to_return = filtered;
     } else {
-      final_result
+      to_return = final_result;
     }
+
+    let are_there_new_interactions =
+      new_interactions_index >= 0 && cache && new_transactions;
+    (
+      to_return,
+      new_interactions_index,
+      are_there_new_interactions,
+    )
   }
 
   async fn get_next_interaction_page(
