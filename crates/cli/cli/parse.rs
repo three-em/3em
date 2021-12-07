@@ -64,7 +64,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         if let Some(data) = pargs.opt_value_from_str("--height")? {
           Some(data)
         } else {
-          Some(826105)
+          Some(826106)
         }
       },
       no_cache: pargs.contains("--no-cache"),

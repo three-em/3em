@@ -225,10 +225,12 @@ impl Arweave {
       let mut tx_infos = transactions.edges.clone();
 
       let mut cursor = String::from("");
-      let maybe_edge = transactions.edges.get(MAX_REQUEST - 1);
+      let max_edge = self.get_max_edges(&transactions.edges);
+      let maybe_edge = transactions.edges.get(max_edge);
 
       if let Some(data) = maybe_edge {
-        cursor = data.cursor.to_owned();
+        let owned = data;
+        cursor = owned.cursor.to_owned();
       } else {
         cursor = String::from("null");
       }
@@ -475,17 +477,33 @@ impl Arweave {
             .get_next_interaction_page(new_variables, false, None)
             .await;
 
-          if !tx.page_info.has_next_page {
+          if tx.edges.is_empty() {
             return None;
           } else {
-            let edge = tx.edges.get(MAX_REQUEST - 1).unwrap();
-            let cursor = (&edge.cursor).to_owned();
-            return Some((tx, State::Next(cursor, variables)));
+            let max_requests = self.get_max_edges(&tx.edges);
+
+            let edge = tx.edges.get(max_requests);
+
+            if let Some(result_edge) = edge {
+              let cursor = (&result_edge.cursor).to_owned();
+              Some((tx, State::Next(cursor, variables)))
+            } else {
+              None
+            }
           }
         }
       }
     })
     .collect::<Vec<GQLTransactionsResultInterface>>()
     .await
+  }
+
+  fn get_max_edges(&self, data: &Vec<GQLEdgeInterface>) -> usize {
+    let len = data.len();
+    if len == MAX_REQUEST {
+      MAX_REQUEST - 1
+    } else {
+      len - 1
+    }
   }
 }
