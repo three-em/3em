@@ -60,7 +60,13 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       save_path: pargs
         .opt_value_from_str("--save")?
         .unwrap_or(String::from("")),
-      height: pargs.opt_value_from_str("--height")?,
+      height: {
+        if let Some(data) = pargs.opt_value_from_str("--height").unwrap() {
+          Some(data)
+        } else {
+          None
+        }
+      },
       no_cache: pargs.contains("--no-cache"),
     },
   };
