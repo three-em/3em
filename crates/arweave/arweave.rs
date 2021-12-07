@@ -190,33 +190,27 @@ impl Arweave {
 
     if interactions.is_some() {
       let mut cache_interactions = interactions.unwrap();
-      let get_last_transaction = self
-        .get_next_interaction_page(variables.to_owned(), true, Some(1 as usize))
+      let last_transaction_edge = cache_interactions.last().unwrap();
+      let has_more_from_last_interaction = self
+        .has_more(&variables, last_transaction_edge.cursor.to_owned())
         .await;
-      let first_result = get_last_transaction.edges.last();
-      if let Some(result) = first_result {
-        let last_transaction = result.node.id.to_owned();
-        let last_transaction_edge = cache_interactions.last().unwrap();
 
-        if !(last_transaction == last_transaction_edge.node.id) {
-          let mut fetch_more_interactions = self
-            .stream_interactions(
-              last_transaction_edge.cursor.to_owned(),
-              variables.to_owned(),
-            )
-            .await;
+      if has_more_from_last_interaction {
+        let mut fetch_more_interactions = self
+          .stream_interactions(
+            last_transaction_edge.cursor.to_owned(),
+            variables.to_owned(),
+          )
+          .await;
 
-          for result in fetch_more_interactions {
-            let mut new_tx_infos = result.edges.clone();
-            cache_interactions.append(&mut new_tx_infos);
-          }
-          new_transactions = true;
+        for result in fetch_more_interactions {
+          let mut new_tx_infos = result.edges.clone();
+          cache_interactions.append(&mut new_tx_infos);
         }
-
-        final_result.append(&mut cache_interactions);
-      } else {
-        panic!("Interaction context does not match");
+        new_transactions = true;
       }
+
+      final_result.append(&mut cache_interactions);
     } else {
       let mut transactions = self
         .get_next_interaction_page(variables.clone(), false, None)
@@ -505,5 +499,19 @@ impl Arweave {
     } else {
       len - 1
     }
+  }
+
+  async fn has_more(
+    &self,
+    variables: &InteractionVariables,
+    cursor: String,
+  ) -> bool {
+    let mut variables = variables.to_owned();
+    variables.after = Some(cursor);
+    variables.block_filter.max = 1;
+
+    let load_transactions =
+      self.get_next_interaction_page(variables, false, None).await;
+    !(load_transactions.edges.is_empty())
   }
 }
