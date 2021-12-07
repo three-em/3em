@@ -20,7 +20,7 @@ pub async fn run(
   let start = std::time::Instant::now();
 
   let execution =
-    execute_contract(arweave, tx, None, None, height, !no_cache).await;
+    execute_contract(arweave, tx, None, None, None, !no_cache).await;
 
   if benchmark {
     let elapsed = start.elapsed();

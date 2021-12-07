@@ -4,7 +4,7 @@ use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
-use three_em_arweave::arweave::Arweave;
+use three_em_arweave::arweave::{Arweave, ARWEAVE_CACHE};
 use three_em_arweave::gql_result::{
   GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
 };
@@ -35,6 +35,7 @@ pub async fn execute_contract(
   height: Option<usize>,
   cache: bool,
 ) -> ExecuteResult {
+  let contract_id_copy = contract_id.to_owned();
   let shared_id = contract_id.clone();
   let shared_client = arweave.clone();
 
@@ -47,8 +48,13 @@ pub async fn execute_contract(
       contract
     }),
     tokio::spawn(async move {
-      let mut interactions =
-        arweave.get_interactions(contract_id, height, cache).await;
+      let (
+        result_interactions,
+        new_interaction_index,
+        are_there_new_interactions,
+      ) = arweave.get_interactions(contract_id, height, cache).await;
+
+      let mut interactions = result_interactions;
 
       interactions.sort_by(|a, b| {
         let a_sort_key =
@@ -58,12 +64,19 @@ pub async fn execute_contract(
         a_sort_key.cmp(&b_sort_key)
       });
 
-      interactions
+      (
+        interactions,
+        new_interaction_index,
+        are_there_new_interactions,
+      )
     })
   );
 
   let loaded_contract = loaded_contract.unwrap();
-  let mut interactions = interactions.unwrap();
+  let (result_interactions, new_interaction_index, are_there_new_interactions) =
+    interactions.unwrap();
+
+  let mut interactions = result_interactions;
 
   let mut validity: HashMap<String, bool> = HashMap::new();
   let transaction = loaded_contract.contract_transaction;
@@ -76,66 +89,127 @@ pub async fn execute_contract(
     },
   };
 
+  let mut needs_processing = true;
+  let mut cache_state: Option<Value> = None;
+
+  if cache {
+    let get_cached_state =
+      ARWEAVE_CACHE.find_state(contract_id_copy.to_owned()).await;
+
+    if let Some(cached_state) = get_cached_state {
+      cache_state = Some(cached_state.state);
+      validity = cached_state.validity;
+      needs_processing = are_there_new_interactions;
+    }
+  }
+
+  let is_cache_state_present = cache_state.is_some();
+
   // TODO: handle evm.
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
-      let mut state: Value =
-        deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap();
-
-      let mut rt = Runtime::new(
-        &(String::from_utf8(loaded_contract.contract_src).unwrap()),
-        state,
-        contract_info,
-      )
-      .await
-      .unwrap();
-
-      for interaction in interactions {
-        let tx = interaction.node;
-        let input = get_input_from_interaction(&tx);
-
-        // TODO: has_multiple_interactions
-        // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
-        let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
-
-        let call_input = serde_json::json!({
-          "input": js_input,
-          "caller": tx.owner.address
+      if needs_processing {
+        let mut state: Value = cache_state.unwrap_or_else(|| {
+          deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap()
         });
 
-        let valid = rt.call(call_input).await.is_ok();
-        validity.insert(tx.id, valid);
-      }
+        let mut rt = Runtime::new(
+          &(String::from_utf8(loaded_contract.contract_src).unwrap()),
+          state,
+          contract_info,
+        )
+        .await
+        .unwrap();
 
-      let state_val: Value = rt.get_contract_state().unwrap();
-      ExecuteResult::V8(state_val, validity)
+        if cache && is_cache_state_present && are_there_new_interactions {
+          interactions = (&interactions[new_interaction_index..]).to_vec();
+        }
+
+        for interaction in interactions {
+          let tx = interaction.node;
+          let input = get_input_from_interaction(&tx);
+
+          // TODO: has_multiple_interactions
+          // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
+          let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
+
+          let call_input = serde_json::json!({
+            "input": js_input,
+            "caller": tx.owner.address
+          });
+
+          let valid = rt.call(call_input).await.is_ok();
+          validity.insert(tx.id, valid);
+        }
+
+        let state_val: Value = rt.get_contract_state().unwrap();
+
+        println!("{}", state_val.to_string());
+
+        if cache {
+          ARWEAVE_CACHE
+            .cache_states(contract_id_copy.to_owned(), &state_val, &validity)
+            .await;
+        }
+
+        ExecuteResult::V8(state_val, validity)
+      } else {
+        ExecuteResult::V8(cache_state.unwrap(), validity)
+      }
     }
     ContractType::WASM => {
-      let wasm = loaded_contract.contract_src.as_slice();
+      if needs_processing {
+        let wasm = loaded_contract.contract_src.as_slice();
 
-      let mut state = loaded_contract.init_state.as_bytes().to_vec();
-      let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
+        let init_state_wasm = if cache_state.is_some() {
+          let cache_state_unwrapped = cache_state.unwrap();
+          let state_str = cache_state_unwrapped.to_string();
+          state_str.as_bytes().to_vec()
+        } else {
+          loaded_contract.init_state.as_bytes().to_vec()
+        };
 
-      for interaction in interactions {
-        let tx = interaction.node;
-        let input = get_input_from_interaction(&tx);
-        let wasm_input: Value = deno_core::serde_json::from_str(input).unwrap();
-        let call_input = serde_json::json!({
-          "input": wasm_input,
-          "caller": tx.owner.address,
-        });
+        let mut state = init_state_wasm;
+        println!("{}", String::from_utf8(state.to_owned()).unwrap());
+        let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
 
-        let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
-        let exec = rt.call(&mut state, &mut input);
-        let valid = exec.is_ok();
-        if valid {
-          state = exec.unwrap();
+        if cache && is_cache_state_present && are_there_new_interactions {
+          interactions = (&interactions[new_interaction_index..]).to_vec();
         }
-        validity.insert(tx.id, valid);
-      }
 
-      let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
-      ExecuteResult::V8(state, validity)
+        for interaction in interactions {
+          let tx = interaction.node;
+          let input = get_input_from_interaction(&tx);
+          let wasm_input: Value =
+            deno_core::serde_json::from_str(input).unwrap();
+          let call_input = serde_json::json!({
+            "input": wasm_input,
+            "caller": tx.owner.address,
+          });
+
+          let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
+          let exec = rt.call(&mut state, &mut input);
+          let valid = exec.is_ok();
+          if valid {
+            state = exec.unwrap();
+          }
+          validity.insert(tx.id, valid);
+        }
+
+        let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
+
+        println!("{}", &state.to_string());
+
+        if cache {
+          ARWEAVE_CACHE
+            .cache_states(contract_id_copy.to_owned(), &state, &validity)
+            .await;
+        }
+
+        ExecuteResult::V8(state, validity)
+      } else {
+        ExecuteResult::V8(cache_state.unwrap(), validity)
+      }
     }
     ContractType::EVM => ExecuteResult::V8(Null, validity),
   }
