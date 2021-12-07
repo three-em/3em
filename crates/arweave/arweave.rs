@@ -508,7 +508,7 @@ impl Arweave {
   ) -> bool {
     let mut variables = variables.to_owned();
     variables.after = Some(cursor);
-    variables.block_filter.max = 1;
+    variables.first = 1;
 
     let load_transactions =
       self.get_next_interaction_page(variables, false, None).await;
