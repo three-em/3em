@@ -197,7 +197,8 @@ impl Arweave {
         .await;
 
       if has_more_from_last_interaction {
-        new_interactions_index = cache_interactions.len() - 1;
+        // Start from what's going to be the next interaction. if doing len - 1, that would mean we will also include the last interaction cached: not ideal.
+        new_interactions_index = cache_interactions.len();
         let mut fetch_more_interactions = self
           .stream_interactions(
             Some(last_transaction_edge.cursor.to_owned()),

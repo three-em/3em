@@ -144,8 +144,6 @@ pub async fn execute_contract(
 
         let state_val: Value = rt.get_contract_state().unwrap();
 
-        println!("{}", state_val.to_string());
-
         if cache {
           ARWEAVE_CACHE
             .cache_states(contract_id_copy.to_owned(), &state_val, &validity)
@@ -170,7 +168,6 @@ pub async fn execute_contract(
         };
 
         let mut state = init_state_wasm;
-        println!("{}", String::from_utf8(state.to_owned()).unwrap());
         let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
 
         if cache && is_cache_state_present && are_there_new_interactions {
@@ -197,8 +194,6 @@ pub async fn execute_contract(
         }
 
         let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
-
-        println!("{}", &state.to_string());
 
         if cache {
           ARWEAVE_CACHE
