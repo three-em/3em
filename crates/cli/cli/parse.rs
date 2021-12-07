@@ -18,6 +18,7 @@ pub enum Flags {
     benchmark: bool,
     save_path: String,
     height: Option<usize>,
+    no_cache: bool,
   },
   Unknown(String),
 }
@@ -60,6 +61,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         .opt_value_from_str("--save")?
         .unwrap_or(String::from("")),
       height: pargs.opt_value_from_str("--height")?,
+      no_cache: pargs.contains("--no-cache"),
     },
   };
 

@@ -1,13 +1,13 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GQLPageInfoInterface {
   pub has_next_page: bool,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLOwnerInterface {
   pub address: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -15,7 +15,7 @@ pub struct GQLOwnerInterface {
   pub key: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLAmountInterface {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[serde(default)]
@@ -25,7 +25,7 @@ pub struct GQLAmountInterface {
   pub ar: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLMetaDataInterface {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[serde(default)]
@@ -36,13 +36,13 @@ pub struct GQLMetaDataInterface {
   pub ty: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLTagInterface {
   pub name: String,
   pub value: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLBlockInterface {
   pub id: String,
   pub timestamp: usize,
@@ -52,12 +52,12 @@ pub struct GQLBlockInterface {
   pub previous: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLNodeParent {
   pub id: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLNodeInterface {
   pub id: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -86,25 +86,25 @@ pub struct GQLNodeInterface {
   pub parent: Option<GQLNodeParent>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLEdgeInterface {
   pub cursor: String,
   pub node: GQLNodeInterface,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GQLTransactionsResultInterface {
   pub page_info: GQLPageInfoInterface,
   pub edges: Vec<GQLEdgeInterface>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLDataResultInterface {
   pub transactions: GQLTransactionsResultInterface,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLResultInterface {
   pub data: GQLDataResultInterface,
 }

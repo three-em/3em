@@ -10,7 +10,8 @@ async fn main() {
     "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ".to_string(),
     None,
     None,
-    Some(749180),
+    None,
+    true,
   )
   .await;
 }

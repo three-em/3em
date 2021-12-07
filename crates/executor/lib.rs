@@ -33,6 +33,7 @@ pub async fn execute_contract(
   contract_src_tx: Option<String>,
   contract_content_type: Option<String>,
   height: Option<usize>,
+  cache: bool,
 ) -> ExecuteResult {
   let shared_id = contract_id.clone();
   let shared_client = arweave.clone();
@@ -40,14 +41,15 @@ pub async fn execute_contract(
   let (loaded_contract, interactions) = tokio::join!(
     tokio::spawn(async move {
       let mut contract = shared_client
-        .load_contract(shared_id, contract_src_tx, contract_content_type)
+        .load_contract(shared_id, contract_src_tx, contract_content_type, cache)
         .await;
 
       contract
     }),
     tokio::spawn(async move {
       let mut interactions =
-        arweave.get_interactions(contract_id, height).await;
+        arweave.get_interactions(contract_id, height, cache).await;
+
       interactions.sort_by(|a, b| {
         let a_sort_key =
           get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
@@ -184,6 +186,7 @@ mod test {
       None,
       None,
       Some(822062),
+      false,
     )
     .await;
     if let ExecuteResult::V8(value, validity) = result {
@@ -211,6 +214,7 @@ mod test {
       None,
       None,
       None,
+      false,
     )
     .await;
     if let ExecuteResult::V8(value, validity) = result {

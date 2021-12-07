@@ -1,12 +1,14 @@
 use crate::arweave_get_tag::get_tag;
+use crate::cache::ArweaveCache;
 use crate::gql_result::{
   GQLEdgeInterface, GQLNodeParent, GQLResultInterface,
   GQLTransactionsResultInterface,
 };
-use crate::miscellaneous::{get_contract_type, ContractType};
+use crate::miscellaneous::{get_contract_type, get_sort_key, ContractType};
 use crate::utils::decode_base_64;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
+use lazy_static::lazy_static;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
@@ -99,7 +101,16 @@ pub struct LoadedContract {
   pub contract_transaction: TransactionData,
 }
 
+enum State {
+  Next(Option<String>, InteractionVariables),
+  End,
+}
+
 pub static MAX_REQUEST: usize = 100;
+
+lazy_static! {
+  static ref ARWEAVE_CACHE: ArweaveCache = ArweaveCache::new();
+}
 
 impl Arweave {
   pub fn new(port: i32, host: String) -> Arweave {
@@ -152,87 +163,116 @@ impl Arweave {
     &self,
     contract_id: String,
     height: Option<usize>,
+    cache: bool,
   ) -> Vec<GQLEdgeInterface> {
-    let variables = self
-      .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
-      .await;
+    let mut interactions: Option<Vec<GQLEdgeInterface>> = None;
 
-    let mut transactions =
-      self.get_next_interaction_page(variables.clone()).await;
-
-    let mut tx_infos = transactions.edges.clone();
+    let height_result = match height {
+      Some(size) => size,
+      None => self.get_network_info().await.height,
+    };
 
     let variables = self
-      .get_default_gql_variables(contract_id.to_owned(), height.to_owned())
+      .get_default_gql_variables(contract_id.to_owned(), height_result)
       .await;
 
-    enum State {
-      Next(String, InteractionVariables),
-      End,
+    if cache {
+      if let Some(cache_interactions) = ARWEAVE_CACHE
+        .find_interactions(contract_id.to_owned())
+        .await
+      {
+        interactions = Some(cache_interactions);
+      }
     }
 
-    let mut cursor = String::from("");
-    let maybe_edge = transactions.edges.get(MAX_REQUEST - 1);
+    let mut final_result: Vec<GQLEdgeInterface> = Vec::new();
+    let mut new_transactions = false;
 
-    if let Some(data) = maybe_edge {
-      cursor = data.cursor.to_owned();
-    } else {
-      cursor = String::from("null");
-    }
+    if interactions.is_some() {
+      let mut cache_interactions = interactions.unwrap();
+      let last_transaction_edge = cache_interactions.last().unwrap();
+      let has_more_from_last_interaction = self
+        .has_more(&variables, last_transaction_edge.cursor.to_owned())
+        .await;
 
-    let results =
-      stream::unfold(State::Next(cursor, variables), |state| async move {
-        match state {
-          State::End => return None,
-          State::Next(cursor, variables) => {
-            let mut new_variables: InteractionVariables = variables.clone();
+      if has_more_from_last_interaction {
+        let mut fetch_more_interactions = self
+          .stream_interactions(
+            Some(last_transaction_edge.cursor.to_owned()),
+            variables.to_owned(),
+          )
+          .await;
 
-            if !(cursor.eq("null")) {
-              new_variables.after = Some(cursor);
-            }
-
-            let tx = self.get_next_interaction_page(new_variables).await;
-
-            if !tx.page_info.has_next_page {
-              return None;
-            } else {
-              let edge = tx.edges.get(MAX_REQUEST - 1).unwrap();
-              let cursor = (&edge.cursor).to_owned();
-              return Some((tx, State::Next(cursor, variables)));
-            }
-          }
+        for result in fetch_more_interactions {
+          let mut new_tx_infos = result.edges.clone();
+          cache_interactions.append(&mut new_tx_infos);
         }
-      })
-      .collect::<Vec<GQLTransactionsResultInterface>>()
-      .await;
+        new_transactions = true;
+      }
 
-    for result in results {
-      let mut new_tx_infos = result.edges.clone();
-      tx_infos.append(&mut new_tx_infos);
+      final_result.append(&mut cache_interactions);
+    } else {
+      let mut transactions = self
+        .get_next_interaction_page(variables.clone(), false, None)
+        .await;
+
+      let mut tx_infos = transactions.edges.clone();
+
+      let mut cursor: Option<String> = None;
+      let max_edge = self.get_max_edges(&transactions.edges);
+      let maybe_edge = transactions.edges.get(max_edge);
+
+      if let Some(data) = maybe_edge {
+        let owned = data;
+        cursor = Some(owned.cursor.to_owned());
+      }
+
+      let results = self.stream_interactions(cursor, variables).await;
+
+      for result in results {
+        let mut new_tx_infos = result.edges.clone();
+        tx_infos.append(&mut new_tx_infos);
+      }
+
+      final_result.append(&mut tx_infos);
+      new_transactions = true;
     }
 
-    let filtered: Vec<GQLEdgeInterface> = tx_infos
-      .into_iter()
-      .filter(|p| {
-        (p.node.parent.is_none())
-          || (p
-            .node
-            .parent
-            .as_ref()
-            .unwrap_or_else(|| &GQLNodeParent { id: None }))
-          .id
-          .is_none()
-      })
-      .collect();
+    if new_transactions {
+      let mut filtered: Vec<GQLEdgeInterface> = final_result
+        .into_iter()
+        .filter(|p| {
+          (p.node.parent.is_none())
+            || (p
+              .node
+              .parent
+              .as_ref()
+              .unwrap_or_else(|| &GQLNodeParent { id: None }))
+            .id
+            .is_none()
+        })
+        .collect();
 
-    filtered
+      if cache {
+        ARWEAVE_CACHE
+          .cache_interactions(contract_id, &filtered)
+          .await;
+      }
+
+      filtered
+    } else {
+      final_result
+    }
   }
 
   async fn get_next_interaction_page(
     &self,
-    variables: InteractionVariables,
+    mut variables: InteractionVariables,
+    from_last_page: bool,
+    max_results: Option<usize>,
   ) -> GQLTransactionsResultInterface {
-    let query = r#"query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
+    let mut query = String::from(
+      r#"query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
       pageInfo {
         hasNextPage
@@ -258,14 +298,15 @@ impl Arweave {
         cursor
       }
     }
-  }"#;
+  }"#,
+    );
 
-    let query_str = String::from(query);
+    if from_last_page {
+      query = query.replace("HEIGHT_ASC", "HEIGHT_DESC");
+      variables.first = max_results.unwrap_or(100 as usize);
+    }
 
-    let graphql_query = GraphqlQuery {
-      query: query_str,
-      variables,
-    };
+    let graphql_query = GraphqlQuery { query, variables };
 
     let req_url = format!("{}/graphql", self.get_host());
     let result = self
@@ -285,64 +326,85 @@ impl Arweave {
     contract_id: String,
     contract_src_tx_id: Option<String>,
     contract_type: Option<String>,
+    cache: bool,
   ) -> LoadedContract {
-    // TODO: DON'T PANIC
-    let contract_transaction =
-      self.get_transaction(&contract_id).await.unwrap();
+    let mut result: Option<LoadedContract> = None;
 
-    let contract_src = contract_src_tx_id
-      .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
-
-    if contract_src.len() <= 0 {
-      panic!("Contract contains invalid information for tag 'Contract-Src'");
+    if cache {
+      result = ARWEAVE_CACHE.find_contract(contract_id.to_owned()).await;
     }
 
-    let min_fee = get_tag(&contract_transaction, "Min-Fee");
-
-    // TODO: Don't panic
-    let contract_src_tx = self.get_transaction(&contract_src).await.unwrap();
-
-    let contract_src_data =
-      self.get_transaction_data(&contract_src_tx.id).await;
-
-    let mut state = String::from("");
-
-    let init_state_tag = get_tag(&contract_transaction, "Init-State");
-    if init_state_tag.len() >= 1 {
-      state = init_state_tag;
+    if result.is_some() {
+      result.unwrap()
     } else {
-      let init_state_tag_txid = get_tag(&contract_transaction, "Init-State-TX");
-      if init_state_tag_txid.len() >= 1 {
-        let init_state_tx =
-          self.get_transaction(&init_state_tag_txid).await.unwrap();
-        state = decode_base_64(init_state_tx.data);
-      } else {
-        state = decode_base_64(contract_transaction.data.to_owned());
+      // TODO: DON'T PANIC
+      let contract_transaction =
+        self.get_transaction(&contract_id).await.unwrap();
 
-        if state.len() <= 0 {
-          state = String::from_utf8(
-            self.get_transaction_data(&contract_transaction.id).await,
-          )
-          .unwrap();
+      let contract_src = contract_src_tx_id
+        .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
+
+      if contract_src.len() <= 0 {
+        panic!("Contract contains invalid information for tag 'Contract-Src'");
+      }
+
+      let min_fee = get_tag(&contract_transaction, "Min-Fee");
+
+      // TODO: Don't panic
+      let contract_src_tx = self.get_transaction(&contract_src).await.unwrap();
+
+      let contract_src_data =
+        self.get_transaction_data(&contract_src_tx.id).await;
+
+      let mut state = String::new();
+
+      let init_state_tag = get_tag(&contract_transaction, "Init-State");
+      if init_state_tag.len() >= 1 {
+        state = init_state_tag;
+      } else {
+        let init_state_tag_txid =
+          get_tag(&contract_transaction, "Init-State-TX");
+        if init_state_tag_txid.len() >= 1 {
+          let init_state_tx =
+            self.get_transaction(&init_state_tag_txid).await.unwrap();
+          state = decode_base_64(init_state_tx.data);
+        } else {
+          state = decode_base_64(contract_transaction.data.to_owned());
+
+          if state.len() <= 0 {
+            state = String::from_utf8(
+              self.get_transaction_data(&contract_transaction.id).await,
+            )
+            .unwrap();
+          }
         }
       }
-    }
 
-    if state.len() <= 0 {
-      panic!("Contract does not have an initial state or an error has occurred while reading it.");
-    }
+      if state.len() <= 0 {
+        panic!("Contract does not have an initial state or an error has occurred while reading it.");
+      }
 
-    let contract_type =
-      get_contract_type(contract_type, &contract_transaction, &contract_src_tx);
+      let contract_type = get_contract_type(
+        contract_type,
+        &contract_transaction,
+        &contract_src_tx,
+      );
 
-    LoadedContract {
-      id: contract_id,
-      contract_src_tx_id: contract_src,
-      contract_src: contract_src_data,
-      contract_type,
-      init_state: state,
-      min_fee,
-      contract_transaction,
+      let final_result = LoadedContract {
+        id: contract_id,
+        contract_src_tx_id: contract_src,
+        contract_src: contract_src_data,
+        contract_type,
+        init_state: state,
+        min_fee,
+        contract_transaction,
+      };
+
+      if cache {
+        ARWEAVE_CACHE.cache_contract(&final_result).await;
+      }
+
+      final_result
     }
   }
 
@@ -362,7 +424,7 @@ impl Arweave {
   async fn get_default_gql_variables(
     &self,
     contract_id: String,
-    height: Option<usize>,
+    height: usize,
   ) -> InteractionVariables {
     let app_name_tag: TagFilter = TagFilter {
       name: "App-Name".to_owned(),
@@ -374,18 +436,74 @@ impl Arweave {
       values: vec![contract_id],
     };
 
-    let new_height = match height {
-      Some(size) => size,
-      None => self.get_network_info().await.height,
-    };
-
     let variables: InteractionVariables = InteractionVariables {
       tags: vec![app_name_tag, contract_tag],
-      block_filter: BlockFilter { max: new_height },
+      block_filter: BlockFilter { max: height },
       first: MAX_REQUEST,
       after: None,
     };
 
     variables
+  }
+
+  async fn stream_interactions(
+    &self,
+    cursor: Option<String>,
+    variables: InteractionVariables,
+  ) -> Vec<GQLTransactionsResultInterface> {
+    stream::unfold(State::Next(cursor, variables), |state| async move {
+      match state {
+        State::End => return None,
+        State::Next(cursor, variables) => {
+          let mut new_variables: InteractionVariables = variables.clone();
+
+          new_variables.after = cursor;
+
+          let tx = self
+            .get_next_interaction_page(new_variables, false, None)
+            .await;
+
+          if tx.edges.is_empty() {
+            return None;
+          } else {
+            let max_requests = self.get_max_edges(&tx.edges);
+
+            let edge = tx.edges.get(max_requests);
+
+            if let Some(result_edge) = edge {
+              let cursor = (&result_edge.cursor).to_owned();
+              Some((tx, State::Next(Some(cursor), variables)))
+            } else {
+              None
+            }
+          }
+        }
+      }
+    })
+    .collect::<Vec<GQLTransactionsResultInterface>>()
+    .await
+  }
+
+  fn get_max_edges(&self, data: &Vec<GQLEdgeInterface>) -> usize {
+    let len = data.len();
+    if len == MAX_REQUEST {
+      MAX_REQUEST - 1
+    } else {
+      len - 1
+    }
+  }
+
+  async fn has_more(
+    &self,
+    variables: &InteractionVariables,
+    cursor: String,
+  ) -> bool {
+    let mut variables = variables.to_owned();
+    variables.after = Some(cursor);
+    variables.first = 1;
+
+    let load_transactions =
+      self.get_next_interaction_page(variables, false, None).await;
+    !(load_transactions.edges.is_empty())
   }
 }
