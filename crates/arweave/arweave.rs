@@ -102,7 +102,7 @@ pub struct LoadedContract {
 }
 
 enum State {
-  Next(String, InteractionVariables),
+  Next(Option<String>, InteractionVariables),
   End,
 }
 
@@ -198,7 +198,7 @@ impl Arweave {
       if has_more_from_last_interaction {
         let mut fetch_more_interactions = self
           .stream_interactions(
-            last_transaction_edge.cursor.to_owned(),
+            Some(last_transaction_edge.cursor.to_owned()),
             variables.to_owned(),
           )
           .await;
@@ -218,15 +218,13 @@ impl Arweave {
 
       let mut tx_infos = transactions.edges.clone();
 
-      let mut cursor = String::from("");
+      let mut cursor: Option<String> = None;
       let max_edge = self.get_max_edges(&transactions.edges);
       let maybe_edge = transactions.edges.get(max_edge);
 
       if let Some(data) = maybe_edge {
         let owned = data;
-        cursor = owned.cursor.to_owned();
-      } else {
-        cursor = String::from("null");
+        cursor = Some(owned.cursor.to_owned());
       }
 
       let results = self.stream_interactions(cursor, variables).await;
@@ -333,11 +331,7 @@ impl Arweave {
     let mut result: Option<LoadedContract> = None;
 
     if cache {
-      let cached_contract =
-        ARWEAVE_CACHE.find_contract(contract_id.to_owned()).await;
-      if let Some(contract) = cached_contract {
-        result = Some(contract);
-      }
+      result = ARWEAVE_CACHE.find_contract(contract_id.to_owned()).await;
     }
 
     if result.is_some() {
@@ -362,7 +356,7 @@ impl Arweave {
       let contract_src_data =
         self.get_transaction_data(&contract_src_tx.id).await;
 
-      let mut state = String::from("");
+      let mut state = String::new();
 
       let init_state_tag = get_tag(&contract_transaction, "Init-State");
       if init_state_tag.len() >= 1 {
@@ -454,7 +448,7 @@ impl Arweave {
 
   async fn stream_interactions(
     &self,
-    cursor: String,
+    cursor: Option<String>,
     variables: InteractionVariables,
   ) -> Vec<GQLTransactionsResultInterface> {
     stream::unfold(State::Next(cursor, variables), |state| async move {
@@ -463,9 +457,7 @@ impl Arweave {
         State::Next(cursor, variables) => {
           let mut new_variables: InteractionVariables = variables.clone();
 
-          if !(cursor.eq("null")) {
-            new_variables.after = Some(cursor);
-          }
+          new_variables.after = cursor;
 
           let tx = self
             .get_next_interaction_page(new_variables, false, None)
@@ -480,7 +472,7 @@ impl Arweave {
 
             if let Some(result_edge) = edge {
               let cursor = (&result_edge.cursor).to_owned();
-              Some((tx, State::Next(cursor, variables)))
+              Some((tx, State::Next(Some(cursor), variables)))
             } else {
               None
             }
