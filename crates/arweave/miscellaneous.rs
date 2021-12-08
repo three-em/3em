@@ -77,7 +77,7 @@ mod tests {
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction(""),
-      &get_fake_transaction("application/evm"),
+      &get_fake_transaction("application/octet-stream"),
     );
     assert!(matches!(contract_type, ContractType::EVM));
     let contract_type = get_contract_type(
