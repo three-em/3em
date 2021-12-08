@@ -25,7 +25,7 @@ pub fn get_contract_type(
   match &(contract_type.to_lowercase())[..] {
     "application/javascript" => ContractType::JAVASCRIPT,
     "application/wasm" => ContractType::WASM,
-    "application/evm" => ContractType::EVM,
+    "application/octet-stream" => ContractType::EVM,
     _ => ContractType::JAVASCRIPT,
   }
 }

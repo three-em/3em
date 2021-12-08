@@ -1782,6 +1782,7 @@ dependencies = [
 name = "three_em_evm"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "hex-literal",
  "primitive-types",
  "tiny-keccak",

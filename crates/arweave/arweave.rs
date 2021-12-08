@@ -181,7 +181,9 @@ impl Arweave {
         .find_interactions(contract_id.to_owned())
         .await
       {
-        interactions = Some(cache_interactions);
+        if cache_interactions.len() != 0 {
+          interactions = Some(cache_interactions);
+        }
       }
     }
 
@@ -189,8 +191,7 @@ impl Arweave {
     let mut new_transactions = false;
     let mut new_interactions_index: usize = 0;
 
-    if interactions.is_some() {
-      let mut cache_interactions = interactions.unwrap();
+    if let Some(mut cache_interactions) = interactions {
       let last_transaction_edge = cache_interactions.last().unwrap();
       let has_more_from_last_interaction = self
         .has_more(&variables, last_transaction_edge.cursor.to_owned())
