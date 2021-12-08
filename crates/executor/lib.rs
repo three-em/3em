@@ -4,12 +4,18 @@ use deno_core::serde_json::Value;
 use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
-use three_em_arweave::arweave::{Arweave, ARWEAVE_CACHE};
-use three_em_arweave::gql_result::{
-  GQLEdgeInterface, GQLNodeInterface, GQLTagInterface,
-};
+use three_em_arweave::arweave::Arweave;
+use three_em_arweave::arweave::ARWEAVE_CACHE;
+use three_em_arweave::gql_result::GQLEdgeInterface;
+use three_em_arweave::gql_result::GQLNodeInterface;
+use three_em_arweave::gql_result::GQLTagInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_arweave::miscellaneous::ContractType;
+use three_em_evm::storage::Storage;
+use three_em_evm::ExecutionState;
+use three_em_evm::Instruction;
+use three_em_evm::Machine;
+use three_em_evm::U256;
 use three_em_js::Runtime;
 use three_em_smartweave::ContractBlock;
 use three_em_smartweave::ContractInfo;
@@ -24,7 +30,7 @@ pub type ValidityTable = HashMap<String, bool>;
 
 pub enum ExecuteResult {
   V8(Value, ValidityTable),
-  Evm(Vec<u8>, ValidityTable),
+  Evm(Storage, Vec<u8>, ValidityTable),
 }
 
 pub async fn execute_contract(
@@ -206,7 +212,37 @@ pub async fn execute_contract(
         ExecuteResult::V8(cache_state.unwrap(), validity)
       }
     }
-    ContractType::EVM => ExecuteResult::V8(Null, validity),
+    ContractType::EVM => {
+      // Contract source bytes.
+      let bytecode = hex::decode(loaded_contract.contract_src.as_slice())
+        .expect("Failed to decode contract bytecode");
+      let store = hex::decode(loaded_contract.init_state.as_bytes())
+        .expect("Failed to decode account state");
+
+      let mut account_store = Storage::from_raw(&store);
+      let mut result = vec![];
+      for interaction in interactions {
+        let tx = interaction.node;
+        let input = get_input_from_interaction(&tx);
+        let call_data = hex::decode(input).expect("Failed to decode input");
+
+        let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
+        machine.set_storage(account_store.clone());
+
+        match machine.execute(&bytecode) {
+          ExecutionState::Abort(_) | ExecutionState::Revert => {
+            validity.insert(tx.id, false);
+          }
+          ExecutionState::Ok => {
+            account_store = machine.storage;
+            result = machine.result;
+            validity.insert(tx.id, true);
+          }
+        }
+      }
+
+      ExecuteResult::Evm(account_store, result, validity)
+    }
   }
 }
 
@@ -230,6 +266,10 @@ pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
     .cloned()
     .collect::<Vec<GQLTagInterface>>();
   filtered_tags.len() > 1
+}
+
+fn nop_cost_fn(_: &Instruction) -> U256 {
+  U256::zero()
 }
 
 #[cfg(test)]

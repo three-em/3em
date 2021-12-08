@@ -51,6 +51,30 @@ pub async fn run(
         file.write_all(serde_json::to_vec(&value).unwrap().as_slice());
       }
     }
-    ExecuteResult::Evm(value, validity_table) => {}
+    ExecuteResult::Evm(store, result, validity_table) => {
+      let store = hex::encode(store.raw());
+      let result = hex::encode(result);
+
+      let value = if show_validity {
+        serde_json::json!({
+          "result": result,
+          "store": store,
+          "validity": validity_table
+        })
+      } else {
+        serde_json::json!({
+          "result": result,
+          "store": store,
+        })
+      };
+
+      if !no_print {
+        if pretty_print {
+          println!("{}", serde_json::to_string_pretty(&value).unwrap());
+        } else {
+          println!("{}", value);
+        }
+      }
+    }
   }
 }

@@ -1747,6 +1747,7 @@ dependencies = [
  "colored",
  "deno_core",
  "deno_crypto",
+ "hex",
  "local_ipaddress",
  "pico-args",
  "reqwest",
@@ -1781,6 +1782,7 @@ dependencies = [
 name = "three_em_evm"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "hex-literal",
  "primitive-types",
  "tiny-keccak",
@@ -1792,10 +1794,12 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "deno_core",
+ "hex",
  "reqwest",
  "serde",
  "sha2",
  "three_em_arweave",
+ "three_em_evm",
  "three_em_js",
  "three_em_smartweave",
  "three_em_wasm",

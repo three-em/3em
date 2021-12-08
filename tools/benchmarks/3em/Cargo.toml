@@ -12,6 +12,10 @@ path = "main.rs"
 name = "bench_wasm"
 path = "wasm.rs"
 
+[[bin]]
+name = "bench_evm"
+path = "evm.rs"
+
 [profile.release]
 opt-level = 3
 lto = true

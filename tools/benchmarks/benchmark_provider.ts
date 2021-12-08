@@ -8,6 +8,7 @@ import {
 import {
   EM3_JS_CMD,
   EM3_WASM_CMD,
+  EM3_EVM_CMD,
   REDSTONE_JS_CMD,
   SMARTWEAVE_JS_CMD,
 } from "./commands.ts";
@@ -44,6 +45,8 @@ export const benchmark3em = async (
       }
       params = executor(benchmarkRuns, config.file);
       break;
+    case ContractTypes.EVM:
+      params = EM3_EVM_CMD(benchmarkRuns, config.file);
   }
 
   results = await benchmark([

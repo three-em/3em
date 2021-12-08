@@ -9,6 +9,12 @@ export const runBenchmarks = async () => {
       file: "./3em-wasm-benchmark.json",
       provider: Providers.EM3,
     }),
+    evm: await benchmark3em({
+      type: ContractTypes.EVM,
+      runs: 10,
+      file: "./3em-evm-benchmark.json",
+      provider: Providers.EM3,
+    }),
     js: await benchmark3em({
       type: ContractTypes.JS,
       runs: 10,

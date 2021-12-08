@@ -25,7 +25,7 @@ pub fn get_contract_type(
   match &(contract_type.to_lowercase())[..] {
     "application/javascript" => ContractType::JAVASCRIPT,
     "application/wasm" => ContractType::WASM,
-    "application/evm" => ContractType::EVM,
+    "application/octet-stream" => ContractType::EVM,
     _ => ContractType::JAVASCRIPT,
   }
 }
@@ -77,7 +77,7 @@ mod tests {
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction(""),
-      &get_fake_transaction("application/evm"),
+      &get_fake_transaction("application/octet-stream"),
     );
     assert!(matches!(contract_type, ContractType::EVM));
     let contract_type = get_contract_type(
