@@ -16,6 +16,8 @@ serde = { version = "1", features = ["derive"] }
 three_em_smartweave = { path = "../smartweave" }
 three_em_js = { path = "../js" }
 three_em_wasm = { path = "../wasm" }
+three_em_evm = { path = "../evm" }
 tokio = { version = "1.10.1", features = ["full"] }
 three_em_arweave = { path = "../arweave" }
 base64 = "0.13.0"
+hex = "0.4.3"

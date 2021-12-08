@@ -1,9 +1,9 @@
-use primitive_types::U256;
+pub use primitive_types::U256;
 use std::collections::HashMap;
 use tiny_keccak::Hasher;
 use tiny_keccak::Keccak;
 
-mod storage;
+pub mod storage;
 
 use storage::Storage;
 
@@ -237,7 +237,7 @@ pub struct Machine {
   pub stack: Stack,
   state: U256,
   memory: Vec<u8>,
-  result: Vec<u8>,
+  pub result: Vec<u8>,
   // The cost function.
   cost_fn: Box<dyn Fn(&Instruction) -> U256>,
   // Total gas used so far.
@@ -258,7 +258,6 @@ pub enum AbortError {
 #[derive(PartialEq, Debug)]
 pub enum ExecutionState {
   Abort(AbortError),
-  Return(U256),
   Revert,
   Ok,
 }
@@ -298,11 +297,7 @@ impl Machine {
     }
   }
 
-  pub fn set_account(&mut self, owner: U256, state: HashMap<U256, U256>) {
-    let mut storage = Storage::new(owner);
-    *storage.inner.get_mut(&owner).unwrap() = state;
-
-    self.owner = owner;
+  pub fn set_storage(&mut self, storage: Storage) {
     self.storage = storage;
   }
 
@@ -529,8 +524,7 @@ impl Machine {
           self.stack.push(U256::from(result));
         }
         Instruction::Address => {
-          // TODO: address
-          self.stack.push(U256::zero());
+          self.stack.push(self.owner);
         }
         Instruction::Balance => {
           let _addr = self.stack.pop();
@@ -860,6 +854,7 @@ impl Machine {
 
 #[cfg(test)]
 mod tests {
+  use crate::storage::Storage;
   use crate::ExecutionState;
   use crate::Instruction;
   use crate::Machine;
@@ -1123,15 +1118,16 @@ mod tests {
     let mut machine =
       Machine::new_with_data(test_cost_fn, hex!("3a525c29").to_vec());
 
-    let mut account_state = HashMap::new();
-    account_state.insert(
+    let account = U256::zero();
+    let mut storage = Storage::new(account);
+    storage.insert(
+      &account,
       U256::zero(),
       U256::from(
         "0x6c6974746c656469767900000000000000000000000000000000000000000014",
       ),
     );
-
-    machine.set_account(U256::zero(), account_state);
+    machine.set_storage(storage);
 
     let status = machine.execute(&bytes);
     assert_eq!(status, ExecutionState::Ok);
