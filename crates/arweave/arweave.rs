@@ -503,7 +503,11 @@ impl Arweave {
     if len == MAX_REQUEST {
       MAX_REQUEST - 1
     } else {
-      len - 1
+      if len == 0 {
+        len
+      } else {
+        len - 1
+      }
     }
   }
 
