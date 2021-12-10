@@ -1,0 +1,21 @@
+[package]
+name = "evm_wasm"
+version = "0.1.0"
+authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
+description = "3EM's Ethereum Virtual Machine implementation for Browsers"
+edition = "2018"
+
+[workspace]
+
+[lib]
+name = "evm"
+path = "lib.rs"
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+
+[dependencies.evm]
+package = "three_em_evm"
+path = "../"
