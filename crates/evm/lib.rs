@@ -5,7 +5,7 @@ use tiny_keccak::Keccak;
 
 pub mod storage;
 
-use storage::Storage;
+pub use storage::Storage;
 
 macro_rules! repr_u8 {
   ($(#[$meta:meta])* $vis:vis enum $name:ident {

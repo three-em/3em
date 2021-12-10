@@ -433,6 +433,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "evm_wasm"
+version = "0.1.0"
+dependencies = [
+ "three_em_evm",
+]
+
+[[package]]
 name = "ff"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
