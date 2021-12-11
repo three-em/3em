@@ -125,12 +125,14 @@ const WORKER = `{
       const times = e.data.times || 1;
 
       for (let i = 0; i < times; i++) {
-        const { state } = await handle(
-          currentState,
-          e.data.action,
-        );
-
-        currentState = state;
+        try {
+          const state = await handle(
+            currentState,
+            e.data.action,
+          );
+  
+          currentState = state.state;
+        } catch(e) {}
       }
 
       selfCloned.postMessage(currentState);
