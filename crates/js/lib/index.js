@@ -121,12 +121,19 @@ const WORKER = `{
 
   selfCloned.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
-      const { state } = await handle(
-        e.data.state,
-        e.data.action,
-      );
+      let currentState = e.data.state;
+      const times = e.data.times || 1;
 
-      selfCloned.postMessage(state);
+      for (let i = 0; i < times; i++) {
+        const { state } = await handle(
+          currentState,
+          e.data.action,
+        );
+
+        currentState = state;
+      }
+
+      selfCloned.postMessage(currentState);
     }
   });
 }`;
@@ -135,7 +142,7 @@ export class Runtime {
   #state;
   #module;
 
-  constructor(source, state, info) {
+  constructor(source, state = {}, info = {}) {
     this.#state = state;
 
     const blob = new Blob([WORKER, source], { type: "application/javascript" });
@@ -145,11 +152,12 @@ export class Runtime {
     );
   }
 
-  async execute(action) {
+  async execute(action = {}, times = 1) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       action,
+      times,
     });
 
     this.#state = await new Promise((resolve) => {

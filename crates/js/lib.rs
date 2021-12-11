@@ -278,11 +278,11 @@ export async function handle() {
 
     rt.call(()).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand1, 0.7939112874678715);
+    assert_eq!(rand1, 0.3800000002095474);
 
     rt.call(()).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
-    assert_eq!(rand2, 0.5254990606499601);
+    assert_eq!(rand2, 0.1933761369163034);
   }
 
   #[tokio::test]
