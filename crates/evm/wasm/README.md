@@ -2,7 +2,7 @@
 
 ```javascript
 // usage_01.js
-import { Machine, hex } from "./index.js";
+import { hex, Machine } from "./index.js";
 
 // Solidity code for 1 + 2 = 3
 // :-)

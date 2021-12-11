@@ -10,7 +10,7 @@ Deno.test("test_runtime_1", async () => {
   );
 
   await runtime.execute({}, 100_000_000);
-  
+
   assertEquals((runtime.state as any).counter, 100_000_000);
   runtime.destroy();
 });
@@ -26,10 +26,11 @@ Deno.test("test_runtime_deterministic", async () => {
       date_now: Date.now(),
     }
   }
-}`);
+}`,
+  );
 
   await runtime.execute();
-  
+
   const state = runtime.state as any;
   assertEquals(state.performance_now, 0);
   assertEquals(state.random, 0.3800000002095474);

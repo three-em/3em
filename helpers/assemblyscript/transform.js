@@ -43,12 +43,15 @@ class ThreeEMTransform extends TransformVisitor {
     );
 
     let source = contract.statements.map((node) => {
-        if (node.kind == NodeKind.FUNCTIONDECLARATION && utils.hasDecorator(node, "contract")) {
-          node.name.text = "__inner_impl";
-          node.flags = CommonFlags.EXPORT;
-        }
+      if (
+        node.kind == NodeKind.FUNCTIONDECLARATION &&
+        utils.hasDecorator(node, "contract")
+      ) {
+        node.name.text = "__inner_impl";
+        node.flags = CommonFlags.EXPORT;
+      }
 
-        return ASTBuilder.build(node);
+      return ASTBuilder.build(node);
     }).join("\n");
 
     p.parseFile(
