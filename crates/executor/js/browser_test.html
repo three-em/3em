@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3EM Executor Test</title>
+</head>
+<body>
+  Open the console.
+</body>
+<script type="module">
+  import { executeContract } from "./index.js";
+
+  const start = performance.now();
+  await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE", 749180);
+  const end = performance.now();
+  console.log(`[JS] Execution time: ${(end - start)}ms.`);
+
+  const start2 = performance.now();
+  await executeContract("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ", 749180);
+  const end2 = performance.now();
+  console.log(`[WASM] Execution time: ${(end2 - start2)}ms.`);
+</script>
+</html>

@@ -1,13 +1,13 @@
 ### Prerequisites
 
-* `wasi-libc`
+- `wasi-libc`
 
 ```bash
 $ cd wasi-libc
 $ make install INSTALL_DIR=../libc
 ```
 
-* `wasi-sdk`
+- `wasi-sdk`
 
 Install and extract static library from here:
 https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-14
@@ -16,7 +16,7 @@ https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-14
 $ mv path/to/libcland_rt.builtins.wasm32.a /path/to/llvm/lib/clang/VERSION/lib/wasi/
 ```
 
-* `cJSON`
+- `cJSON`
 
 ### Compiling
 

@@ -6,9 +6,9 @@ import {
   StatsResult,
 } from "./model.ts";
 import {
+  EM3_EVM_CMD,
   EM3_JS_CMD,
   EM3_WASM_CMD,
-  EM3_EVM_CMD,
   REDSTONE_JS_CMD,
   SMARTWEAVE_JS_CMD,
 } from "./commands.ts";

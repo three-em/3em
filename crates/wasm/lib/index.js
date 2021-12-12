@@ -6,11 +6,11 @@ export class WasmRuntime {
   #contractInfo;
   #contractInfoPtr;
 
-  constructor(
+  async compile(
     moduleBytes,
     contract,
   ) {
-    const module = new WebAssembly.Module(moduleBytes);
+    const module = await WebAssembly.compile(moduleBytes);
     const imports = {
       "env": {
         abort: () => {},
@@ -30,7 +30,7 @@ export class WasmRuntime {
       },
     };
 
-    const instance = new WebAssembly.Instance(module, imports);
+    const instance = await WebAssembly.instantiate(module, imports);
 
     const contractInfo = encoder.encode(JSON.stringify(contract));
     const contractPtr = instance.exports._alloc(contractInfo.byteLength);

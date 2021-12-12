@@ -6,7 +6,7 @@ export const benchmark = async (
 ): Promise<StatsResult> => {
   await Deno.run({
     cmd: [...cmd, "--show-output"],
-    stdout: "null"
+    stdout: "null",
   }).status();
 
   return JSON.parse(Deno.readTextFileSync(filePath)).results[0] as StatsResult;
