@@ -122,13 +122,15 @@ const WORKER = `{
   selfCloned.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
       let currentState = e.data.state;
-      const times = e.data.times || 1;
+      const interactions = e.data.interactions || [];
 
-      for (let i = 0; i < times; i++) {
+      for (let i = 0; i < interactions; i++) {
+        const tx = interactions[i].node;
+        const input = tx.tags.find(data => data.name === "Input");
         try {
           const state = await handle(
             currentState,
-            e.data.action,
+            { tx, input },
           );
   
           currentState = state.state;
@@ -154,19 +156,34 @@ export class Runtime {
     );
   }
 
-  async execute(action = {}, times = 1) {
-    this.#module.postMessage({
-      type: "execute",
-      state: this.#state,
-      action,
-      times,
-    });
-
+  async resolveState() {
     this.#state = await new Promise((resolve) => {
       this.#module.onmessage = function (e) {
         resolve(e.data);
       };
     });
+  }
+
+  // Fast path for the most common case.
+  async executeInteractions(interactions) {
+    this.#module.postMessage({
+      type: "execute",
+      state: this.#state,
+      interactions,
+    });
+
+    await this.resolveState();
+  }
+
+  async execute(action = {}) {
+    this.#module.postMessage({
+      type: "execute",
+      state: this.#state,
+      action,
+      interactions: [],
+    });
+
+    await this.resolveState();
   }
 
   get state() {
