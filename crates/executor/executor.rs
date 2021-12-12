@@ -3,20 +3,20 @@ use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use std::collections::HashMap;
 use three_em_arweave::arweave::LoadedContract;
+use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_js::Runtime;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
-use three_em_arweave::arweave::ARWEAVE_CACHE;
 
 pub type ValidityTable = HashMap<String, bool>;
 pub type CachedState = Option<Value>;
 
 pub enum ExecuteResult {
   V8(Value, ValidityTable),
-  Evm(Storage, Vec<u8>, ValidityTable)
+  Evm(Storage, Vec<u8>, ValidityTable),
 }
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
