@@ -1,4 +1,6 @@
 import { Runtime } from "../../js/web/index.js";
+import { hex, Machine } from "../../evm/wasm/index.js";
+import { WasmRuntime } from "../../wasm/lib/index.js";
 
 const getTagSource = `
 function getTag(tx, field) {
@@ -230,7 +232,9 @@ export async function executeContract(
     // So now we have the cached interactions
     // but we still need to ensure that the cached interactions are up to date.
     const lastEdge = interactions[interactions.length - 1];
-    updatePromise = updateInteractions(contractId, height, lastEdge.cursor);
+    if (lastEdge) {
+      updatePromise = updateInteractions(contractId, height, lastEdge.cursor);
+    }
   }
 
   if (!cachedContract) {
@@ -266,13 +270,40 @@ export async function executeContract(
       }
 
       rt.destroy();
+
       return rt.state;
-      break;
     case "application/wasm":
-      break;
+      const module = str2u8(source);
+      const wasm = new WasmRuntime();
+      await wasm.compile(
+        module,
+        {},
+      );
+
+      let currState = encode(state);
+      for (const interaction of interactions) {
+        const input = interaction.node.tags.find((data) =>
+          data.name === "Input"
+        );
+        currState = wasm.call(currState, {
+          input,
+          caller: interaction.node.owner.address,
+        });
+      }
+
+      return currState;
     case "application/octet-stream":
       break;
     default:
       throw new Error(`Unsupported contract type: ${type}`);
   }
+}
+
+const encode = (s) => new TextEncoder().encode(JSON.stringify(s));
+function str2u8(str) {
+  const bufView = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return bufView;
 }
