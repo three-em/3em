@@ -169,3 +169,165 @@ pub async fn raw_execute_contract<
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use crate::executor::{raw_execute_contract, ExecuteResult};
+  use deno_core::serde_json;
+  use deno_core::serde_json::Value;
+  use std::collections::HashMap;
+  use three_em_arweave::arweave::{LoadedContract, TransactionData};
+  use three_em_arweave::gql_result::{
+    GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface, GQLOwnerInterface,
+    GQLTagInterface,
+  };
+  use three_em_arweave::miscellaneous::ContractType;
+
+  #[tokio::test]
+  pub async fn test_executor_js() {
+    let init_state = serde_json::json!({
+      "users": []
+    });
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      "users_contract.js",
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+    let fake_interactions = vec![
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "add",
+          "name": "Andres"
+        }),
+        "tx1",
+      ),
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "none",
+          "name": "Tate"
+        }),
+        "tx2",
+      ),
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "add",
+          "name": "Divy"
+        }),
+        "tx3",
+      ),
+    ];
+
+    let result = raw_execute_contract(
+      String::new(),
+      fake_contract,
+      fake_interactions,
+      HashMap::new(),
+      None,
+      true,
+      |validity, cache| {
+        panic!("not implemented");
+      },
+    )
+    .await;
+
+    if let ExecuteResult::V8(value, validity) = result {
+      assert_eq!(validity.len(), 3);
+      let (tx1, tx2, tx3) = (
+        validity.get("tx1"),
+        validity.get("tx2"),
+        validity.get("tx3"),
+      );
+      assert_eq!(tx1.is_some(), true);
+      assert_eq!(tx2.is_some(), true);
+      assert_eq!(tx3.is_some(), true);
+      assert_eq!((tx1.unwrap()).to_owned(), true);
+      assert_eq!((tx2.unwrap()).to_owned(), false);
+      assert_eq!((tx3.unwrap()).to_owned(), true);
+
+      let value_state = value.get("users");
+      assert_eq!(value_state.is_some(), true);
+      let users = value_state
+        .unwrap()
+        .to_owned()
+        .as_array()
+        .unwrap()
+        .to_owned();
+      assert_eq!(
+        users.get(0).unwrap().to_owned(),
+        serde_json::json!("Andres")
+      );
+      assert_eq!(users.get(1).unwrap().to_owned(), serde_json::json!("Divy"));
+    } else {
+      panic!("Failed");
+    }
+  }
+
+  pub fn generate_fake_loaded_contract_data(
+    contract_file_name: &str,
+    contract_type: ContractType,
+    init_state: String,
+  ) -> LoadedContract {
+    let contract_id = String::from("test");
+    LoadedContract {
+      id: contract_id.to_owned(),
+      contract_src_tx_id: String::new(),
+      contract_src: get_contract_source_bytes(contract_file_name),
+      contract_type,
+      init_state: String::from(init_state),
+      min_fee: String::new(),
+      contract_transaction: TransactionData {
+        format: 0,
+        id: String::new(),
+        last_tx: String::new(),
+        owner: String::new(),
+        tags: Vec::new(),
+        target: String::new(),
+        quantity: String::new(),
+        data: String::new(),
+        reward: String::new(),
+        signature: String::new(),
+        data_size: String::new(),
+        data_root: String::new(),
+      },
+    }
+  }
+
+  pub fn generate_fake_interaction(input: Value, id: &str) -> GQLEdgeInterface {
+    GQLEdgeInterface {
+      cursor: String::new(),
+      node: GQLNodeInterface {
+        id: String::from(id),
+        anchor: None,
+        signature: None,
+        recipient: None,
+        owner: GQLOwnerInterface {
+          address: String::new(),
+          key: None,
+        },
+        fee: None,
+        quantity: None,
+        data: None,
+        tags: vec![GQLTagInterface {
+          name: String::from("Input"),
+          value: input.to_string(),
+        }],
+        block: GQLBlockInterface {
+          id: String::new(),
+          timestamp: 0,
+          height: 0,
+          previous: None,
+        },
+        parent: None,
+      },
+    }
+  }
+
+  pub fn get_contract_source_bytes(contract_file_name: &str) -> Vec<u8> {
+    if contract_file_name == "users_contract.js" {
+      include_bytes!("../../testdata/contracts/users_contract.js").to_vec()
+    } else {
+      vec![]
+    }
+  }
+}
