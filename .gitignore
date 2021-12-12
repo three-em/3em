@@ -10,6 +10,7 @@
 ./redstone-js-benchmark.json
 3em-js-benchmark.json
 3em-wasm-benchmark.json
+3em-evm-benchmark.json
 smartweave-js-benchmark.json
 redstone-js-benchmark.json
 /testdata/01_wasm/target

@@ -1,3 +1,6 @@
+pub mod executor;
+
+use crate::executor::{raw_execute_contract, ExecuteResult};
 use deno_core::error::AnyError;
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
@@ -24,13 +27,6 @@ use three_em_wasm::WasmRuntime;
 struct ContractHandlerResult {
   result: Option<Value>,
   state: Option<Value>,
-}
-
-pub type ValidityTable = HashMap<String, bool>;
-
-pub enum ExecuteResult {
-  V8(Value, ValidityTable),
-  Evm(Storage, Vec<u8>, ValidityTable),
 }
 
 pub async fn execute_contract(
@@ -85,15 +81,6 @@ pub async fn execute_contract(
   let mut interactions = result_interactions;
 
   let mut validity: HashMap<String, bool> = HashMap::new();
-  let transaction = loaded_contract.contract_transaction;
-  let contract_info = ContractInfo {
-    transaction,
-    block: ContractBlock {
-      height: 0,
-      indep_hash: String::from(""),
-      timestamp: String::from(""),
-    },
-  };
 
   let mut needs_processing = true;
   let mut cache_state: Option<Value> = None;
@@ -111,139 +98,22 @@ pub async fn execute_contract(
 
   let is_cache_state_present = cache_state.is_some();
 
-  // TODO: handle evm.
-  match loaded_contract.contract_type {
-    ContractType::JAVASCRIPT => {
-      if needs_processing {
-        let mut state: Value = cache_state.unwrap_or_else(|| {
-          deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap()
-        });
-
-        let mut rt = Runtime::new(
-          &(String::from_utf8(loaded_contract.contract_src).unwrap()),
-          state,
-          contract_info,
-        )
-        .await
-        .unwrap();
-
-        if cache && is_cache_state_present && are_there_new_interactions {
-          interactions = (&interactions[new_interaction_index..]).to_vec();
-        }
-
-        for interaction in interactions {
-          let tx = interaction.node;
-          let input = get_input_from_interaction(&tx);
-
-          // TODO: has_multiple_interactions
-          // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
-          let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
-
-          let call_input = serde_json::json!({
-            "input": js_input,
-            "caller": tx.owner.address
-          });
-
-          let valid = rt.call(call_input).await.is_ok();
-          validity.insert(tx.id, valid);
-        }
-
-        let state_val: Value = rt.get_contract_state().unwrap();
-
-        if cache {
-          ARWEAVE_CACHE
-            .cache_states(contract_id_copy.to_owned(), &state_val, &validity)
-            .await;
-        }
-
-        ExecuteResult::V8(state_val, validity)
-      } else {
-        ExecuteResult::V8(cache_state.unwrap(), validity)
-      }
-    }
-    ContractType::WASM => {
-      if needs_processing {
-        let wasm = loaded_contract.contract_src.as_slice();
-
-        let init_state_wasm = if cache_state.is_some() {
-          let cache_state_unwrapped = cache_state.unwrap();
-          let state_str = cache_state_unwrapped.to_string();
-          state_str.as_bytes().to_vec()
-        } else {
-          loaded_contract.init_state.as_bytes().to_vec()
-        };
-
-        let mut state = init_state_wasm;
-        let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
-
-        if cache && is_cache_state_present && are_there_new_interactions {
-          interactions = (&interactions[new_interaction_index..]).to_vec();
-        }
-
-        for interaction in interactions {
-          let tx = interaction.node;
-          let input = get_input_from_interaction(&tx);
-          let wasm_input: Value =
-            deno_core::serde_json::from_str(input).unwrap();
-          let call_input = serde_json::json!({
-            "input": wasm_input,
-            "caller": tx.owner.address,
-          });
-
-          let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
-          let exec = rt.call(&mut state, &mut input);
-          let valid = exec.is_ok();
-          if valid {
-            state = exec.unwrap();
-          }
-          validity.insert(tx.id, valid);
-        }
-
-        let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
-
-        if cache {
-          ARWEAVE_CACHE
-            .cache_states(contract_id_copy.to_owned(), &state, &validity)
-            .await;
-        }
-
-        ExecuteResult::V8(state, validity)
-      } else {
-        ExecuteResult::V8(cache_state.unwrap(), validity)
-      }
-    }
-    ContractType::EVM => {
-      // Contract source bytes.
-      let bytecode = hex::decode(loaded_contract.contract_src.as_slice())
-        .expect("Failed to decode contract bytecode");
-      let store = hex::decode(loaded_contract.init_state.as_bytes())
-        .expect("Failed to decode account state");
-
-      let mut account_store = Storage::from_raw(&store);
-      let mut result = vec![];
-      for interaction in interactions {
-        let tx = interaction.node;
-        let input = get_input_from_interaction(&tx);
-        let call_data = hex::decode(input).expect("Failed to decode input");
-
-        let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
-        machine.set_storage(account_store.clone());
-
-        match machine.execute(&bytecode) {
-          ExecutionState::Abort(_) | ExecutionState::Revert => {
-            validity.insert(tx.id, false);
-          }
-          ExecutionState::Ok => {
-            account_store = machine.storage;
-            result = machine.result;
-            validity.insert(tx.id, true);
-          }
-        }
-      }
-
-      ExecuteResult::Evm(account_store, result, validity)
-    }
+  if cache && is_cache_state_present && are_there_new_interactions {
+    interactions = (&interactions[new_interaction_index..]).to_vec();
   }
+
+  raw_execute_contract(
+    contract_id_copy.to_owned(),
+    loaded_contract,
+    interactions,
+    validity,
+    cache_state,
+    needs_processing,
+    |validity_table, cache_state| {
+      ExecuteResult::V8(cache_state.unwrap(), validity_table)
+    },
+  )
+  .await
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
