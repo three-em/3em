@@ -438,7 +438,6 @@ mod tests {
   use crate::WasmRuntime;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
-  use std::sync::atomic::Ordering;
 
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
@@ -450,7 +449,7 @@ mod tests {
 
     let action = json!({});
     let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
-    let mut prev_state = json!({
+    let prev_state = json!({
       "counter": 0,
     });
 

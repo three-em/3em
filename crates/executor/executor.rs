@@ -259,7 +259,7 @@ mod tests {
       HashMap::new(),
       None,
       true,
-      |validity, cache| {
+      |_, _| {
         panic!("not implemented");
       },
       Arweave::new(443, "arweave.net".to_string()),
@@ -337,7 +337,7 @@ mod tests {
       HashMap::new(),
       None,
       true,
-      |validity, cache| {
+      |_, _| {
         panic!("not implemented");
       },
       Arweave::new(443, "arweave.net".to_string()),

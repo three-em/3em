@@ -131,8 +131,7 @@ mod tests {
   #[tokio::test]
   async fn test_encrypt() {
     let keypair = generate_keypair().await;
-    let (encrypt, encrypt_len) =
-      encrypt(keypair.public_key.to_owned(), "Hello Divy");
+    let (encrypt, _) = encrypt(keypair.public_key.to_owned(), "Hello Divy");
     let (decrypt, decrypt_len) =
       decrypt(keypair.private_key.to_owned(), encrypt);
     assert_eq!(
@@ -144,7 +143,7 @@ mod tests {
   #[tokio::test]
   async fn test_encrypt_from_internal() {
     let keypair = GeneratedPair::new().await;
-    let (encrypt, encrypt_len) = keypair.encrypt("Hello Divy");
+    let (encrypt, _) = keypair.encrypt("Hello Divy");
     let (decrypt, decrypt_len) = keypair.decrypt(encrypt);
     assert_eq!(
       String::from_utf8(decrypt[..decrypt_len].to_vec()).unwrap(),

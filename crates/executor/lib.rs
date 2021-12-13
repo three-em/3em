@@ -191,7 +191,7 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, _validity) = result {
       assert!(!(value.is_null()));
       assert!(value.get("people").is_some());
       assert!(value.get("people").unwrap().is_array());
