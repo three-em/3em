@@ -58,7 +58,7 @@ impl TransactionData {
       .iter()
       .find(|t| t.name == encoded_tag)
       .map(|t| Ok(String::from_utf8(base64::decode(&t.value)?)?))
-      .ok_or(AnyError::msg(format!("{} tag not found", tag)))?
+      .ok_or_else(|| AnyError::msg(format!("{} tag not found", tag)))?
   }
 }
 
@@ -267,9 +267,10 @@ impl Arweave {
             || p
               .node
               .parent
-              .as_ref().unwrap_or(&GQLNodeParent { id: None })
-            .id
-            .is_none()
+              .as_ref()
+              .unwrap_or(&GQLNodeParent { id: None })
+              .id
+              .is_none()
         })
         .collect();
 
@@ -369,7 +370,9 @@ impl Arweave {
 
       let contract_src = contract_src_tx_id
         .or_else(|| contract_transaction.get_tag("Contract-Src").ok())
-        .ok_or(AnyError::msg("Contract-Src tag not found in transaction"))?;
+        .ok_or_else(|| {
+          AnyError::msg("Contract-Src tag not found in transaction")
+        })?;
 
       let min_fee = contract_transaction.get_tag("Min-Fee").ok();
 
@@ -385,8 +388,7 @@ impl Arweave {
       } else if let Ok(init_state_tag_txid) =
         contract_transaction.get_tag("Init-State-TX")
       {
-        let init_state_tx =
-          self.get_transaction(&init_state_tag_txid).await?;
+        let init_state_tx = self.get_transaction(&init_state_tag_txid).await?;
         state = decode_base_64(init_state_tx.data);
       } else {
         state = decode_base_64(contract_transaction.data.to_owned());

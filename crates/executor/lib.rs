@@ -10,7 +10,6 @@ use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
-use three_em_arweave::gql_result::GQLTagInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_evm::Instruction;
 use three_em_evm::U256;
@@ -123,12 +122,13 @@ pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
 
 pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
   let tags = (&interaction_tx.tags).to_owned();
-  let filtered_tags = tags
+  let count = tags
     .iter()
     .filter(|data| data.name == *"Contract")
     .cloned()
-    .collect::<Vec<GQLTagInterface>>();
-  filtered_tags.len() > 1
+    .count();
+
+  count > 1
 }
 
 fn nop_cost_fn(_: &Instruction) -> U256 {

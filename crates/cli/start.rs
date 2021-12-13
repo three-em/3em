@@ -89,6 +89,7 @@ pub async fn start(
     let (socket, _) = listener.accept().await?;
 
     tokio::task::spawn(async move {
+      #[allow(clippy::for_loops_over_fallibles)]
       for data in handle_node(socket).next().await {
         process(data).await;
       }

@@ -35,23 +35,25 @@ fn parse_node_limit(
 pub fn parse() -> Result<Flags, pico_args::Error> {
   let mut pargs = Arguments::from_env();
 
+  #[allow(clippy::wildcard_in_or_patterns)]
   let flags = match pargs.subcommand()?.as_deref().unwrap_or("Unknown") {
     "start" => Flags::Start {
       port: pargs.opt_value_from_str("--port")?.unwrap_or(8755),
       host: pargs
         .opt_value_from_str("--host")?
-        .unwrap_or(String::from("127.0.0.1")),
+        .unwrap_or_else(|| String::from("127.0.0.1")),
       node_capacity: parse_node_limit(&mut pargs).unwrap(),
     },
-    #[allow(clippy::wildcard_in_or_patterns)]
     "run" | _ => Flags::Run {
       host: pargs
         .opt_value_from_str("--arweave-host")?
-        .unwrap_or(String::from("arweave.net")),
+        .unwrap_or_else(|| String::from("arweave.net")),
       port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
       tx: pargs
         .opt_value_from_str("--contract-id")?
-        .unwrap_or_else(|| String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")),
+        .unwrap_or_else(|| {
+          String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")
+        }),
       pretty_print: pargs.contains("--pretty-print"),
       no_print: pargs.contains("--no-print"),
       show_validity: pargs.contains("--show-validity"),
@@ -59,10 +61,8 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       benchmark: pargs.contains("--benchmark"),
       save_path: pargs
         .opt_value_from_str("--save")?
-        .unwrap_or(String::from("")),
-      height: {
-        pargs.opt_value_from_str("--height").unwrap()
-      },
+        .unwrap_or_else(|| String::from("")),
+      height: { pargs.opt_value_from_str("--height").unwrap() },
       no_cache: pargs.contains("--no-cache"),
     },
   };

@@ -39,13 +39,13 @@ pub fn to_private_key(
   private_key: Vec<u8>,
 ) -> rsa::pkcs1::Result<RsaPrivateKey> {
   let bytes = &private_key[..];
-  
+
   RsaPrivateKey::from_pkcs1_der(bytes)
 }
 
 fn to_public_key(public_key: Vec<u8>) -> rsa::pkcs1::Result<RsaPublicKey> {
   let bytes = &public_key[..];
-  
+
   RsaPublicKey::from_pkcs1_der(bytes)
 }
 
@@ -74,8 +74,6 @@ pub fn sign(private_key: Vec<u8>, data: &str) -> Vec<u8> {
   };
 
   let (scheme, hasher) = (get_scheme(), hasher(data.as_bytes()));
-
-  
 
   private_key.sign(scheme, &hasher).unwrap()
 }
@@ -129,8 +127,7 @@ mod tests {
   async fn test_encrypt() {
     let keypair = generate_keypair().await;
     let (encrypt, _) = encrypt(keypair.public_key.to_owned(), "Hello Divy");
-    let (decrypt, decrypt_len) =
-      decrypt(keypair.private_key, encrypt);
+    let (decrypt, decrypt_len) = decrypt(keypair.private_key, encrypt);
     assert_eq!(
       String::from_utf8(decrypt[..decrypt_len].to_vec()).unwrap(),
       "Hello Divy"
@@ -166,11 +163,7 @@ mod tests {
       "Hello World",
     );
     assert!(!is_valid);
-    let is_valid = verify(
-      keypair2.public_key,
-      signed,
-      "Hello World!",
-    );
+    let is_valid = verify(keypair2.public_key, signed, "Hello World!");
     assert!(!is_valid);
   }
 
@@ -184,11 +177,7 @@ mod tests {
       "Hello World!",
     );
     assert!(is_valid);
-    let is_valid = verify(
-      keypair.public_key,
-      signed,
-      "Hello World",
-    );
+    let is_valid = verify(keypair.public_key, signed, "Hello World");
     assert!(!is_valid);
   }
 }

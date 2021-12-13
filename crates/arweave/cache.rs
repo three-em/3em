@@ -19,6 +19,12 @@ pub struct StateResult {
   pub validity: HashMap<String, bool>,
 }
 
+impl Default for ArweaveCache {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl ArweaveCache {
   pub fn new() -> ArweaveCache {
     if let Some(cache_dir) = dirs::cache_dir() {

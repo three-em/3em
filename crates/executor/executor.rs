@@ -22,6 +22,7 @@ pub enum ExecuteResult {
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn raw_execute_contract<
   CachedCallBack: FnOnce(ValidityTable, CachedState) -> ExecuteResult,
 >(

@@ -13,8 +13,7 @@ pub fn get_core_nodes() -> Vec<Node> {
   let result = nodes
     .iter()
     .map(|content| {
-      let data: Vec<String> =
-        content.split(':').map(String::from).collect();
+      let data: Vec<String> = content.split(':').map(String::from).collect();
       let ip = data.get(0).unwrap();
       let port = data.get(1).unwrap().parse::<i32>().unwrap();
       Node::new(ip, port)

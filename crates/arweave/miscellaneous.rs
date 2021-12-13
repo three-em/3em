@@ -19,7 +19,9 @@ pub fn get_contract_type(
   let contract_type = maybe_content_type
     .or_else(|| source_transaction.get_tag("Content-Type").ok())
     .or_else(|| contract_transaction.get_tag("Content-Type").ok())
-    .ok_or(AnyError::msg("Contract-Src tag not found in transaction"))?;
+    .ok_or_else(|| {
+      AnyError::msg("Contract-Src tag not found in transaction")
+    })?;
 
   let ty = match &(contract_type.to_lowercase())[..] {
     "application/javascript" => ContractType::JAVASCRIPT,
