@@ -80,7 +80,7 @@ async fn main() -> Result<(), AnyError> {
         height,
         no_cache,
       )
-      .await;
+      .await?;
     }
   };
 

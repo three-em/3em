@@ -1,11 +1,13 @@
-use crate::arweave_get_tag::get_tag;
 use crate::cache::ArweaveCache;
-use crate::gql_result::{
-  GQLEdgeInterface, GQLNodeParent, GQLResultInterface,
-  GQLTransactionsResultInterface,
-};
-use crate::miscellaneous::{get_contract_type, get_sort_key, ContractType};
+use crate::gql_result::GQLEdgeInterface;
+use crate::gql_result::GQLNodeParent;
+use crate::gql_result::GQLResultInterface;
+use crate::gql_result::GQLTransactionsResultInterface;
+use crate::miscellaneous::get_contract_type;
+use crate::miscellaneous::get_sort_key;
+use crate::miscellaneous::ContractType;
 use crate::utils::decode_base_64;
+use deno_core::error::AnyError;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
 use lazy_static::lazy_static;
@@ -26,7 +28,7 @@ pub struct NetworkInfo {
   pub node_state_latency: usize,
 }
 
-#[derive(Deserialize, Serialize, Default, Clone)]
+#[derive(Deserialize, Serialize, Default, Clone, Debug)]
 pub struct Tag {
   pub name: String,
   pub value: String,
@@ -46,6 +48,21 @@ pub struct TransactionData {
   pub signature: String,
   pub data_size: String,
   pub data_root: String,
+}
+
+impl TransactionData {
+  pub fn get_tag(&self, tag: &str) -> Result<String, AnyError> {
+    // Encodes the tag instead of decoding the keys.
+    let encoded_tag = base64::encode_config(tag, base64::URL_SAFE_NO_PAD);
+    println!("{}", encoded_tag);
+    println!("{:?}", self.tags);
+    self
+      .tags
+      .iter()
+      .find(|t| t.name == encoded_tag)
+      .map(|t| Ok(String::from_utf8(base64::decode(&t.value)?)?))
+      .ok_or(AnyError::msg(format!("{} tag not found", tag)))?
+  }
 }
 
 #[derive(Clone)]
@@ -97,7 +114,7 @@ pub struct LoadedContract {
   pub contract_src: Vec<u8>,
   pub contract_type: ContractType,
   pub init_state: String,
-  pub min_fee: String,
+  pub min_fee: Option<String>,
   pub contract_transaction: TransactionData,
 }
 
@@ -164,7 +181,7 @@ impl Arweave {
     contract_id: String,
     height: Option<usize>,
     cache: bool,
-  ) -> (Vec<GQLEdgeInterface>, usize, bool) {
+  ) -> Result<(Vec<GQLEdgeInterface>, usize, bool), AnyError> {
     let mut interactions: Option<Vec<GQLEdgeInterface>> = None;
 
     let height_result = match height {
@@ -195,7 +212,7 @@ impl Arweave {
       let last_transaction_edge = cache_interactions.last().unwrap();
       let has_more_from_last_interaction = self
         .has_more(&variables, last_transaction_edge.cursor.to_owned())
-        .await;
+        .await?;
 
       if has_more_from_last_interaction {
         // Start from what's going to be the next interaction. if doing len - 1, that would mean we will also include the last interaction cached: not ideal.
@@ -218,7 +235,7 @@ impl Arweave {
     } else {
       let mut transactions = self
         .get_next_interaction_page(variables.clone(), false, None)
-        .await;
+        .await?;
 
       let mut tx_infos = transactions.edges.clone();
 
@@ -272,11 +289,11 @@ impl Arweave {
 
     let are_there_new_interactions =
       new_interactions_index >= 0 && cache && new_transactions;
-    (
+    Ok((
       to_return,
       new_interactions_index,
       are_there_new_interactions,
-    )
+    ))
   }
 
   async fn get_next_interaction_page(
@@ -284,7 +301,7 @@ impl Arweave {
     mut variables: InteractionVariables,
     from_last_page: bool,
     max_results: Option<usize>,
-  ) -> GQLTransactionsResultInterface {
+  ) -> Result<GQLTransactionsResultInterface, AnyError> {
     let mut query = String::from(
       r#"query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -317,7 +334,7 @@ impl Arweave {
 
     if from_last_page {
       query = query.replace("HEIGHT_ASC", "HEIGHT_DESC");
-      variables.first = max_results.unwrap_or(100 as usize);
+      variables.first = max_results.unwrap_or(100);
     }
 
     let graphql_query = GraphqlQuery { query, variables };
@@ -331,8 +348,9 @@ impl Arweave {
       .await
       .unwrap();
 
-    let data = result.json::<GQLResultInterface>().await.unwrap();
-    data.data.transactions
+    let data = result.json::<GQLResultInterface>().await?;
+
+    Ok(data.data.transactions)
   }
 
   pub async fn load_contract(
@@ -341,7 +359,7 @@ impl Arweave {
     contract_src_tx_id: Option<String>,
     contract_type: Option<String>,
     cache: bool,
-  ) -> LoadedContract {
+  ) -> Result<LoadedContract, AnyError> {
     let mut result: Option<LoadedContract> = None;
 
     if cache {
@@ -349,38 +367,31 @@ impl Arweave {
     }
 
     if result.is_some() {
-      result.unwrap()
+      Ok(result.unwrap())
     } else {
-      // TODO: DON'T PANIC
-      let contract_transaction =
-        self.get_transaction(&contract_id).await.unwrap();
+      let contract_transaction = self.get_transaction(&contract_id).await?;
 
       let contract_src = contract_src_tx_id
-        .unwrap_or_else(|| get_tag(&contract_transaction, "Contract-Src"));
+        .or_else(|| contract_transaction.get_tag("Contract-Src").ok())
+        .ok_or(AnyError::msg("Contract-Src tag not found in transaction"))?;
 
-      if contract_src.len() <= 0 {
-        panic!("Contract contains invalid information for tag 'Contract-Src'");
-      }
+      let min_fee = contract_transaction.get_tag("Min-Fee").ok();
 
-      let min_fee = get_tag(&contract_transaction, "Min-Fee");
-
-      // TODO: Don't panic
-      let contract_src_tx = self.get_transaction(&contract_src).await.unwrap();
+      let contract_src_tx = self.get_transaction(&contract_src).await?;
 
       let contract_src_data =
         self.get_transaction_data(&contract_src_tx.id).await;
 
       let mut state = String::new();
 
-      let init_state_tag = get_tag(&contract_transaction, "Init-State");
-      if init_state_tag.len() >= 1 {
+      if let Ok(init_state_tag) = contract_transaction.get_tag("Init-State") {
         state = init_state_tag;
       } else {
-        let init_state_tag_txid =
-          get_tag(&contract_transaction, "Init-State-TX");
-        if init_state_tag_txid.len() >= 1 {
+        if let Ok(init_state_tag_txid) =
+          contract_transaction.get_tag("Init-State-TX")
+        {
           let init_state_tx =
-            self.get_transaction(&init_state_tag_txid).await.unwrap();
+            self.get_transaction(&init_state_tag_txid).await?;
           state = decode_base_64(init_state_tx.data);
         } else {
           state = decode_base_64(contract_transaction.data.to_owned());
@@ -394,15 +405,11 @@ impl Arweave {
         }
       }
 
-      if state.len() <= 0 {
-        panic!("Contract does not have an initial state or an error has occurred while reading it.");
-      }
-
       let contract_type = get_contract_type(
         contract_type,
         &contract_transaction,
         &contract_src_tx,
-      );
+      )?;
 
       let final_result = LoadedContract {
         id: contract_id,
@@ -418,7 +425,7 @@ impl Arweave {
         ARWEAVE_CACHE.cache_contract(&final_result).await;
       }
 
-      final_result
+      Ok(final_result)
     }
   }
 
@@ -475,7 +482,8 @@ impl Arweave {
 
           let tx = self
             .get_next_interaction_page(new_variables, false, None)
-            .await;
+            .await
+            .unwrap();
 
           if tx.edges.is_empty() {
             return None;
@@ -515,13 +523,15 @@ impl Arweave {
     &self,
     variables: &InteractionVariables,
     cursor: String,
-  ) -> bool {
+  ) -> Result<bool, AnyError> {
     let mut variables = variables.to_owned();
     variables.after = Some(cursor);
     variables.first = 1;
 
-    let load_transactions =
-      self.get_next_interaction_page(variables, false, None).await;
-    !(load_transactions.edges.is_empty())
+    let load_transactions = self
+      .get_next_interaction_page(variables, false, None)
+      .await?;
+
+    Ok(!load_transactions.edges.is_empty())
   }
 }

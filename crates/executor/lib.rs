@@ -8,6 +8,7 @@ use serde_json::value::Value::Null;
 use std::collections::HashMap;
 use std::time::Instant;
 use three_em_arweave::arweave::Arweave;
+use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
@@ -36,25 +37,27 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
   cache: bool,
-) -> ExecuteResult {
+) -> Result<ExecuteResult, AnyError> {
   let contract_id_copy = contract_id.to_owned();
   let shared_id = contract_id.clone();
   let shared_client = arweave.clone();
 
   let (loaded_contract, interactions) = tokio::join!(
     tokio::spawn(async move {
-      let mut contract = shared_client
+      let mut contract: Result<LoadedContract, AnyError> = shared_client
         .load_contract(shared_id, contract_src_tx, contract_content_type, cache)
         .await;
 
       contract
     }),
     tokio::spawn(async move {
+      let interactions: Result<(Vec<GQLEdgeInterface>, usize, bool), AnyError> =
+        arweave.get_interactions(contract_id, height, cache).await;
       let (
         result_interactions,
         new_interaction_index,
         are_there_new_interactions,
-      ) = arweave.get_interactions(contract_id, height, cache).await;
+      ) = interactions?;
 
       let mut interactions = result_interactions;
 
@@ -66,17 +69,17 @@ pub async fn execute_contract(
         a_sort_key.cmp(&b_sort_key)
       });
 
-      (
+      Ok((
         interactions,
         new_interaction_index,
         are_there_new_interactions,
-      )
+      )) as Result<(Vec<GQLEdgeInterface>, usize, bool), AnyError>
     })
   );
 
-  let loaded_contract = loaded_contract.unwrap();
+  let loaded_contract = loaded_contract?.unwrap();
   let (result_interactions, new_interaction_index, are_there_new_interactions) =
-    interactions.unwrap();
+    interactions?.unwrap();
 
   let mut interactions = result_interactions;
 
@@ -102,18 +105,20 @@ pub async fn execute_contract(
     interactions = (&interactions[new_interaction_index..]).to_vec();
   }
 
-  raw_execute_contract(
-    contract_id_copy.to_owned(),
-    loaded_contract,
-    interactions,
-    validity,
-    cache_state,
-    needs_processing,
-    |validity_table, cache_state| {
-      ExecuteResult::V8(cache_state.unwrap(), validity_table)
-    },
+  Ok(
+    raw_execute_contract(
+      contract_id_copy.to_owned(),
+      loaded_contract,
+      interactions,
+      validity,
+      cache_state,
+      needs_processing,
+      |validity_table, cache_state| {
+        ExecuteResult::V8(cache_state.unwrap(), validity_table)
+      },
+    )
+    .await,
   )
-  .await
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
@@ -167,7 +172,8 @@ mod test {
       Some(822062),
       false,
     )
-    .await;
+    .await
+    .unwrap();
     if let ExecuteResult::V8(value, validity) = result {
       assert!(!(value.is_null()));
       assert!(value.get("counter").is_some());
@@ -195,7 +201,8 @@ mod test {
       None,
       false,
     )
-    .await;
+    .await
+    .unwrap();
     if let ExecuteResult::V8(value, validity) = result {
       assert!(!(value.is_null()));
       assert!(value.get("people").is_some());

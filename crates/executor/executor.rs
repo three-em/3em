@@ -275,7 +275,7 @@ mod tests {
       contract_src: get_contract_source_bytes(contract_file_name),
       contract_type,
       init_state: String::from(init_state),
-      min_fee: String::new(),
+      min_fee: None,
       contract_transaction: TransactionData {
         format: 0,
         id: String::new(),

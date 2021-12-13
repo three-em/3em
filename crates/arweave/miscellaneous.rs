@@ -1,6 +1,6 @@
 use crate::arweave::TransactionData;
-use crate::arweave_get_tag::get_tag;
 use crate::utils::hasher;
+use deno_core::error::AnyError;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -15,19 +15,20 @@ pub fn get_contract_type(
   maybe_content_type: Option<String>,
   contract_transaction: &TransactionData,
   source_transaction: &TransactionData,
-) -> ContractType {
-  let mut contract_type = maybe_content_type
-    .unwrap_or_else(|| get_tag(&source_transaction, "Content-Type"));
-  if contract_type.len() <= 0 {
-    contract_type = get_tag(&contract_transaction, "Content-Type");
-  }
+) -> Result<ContractType, AnyError> {
+  let contract_type = maybe_content_type
+    .or_else(|| source_transaction.get_tag("Content-Type").ok())
+    .or_else(|| contract_transaction.get_tag("Content-Type").ok())
+    .ok_or(AnyError::msg("Contract-Src tag not found in transaction"))?;
 
-  match &(contract_type.to_lowercase())[..] {
+  let ty = match &(contract_type.to_lowercase())[..] {
     "application/javascript" => ContractType::JAVASCRIPT,
     "application/wasm" => ContractType::WASM,
     "application/octet-stream" => ContractType::EVM,
     _ => ContractType::JAVASCRIPT,
-  }
+  };
+
+  Ok(ty)
 }
 
 pub fn get_sort_key(
@@ -54,37 +55,43 @@ mod tests {
       Some(String::from("invalid")),
       &get_fake_transaction("whatever"),
       &get_fake_transaction("whatever"),
-    );
+    )
+    .unwrap();
     assert!(matches!(contract_type, ContractType::JAVASCRIPT));
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction("whatever"),
       &get_fake_transaction("whatever"),
-    );
+    )
+    .unwrap();
     assert!(matches!(contract_type, ContractType::JAVASCRIPT));
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction(""),
       &get_fake_transaction("whatever"),
-    );
+    )
+    .unwrap();
     assert!(matches!(contract_type, ContractType::JAVASCRIPT));
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction("whatever"),
       &get_fake_transaction("application/wasm"),
-    );
+    )
+    .unwrap();
     assert!(matches!(contract_type, ContractType::WASM));
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction(""),
       &get_fake_transaction("application/octet-stream"),
-    );
+    )
+    .unwrap();
     assert!(matches!(contract_type, ContractType::EVM));
     let contract_type = get_contract_type(
       None,
       &get_fake_transaction(""),
       &get_fake_transaction(""),
-    );
+    )
+    .unwrap();
     assert!(matches!(contract_type, ContractType::JAVASCRIPT));
   }
 
