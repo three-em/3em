@@ -93,7 +93,7 @@ pub async fn raw_execute_contract<
 
               let state: Value = rt.get_contract_state().unwrap();
               rt = Runtime::new(
-                &(String::from_utf8(contract.contract_src).unwrap()),
+                &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 contract_info,
               )
@@ -223,7 +223,7 @@ mod tests {
     });
 
     let fake_contract = generate_fake_loaded_contract_data(
-      "users_contract.js",
+      include_bytes!("../../testdata/contracts/users_contract.js"),
       ContractType::JAVASCRIPT,
       init_state.to_string(),
     );
@@ -261,7 +261,7 @@ mod tests {
       |validity, cache| {
         panic!("not implemented");
       },
-      Arweave::new(443, "https://arweave.net".to_string()),
+      Arweave::new(443, "arweave.net".to_string()),
     )
     .await;
 
@@ -297,8 +297,70 @@ mod tests {
     }
   }
 
+  #[tokio::test]
+  async fn test_contract_evolve() {
+    let init_state = serde_json::json!({
+      "canEvolve": true,
+      "v": 0,
+      "i": 0,
+      "pi": 0
+    });
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/evolve/evolve1.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let fake_interactions = vec![
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "evolve",
+          // Contract Source for "Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"
+          "value": "C0F9QvOOJNR2DDIicWeL9B-C5vFrtczmOjpW_3FCQBQ",
+        }),
+        "tx1",
+      ),
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "contribute",
+        }),
+        "tx2",
+      ),
+    ];
+
+    let result = raw_execute_contract(
+      String::from("Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"),
+      fake_contract,
+      fake_interactions,
+      HashMap::new(),
+      None,
+      true,
+      |validity, cache| {
+        panic!("not implemented");
+      },
+      Arweave::new(443, "arweave.net".to_string()),
+    )
+    .await;
+
+    if let ExecuteResult::V8(value, validity) = result {
+      // tx1 is the evolve action. This must not fail.
+      // All network calls happen here and runtime is
+      // re-initialized.
+      assert_eq!(validity.get("tx1").unwrap(), &true);
+      // tx2 is the interaction to the evolved source.
+      // In this case, the pi contract.
+      assert_eq!(validity.get("tx2").unwrap(), &true);
+
+      let value_state = value.get("canEvolve");
+      assert_eq!(value_state.is_some(), true);
+
+      assert_eq!(value.get("v").unwrap(), 0.6666666666666667_f64);
+    }
+  }
+
   pub fn generate_fake_loaded_contract_data(
-    contract_file_name: &str,
+    contract_source: &[u8],
     contract_type: ContractType,
     init_state: String,
   ) -> LoadedContract {
@@ -306,7 +368,7 @@ mod tests {
     LoadedContract {
       id: contract_id.to_owned(),
       contract_src_tx_id: String::new(),
-      contract_src: get_contract_source_bytes(contract_file_name),
+      contract_src: contract_source.to_vec(),
       contract_type,
       init_state: String::from(init_state),
       min_fee: String::new(),
@@ -354,14 +416,6 @@ mod tests {
         },
         parent: None,
       },
-    }
-  }
-
-  pub fn get_contract_source_bytes(contract_file_name: &str) -> Vec<u8> {
-    if contract_file_name == "users_contract.js" {
-      include_bytes!("../../testdata/contracts/users_contract.js").to_vec()
-    } else {
-      vec![]
     }
   }
 }
