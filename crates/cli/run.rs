@@ -1,3 +1,4 @@
+use deno_core::error::AnyError;
 use std::io::Write;
 use three_em_arweave::arweave::Arweave;
 use three_em_executor::execute_contract;
@@ -15,12 +16,12 @@ pub async fn run(
   save_path: String,
   height: Option<usize>,
   no_cache: bool,
-) {
+) -> Result<(), AnyError> {
   let arweave = Arweave::new(port, host);
   let start = std::time::Instant::now();
 
   let execution =
-    execute_contract(arweave, tx, None, None, height, !no_cache).await;
+    execute_contract(arweave, tx, None, None, height, !no_cache).await?;
 
   if benchmark {
     let elapsed = start.elapsed();
@@ -77,4 +78,6 @@ pub async fn run(
       }
     }
   }
+
+  Ok(())
 }
