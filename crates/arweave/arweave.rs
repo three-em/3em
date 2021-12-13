@@ -391,7 +391,7 @@ impl Arweave {
       } else {
         state = decode_base_64(contract_transaction.data.to_owned());
 
-        if state.len() <= 0 {
+        if state.len() == 0 {
           state = String::from_utf8(
             self.get_transaction_data(&contract_transaction.id).await,
           )

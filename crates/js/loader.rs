@@ -16,7 +16,7 @@ impl ModuleLoader for EmbeddedModuleLoader {
     _is_main: bool,
   ) -> Result<ModuleSpecifier, AnyError> {
     if let Ok(module_specifier) = deno_core::resolve_url(specifier) {
-      if specifier == &self.1 {
+      if specifier == self.1 {
         return Ok(module_specifier);
       }
     }

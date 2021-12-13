@@ -422,6 +422,7 @@ impl WasmRuntime {
   }
 }
 
+#[allow(clippy::mut_from_ref)]
 unsafe fn get_backing_store_slice_mut(
   backing_store: &v8::SharedRef<v8::BackingStore>,
   byte_offset: usize,
