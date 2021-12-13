@@ -1,3 +1,5 @@
+#![allow(unused_assignments)]
+
 use std::borrow::Cow;
 use std::mem::transmute;
 use wasm_encoder::BlockType;
@@ -415,8 +417,9 @@ impl Metering {
           }
           module.section(&section);
 
-          // parser.skip_section();
+          // FIXME: This is probably not correct. But I forgot why I put this here.
           source = &input[range.end..];
+
           continue;
         }
         Payload::DataCountSection { count: _, range } => {
@@ -989,7 +992,7 @@ mod tests {
       let mut rt =
         WasmRuntime::new(&module.finish(), Default::default()).unwrap();
 
-      let mut prev_state = json!({
+      let prev_state = json!({
         "counter": 0,
       });
       let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();

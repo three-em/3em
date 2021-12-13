@@ -10,11 +10,8 @@ mod utils;
 use crate::cli::parse;
 use crate::cli::parse::Flags;
 use deno_core::error::AnyError;
-use three_em_executor::execute_contract;
 
-use colored::Colorize;
 use std::env;
-use std::thread;
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
@@ -26,13 +23,6 @@ static BANNER: &str = r#"
 
 The Web3 Execution Machine
 Languages supported: Javascript, Rust, C++, C, C#.
-"#;
-
-static USAGE: &str = r#"
-    USAGE:
-      three_em [OPTIONS] [SUBCOMMAND]
-
-    For more information try --help
 "#;
 
 #[tokio::main]
@@ -50,9 +40,6 @@ async fn main() -> Result<(), AnyError> {
       node_capacity,
     } => {
       crate::start::start(host, port, node_capacity).await?;
-    }
-    Flags::Unknown(cmd) => {
-      print_cmd_error(&cmd);
     }
     Flags::Run {
       port,
@@ -85,9 +72,4 @@ async fn main() -> Result<(), AnyError> {
   };
 
   Ok(())
-}
-
-fn print_cmd_error(cmd: &String) {
-  println!("{}: Found argument '{}' which wasn't expected, or isn't valid in this context.", "error".red(), cmd);
-  println!("{}", USAGE);
 }

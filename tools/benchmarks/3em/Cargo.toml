@@ -16,11 +16,6 @@ path = "wasm.rs"
 name = "bench_evm"
 path = "evm.rs"
 
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-
 [dependencies]
 three_em_executor = { path = "../../../crates/executor" }
 three_em_arweave = { path = "../../../crates/arweave" }

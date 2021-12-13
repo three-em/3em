@@ -4,7 +4,6 @@ use crate::gql_result::GQLNodeParent;
 use crate::gql_result::GQLResultInterface;
 use crate::gql_result::GQLTransactionsResultInterface;
 use crate::miscellaneous::get_contract_type;
-use crate::miscellaneous::get_sort_key;
 use crate::miscellaneous::ContractType;
 use crate::utils::decode_base_64;
 use deno_core::error::AnyError;
@@ -118,6 +117,7 @@ pub struct LoadedContract {
 
 enum State {
   Next(Option<String>, InteractionVariables),
+  #[allow(dead_code)]
   End,
 }
 
@@ -215,7 +215,7 @@ impl Arweave {
       if has_more_from_last_interaction {
         // Start from what's going to be the next interaction. if doing len - 1, that would mean we will also include the last interaction cached: not ideal.
         new_interactions_index = cache_interactions.len();
-        let mut fetch_more_interactions = self
+        let fetch_more_interactions = self
           .stream_interactions(
             Some(last_transaction_edge.cursor.to_owned()),
             variables.to_owned(),
@@ -231,7 +231,7 @@ impl Arweave {
 
       final_result.append(&mut cache_interactions);
     } else {
-      let mut transactions = self
+      let transactions = self
         .get_next_interaction_page(variables.clone(), false, None)
         .await?;
 
@@ -257,10 +257,10 @@ impl Arweave {
       new_transactions = true;
     }
 
-    let mut to_return: Vec<GQLEdgeInterface> = Vec::new();
+    let to_return: Vec<GQLEdgeInterface>;
 
     if new_transactions {
-      let mut filtered: Vec<GQLEdgeInterface> = final_result
+      let filtered: Vec<GQLEdgeInterface> = final_result
         .into_iter()
         .filter(|p| {
           (p.node.parent.is_none())
@@ -285,8 +285,7 @@ impl Arweave {
       to_return = final_result;
     }
 
-    let are_there_new_interactions =
-      new_interactions_index >= 0 && cache && new_transactions;
+    let are_there_new_interactions = cache && new_transactions;
     Ok((
       to_return,
       new_interactions_index,
@@ -380,7 +379,7 @@ impl Arweave {
       let contract_src_data =
         self.get_transaction_data(&contract_src_tx.id).await;
 
-      let mut state = String::new();
+      let mut state: String;
 
       if let Ok(init_state_tag) = contract_transaction.get_tag("Init-State") {
         state = init_state_tag;

@@ -1,5 +1,4 @@
 pub use primitive_types::U256;
-use std::collections::HashMap;
 use tiny_keccak::Hasher;
 use tiny_keccak::Keccak;
 
@@ -859,7 +858,6 @@ mod tests {
   use crate::Instruction;
   use crate::Machine;
   use crate::Stack;
-  use std::collections::HashMap;
 
   use hex_literal::hex;
   use primitive_types::U256;
@@ -947,7 +945,6 @@ mod tests {
 
   #[test]
   fn test_add_solidity() {
-    let machine = Machine::new(test_cost_fn);
     // label_0000:
     // 	// Inputs[1] { @0005  msg.value }
     // 	0000    60  PUSH1 0x80
@@ -1086,6 +1083,7 @@ mod tests {
       0x40,
       Instruction::MStore as u8,
     ]);
+    assert_eq!(status, ExecutionState::Ok);
   }
 
   #[test]

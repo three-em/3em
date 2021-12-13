@@ -13,5 +13,6 @@ async fn main() {
     Some(749180),
     true,
   )
-  .await;
+  .await
+  .unwrap();
 }

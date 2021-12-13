@@ -3,16 +3,11 @@ use crate::messages::get_addr::get_addr;
 use crate::node::{send_message, Node};
 use crate::utils::u8_array_to_usize;
 use deno_core::error::AnyError;
-use deno_core::futures::pin_mut;
-use deno_core::futures::stream::poll_fn;
 use deno_core::futures::stream::unfold;
 use deno_core::futures::stream::Stream;
-use deno_core::futures::task::Poll;
 use deno_core::futures::StreamExt;
-use std::future::Future;
 use std::pin::Pin;
 use tokio::io::AsyncReadExt;
-use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
 
@@ -23,10 +18,10 @@ use tokio::net::TcpStream;
 /// |  length of data  |  actual data     | 0x69 - magic number |
 ///
 /// If the magic number is not 0x69, the data is invalid.
-fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
+fn handle_node(stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
   let stream = unfold(stream, |mut stream| async {
     let mut len = [0; 4];
-    let read_len = stream.read(&mut len).await.unwrap();
+    stream.read(&mut len).await.unwrap();
     let mut message_len = u8_array_to_usize(len);
 
     let mut inbound_data: Vec<u8> = vec![];
@@ -44,7 +39,7 @@ fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
     }
 
     let mut magic = [0; 1];
-    let read = stream.read(&mut magic).await.unwrap();
+    stream.read(&mut magic).await.unwrap();
     assert_eq!(magic[0], 0x69);
     Some((inbound_data, (stream)))
   });
@@ -52,19 +47,20 @@ fn handle_node(mut stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
   Box::pin(stream)
 }
 
-async fn process(inbound: Vec<u8>) {
+async fn process(_inbound: Vec<u8>) {
   // TODO
 }
 
+#[allow(dead_code)]
 async fn discover(host: &str, port: i32) {
   let node = Node::new(host, port);
-  send_message(String::from("Hello"), &node).await;
+  send_message(String::from("Hello"), &node).await.unwrap();
 }
 
 async fn send_discovery(nodes: &Vec<Node>) {
   for node in nodes {
     let message = get_addr(node);
-    let result = send_message(message, node).await.unwrap();
+    let _result = send_message(message, node).await.unwrap();
     // TODO: Verify result is a pong message containing the same output from get_addr
     // TODO: If the response matches get_addr (host and version information), add the node to a list of nodes that answered the call.
   }
@@ -73,7 +69,7 @@ async fn send_discovery(nodes: &Vec<Node>) {
 pub async fn start(
   host: String,
   port: i32,
-  node_capacitiy: i32,
+  _node_capacitiy: i32,
 ) -> Result<(), AnyError> {
   let specifier = format!("{}:{}", host, port);
   let this_node = Node::new(&host, port);

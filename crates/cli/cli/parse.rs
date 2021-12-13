@@ -20,7 +20,6 @@ pub enum Flags {
     height: Option<usize>,
     no_cache: bool,
   },
-  Unknown(String),
 }
 
 fn parse_node_limit(

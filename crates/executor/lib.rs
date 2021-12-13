@@ -1,12 +1,10 @@
 pub mod executor;
 
-use crate::executor::{raw_execute_contract, ExecuteResult};
+use crate::executor::raw_execute_contract;
+use crate::executor::ExecuteResult;
 use deno_core::error::AnyError;
-use deno_core::serde_json;
 use deno_core::serde_json::Value;
-use serde_json::value::Value::Null;
 use std::collections::HashMap;
-use std::time::Instant;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
@@ -14,21 +12,8 @@ use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_arweave::gql_result::GQLTagInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
-use three_em_arweave::miscellaneous::ContractType;
-use three_em_evm::storage::Storage;
-use three_em_evm::ExecutionState;
 use three_em_evm::Instruction;
-use three_em_evm::Machine;
 use three_em_evm::U256;
-use three_em_js::Runtime;
-use three_em_smartweave::ContractBlock;
-use three_em_smartweave::ContractInfo;
-use three_em_wasm::WasmRuntime;
-
-struct ContractHandlerResult {
-  result: Option<Value>,
-  state: Option<Value>,
-}
 
 pub async fn execute_contract(
   arweave: Arweave,
@@ -44,7 +29,7 @@ pub async fn execute_contract(
   let shared_client2 = arweave.clone();
   let (loaded_contract, interactions) = tokio::join!(
     tokio::spawn(async move {
-      let mut contract: Result<LoadedContract, AnyError> = shared_client
+      let contract: Result<LoadedContract, AnyError> = shared_client
         .load_contract(shared_id, contract_src_tx, contract_content_type, cache)
         .await;
 
@@ -206,7 +191,7 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, _validity) = result {
       assert!(!(value.is_null()));
       assert!(value.get("people").is_some());
       assert!(value.get("people").unwrap().is_array());
