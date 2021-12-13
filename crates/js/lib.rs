@@ -152,7 +152,7 @@ impl Runtime {
     Ok(serde_v8::from_v8(scope, value)?)
   }
 
-  pub async fn call<R>(&mut self, action: R) -> Result<(), AnyError>
+  pub async fn call<R>(&mut self, action: R) -> Result<Option<String>, AnyError>
   where
     R: Serialize + 'static,
   {
@@ -202,11 +202,20 @@ impl Runtime {
         .ok_or(Error::Terminated)?;
       let state_key = v8::String::new(scope, "state").unwrap().into();
       let state_obj = state.get(scope, state_key).unwrap();
-
       self.contract_state = v8::Global::new(scope, state_obj);
+
+      if let Some(state) = state_obj.to_object(scope) {
+        let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
+        let can_evolve = state.get(scope, evolve_key).unwrap();
+        if can_evolve.boolean_value(scope) {
+          let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
+          let evolve = state.get(scope, evolve_key).unwrap();
+          return Ok(Some(evolve.to_rust_string_lossy(scope)));
+        }
+      }
     };
 
-    Ok(())
+    Ok(None)
   }
 }
 
@@ -382,5 +391,22 @@ export async function handle() {
       HeapLimitState::Exceeded(_current) => {}
       _ => panic!("Expected heap limit to be exceeded"),
     }
+  }
+
+  #[tokio::test]
+  async fn test_contract_evolve() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return { state: { canEvolve: true, evolve: "xxdummy" } };
+}"#,
+      (),
+      ContractInfo::default(),
+    )
+    .await
+    .unwrap();
+
+    let evolved = rt.call(()).await.unwrap();
+    assert_eq!(evolved, Some("xxdummy".to_string()));
   }
 }
