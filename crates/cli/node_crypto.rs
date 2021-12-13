@@ -1,10 +1,11 @@
+#![allow(dead_code)]
+
 use crate::utils::hasher;
 use deno_crypto::rand::rngs::OsRng;
 use rsa::pkcs1::{
   FromRsaPrivateKey, FromRsaPublicKey, ToRsaPrivateKey, ToRsaPublicKey,
 };
 use rsa::{PaddingScheme, PublicKey, RsaPrivateKey, RsaPublicKey};
-use sha2::Digest;
 
 pub struct GeneratedPair {
   private_key: Vec<u8>,
@@ -121,7 +122,7 @@ impl GeneratedPair {
   }
 }
 
-#[cfg(not(test))]
+#[cfg(test)]
 mod tests {
   use crate::node_crypto::{
     decrypt, encrypt, generate_keypair, sign, verify, GeneratedPair,

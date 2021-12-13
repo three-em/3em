@@ -49,7 +49,7 @@ pub async fn raw_execute_contract<
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
       if needs_processing {
-        let mut state: Value = cache_state.unwrap_or_else(|| {
+        let state: Value = cache_state.unwrap_or_else(|| {
           deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap()
         });
 
@@ -77,7 +77,7 @@ pub async fn raw_execute_contract<
           let valid = match rt.call(call_input).await {
             Ok(None) => true,
             Ok(Some(evolve)) => {
-              let mut contract = shared_client
+              let contract = shared_client
                 .load_contract(contract_id.clone(), Some(evolve), None, true)
                 .await
                 .unwrap();

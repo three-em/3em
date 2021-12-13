@@ -1,5 +1,4 @@
 pub use primitive_types::U256;
-use std::collections::HashMap;
 use tiny_keccak::Hasher;
 use tiny_keccak::Keccak;
 

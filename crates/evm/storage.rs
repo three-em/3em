@@ -42,7 +42,7 @@ impl Storage {
       offset += 32;
 
       let mut account_storage = HashMap::new();
-      let mut key_count = U256::from(&raw[offset..offset + 32]);
+      let key_count = U256::from(&raw[offset..offset + 32]);
       offset += 32;
 
       for _ in 0..key_count.as_usize() {

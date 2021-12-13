@@ -6,15 +6,11 @@ use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
 use deno_core::serde_v8;
-use deno_core::Extension;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
 use deno_web::BlobStore;
 use std::cell::RefCell;
-use std::ffi::c_void;
 use std::fmt::Debug;
-use std::path::Path;
-use std::path::PathBuf;
 use std::rc::Rc;
 use three_em_smartweave::ContractInfo;
 
@@ -105,10 +101,10 @@ impl Runtime {
       create_params: Some(params),
       ..Default::default()
     });
-    let mut isolate = rt.v8_isolate();
+    let isolate = rt.v8_isolate();
 
-    let mut handle = isolate.thread_safe_handle();
-    let mut state = Rc::new(RefCell::new(HeapLimitState::default()));
+    let handle = isolate.thread_safe_handle();
+    let state = Rc::new(RefCell::new(HeapLimitState::default()));
 
     let state_clone = state.clone();
     rt.add_near_heap_limit_callback(move |curr, _| {

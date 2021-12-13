@@ -1,22 +1,5 @@
 use sha2::Digest;
 
-pub fn parse_basic_ip(ip: String, port: i32) -> String {
-  format!("{}:{}", ip, port)
-}
-
-pub fn current_node_tcp_ip(port: i32) -> String {
-  let ip = local_ipaddress::get().unwrap_or(String::from("127.0.0.1"));
-  String::from(parse_basic_ip(ip, port))
-}
-
-pub fn usize_to_u8_array(num: u32) -> [u8; 4] {
-  u32::to_le_bytes(num)
-}
-
-pub fn u8_array_to_usize(bytes: [u8; 4]) -> usize {
-  u32::from_le_bytes(bytes) as usize
-}
-
 pub fn decode_base_64(data: String) -> String {
   String::from_utf8(base64::decode(data).unwrap_or_else(|_| vec![]))
     .unwrap_or(String::from(""))

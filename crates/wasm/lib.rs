@@ -1,16 +1,7 @@
 use deno_core::error::AnyError;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
-use deno_core::ZeroCopyBuf;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::cell::Cell;
-use std::cell::RefCell;
-use std::fmt::Debug;
-use std::rc::Rc;
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
 use three_em_js::snapshot;
 use three_em_smartweave::read_contract_state;
 use three_em_smartweave::ContractInfo;
@@ -20,8 +11,6 @@ macro_rules! wasm_alloc {
     $alloc.call($scope, $this.into(), &[$len.into()]).unwrap()
   };
 }
-
-static COST: AtomicUsize = AtomicUsize::new(0);
 
 pub struct WasmRuntime {
   rt: JsRuntime,
@@ -66,7 +55,7 @@ impl WasmRuntime {
       let buf = v8::SharedRef::from(buf);
       let buf = v8::ArrayBuffer::with_backing_store(scope, &buf);
 
-      let wasm_obj = wasm_obj.get(scope).to_object(scope).unwrap();
+      let wasm_obj = wasm_obj.open(scope).to_object(scope).unwrap();
 
       // Create a new WebAssembly.Instance object.
       let module_str = v8::String::new(scope, "Module").unwrap();
@@ -160,11 +149,11 @@ impl WasmRuntime {
           .int32_value(scope)
           .unwrap();
 
-        let mut len_bytes = unsafe {
+        let len_bytes = unsafe {
           get_backing_store_slice_mut(&store, length_ptr as usize, 4)
         };
 
-        let mut tx_id = String::from_utf8_lossy(tx_bytes).to_string();
+        let tx_id = String::from_utf8_lossy(tx_bytes).to_string();
 
         let state = read_contract_state(tx_id);
         let mut state = deno_core::serde_json::to_vec(&state).unwrap();
@@ -175,7 +164,7 @@ impl WasmRuntime {
         let state_len = v8::Number::new(scope, state.len() as f64);
         let state_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
 
-        let mut state_region = unsafe {
+        let state_region = unsafe {
           get_backing_store_slice_mut(
             &store,
             state_ptr.uint32_value(scope).unwrap() as usize,
@@ -298,7 +287,7 @@ impl WasmRuntime {
       let exports = v8::Global::new(scope, exports);
 
       let undefined = v8::undefined(scope);
-      let alloc_obj = allocator.get(scope).to_object(scope).unwrap();
+      let alloc_obj = allocator.open(scope).to_object(scope).unwrap();
       let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
 
       let contact_info_len = v8::Number::new(scope, contract.len() as f64);
@@ -339,7 +328,7 @@ impl WasmRuntime {
       let scope = &mut self.rt.handle_scope();
       let undefined = v8::undefined(scope);
 
-      let alloc_obj = self.allocator.get(scope).to_object(scope).unwrap();
+      let alloc_obj = self.allocator.open(scope).to_object(scope).unwrap();
       let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
 
       let state_len = v8::Number::new(scope, state.len() as f64);
@@ -354,7 +343,7 @@ impl WasmRuntime {
       let action_ptr = wasm_alloc!(scope, alloc, undefined, action_len);
       let action_ptr_u32 = action_ptr.uint32_value(scope).unwrap();
 
-      let exports_obj = self.exports.get(scope).to_object(scope).unwrap();
+      let exports_obj = self.exports.open(scope).to_object(scope).unwrap();
 
       let mem_str = v8::String::new(scope, "memory").unwrap();
       let mem_obj = exports_obj.get(scope, mem_str.into()).unwrap();
@@ -368,13 +357,13 @@ impl WasmRuntime {
       // O HOLY Backin' store.
       let store = mem_buf.get_backing_store();
 
-      let mut state_mem_region = unsafe {
+      let state_mem_region = unsafe {
         get_backing_store_slice_mut(&store, local_ptr_u32 as usize, state.len())
       };
 
       state_mem_region.swap_with_slice(state);
 
-      let mut action_region = unsafe {
+      let action_region = unsafe {
         get_backing_store_slice_mut(
           &store,
           action_ptr_u32 as usize,
@@ -394,7 +383,7 @@ impl WasmRuntime {
 
       contract_mem_region.swap_with_slice(&mut self.sw_contract.0);
 
-      let handler_obj = self.handle.get(scope).to_object(scope).unwrap();
+      let handler_obj = self.handle.open(scope).to_object(scope).unwrap();
       let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
 
       let result_ptr = handle
@@ -412,13 +401,13 @@ impl WasmRuntime {
         )
         .unwrap();
       let result_ptr_u32 = result_ptr.uint32_value(scope).unwrap();
-      let get_len_obj = self.result_len.get(scope).to_object(scope).unwrap();
+      let get_len_obj = self.result_len.open(scope).to_object(scope).unwrap();
       let get_len = v8::Local::<v8::Function>::try_from(get_len_obj)?;
 
       let result_len = get_len.call(scope, undefined.into(), &[]).unwrap();
       let result_len = result_len.uint32_value(scope).unwrap();
 
-      let mut result_mem = unsafe {
+      let result_mem = unsafe {
         get_backing_store_slice_mut(
           &store,
           result_ptr_u32 as usize,

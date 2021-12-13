@@ -49,7 +49,9 @@ pub async fn run(
 
       if save {
         let mut file = std::fs::File::create(save_path).unwrap();
-        file.write_all(serde_json::to_vec(&value).unwrap().as_slice());
+        file
+          .write_all(serde_json::to_vec(&value).unwrap().as_slice())
+          .unwrap();
       }
     }
     ExecuteResult::Evm(store, result, validity_table) => {
