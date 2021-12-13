@@ -54,8 +54,6 @@ impl TransactionData {
   pub fn get_tag(&self, tag: &str) -> Result<String, AnyError> {
     // Encodes the tag instead of decoding the keys.
     let encoded_tag = base64::encode_config(tag, base64::URL_SAFE_NO_PAD);
-    println!("{}", encoded_tag);
-    println!("{:?}", self.tags);
     self
       .tags
       .iter()
