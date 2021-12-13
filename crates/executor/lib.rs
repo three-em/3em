@@ -40,7 +40,7 @@ pub async fn execute_contract(
   let contract_id_copy = contract_id.to_owned();
   let shared_id = contract_id.clone();
   let shared_client = arweave.clone();
-
+  let shared_client2 = arweave.clone();
   let (loaded_contract, interactions) = tokio::join!(
     tokio::spawn(async move {
       let mut contract = shared_client
@@ -54,7 +54,9 @@ pub async fn execute_contract(
         result_interactions,
         new_interaction_index,
         are_there_new_interactions,
-      ) = arweave.get_interactions(contract_id, height, cache).await;
+      ) = shared_client2
+        .get_interactions(contract_id, height, cache)
+        .await;
 
       let mut interactions = result_interactions;
 
@@ -112,6 +114,7 @@ pub async fn execute_contract(
     |validity_table, cache_state| {
       ExecuteResult::V8(cache_state.unwrap(), validity_table)
     },
+    arweave,
   )
   .await
 }

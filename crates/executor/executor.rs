@@ -2,6 +2,7 @@ use crate::{get_input_from_interaction, nop_cost_fn};
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use std::collections::HashMap;
+use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::gql_result::GQLEdgeInterface;
@@ -31,6 +32,7 @@ pub async fn raw_execute_contract<
   cache_state: Option<Value>,
   needs_processing: bool,
   on_cached: CachedCallBack,
+  shared_client: Arweave,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
   let contract_info = ContractInfo {
@@ -72,7 +74,37 @@ pub async fn raw_execute_contract<
             "caller": tx.owner.address
           });
 
-          let valid = rt.call(call_input).await.is_ok();
+          let valid = match rt.call(call_input).await {
+            Ok(None) => true,
+            Ok(Some(evolve)) => {
+              let mut contract = shared_client
+                .load_contract(contract_id.clone(), Some(evolve), None, true)
+                .await;
+
+              let transaction = (&contract.contract_transaction).to_owned();
+              let contract_info = ContractInfo {
+                transaction,
+                block: ContractBlock {
+                  height: 0,
+                  indep_hash: String::from(""),
+                  timestamp: String::from(""),
+                },
+              };
+
+              let state: Value = rt.get_contract_state().unwrap();
+              rt = Runtime::new(
+                &(String::from_utf8(contract.contract_src).unwrap()),
+                state,
+                contract_info,
+              )
+              .await
+              .unwrap();
+
+              true
+            }
+            Err(_) => false,
+          };
+
           validity.insert(tx.id, valid);
         }
 
@@ -176,6 +208,7 @@ mod tests {
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
   use std::collections::HashMap;
+  use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
   use three_em_arweave::gql_result::{
     GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface, GQLOwnerInterface,
@@ -228,6 +261,7 @@ mod tests {
       |validity, cache| {
         panic!("not implemented");
       },
+      Arweave::new(443, "https://arweave.net".to_string()),
     )
     .await;
 
