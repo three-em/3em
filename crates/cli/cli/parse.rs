@@ -43,6 +43,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         .unwrap_or(String::from("127.0.0.1")),
       node_capacity: parse_node_limit(&mut pargs).unwrap(),
     },
+    #[allow(clippy::wildcard_in_or_patterns)]
     "run" | _ => Flags::Run {
       host: pargs
         .opt_value_from_str("--arweave-host")?
@@ -50,7 +51,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
       tx: pargs
         .opt_value_from_str("--contract-id")?
-        .unwrap_or(String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")),
+        .unwrap_or_else(|| String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")),
       pretty_print: pargs.contains("--pretty-print"),
       no_print: pargs.contains("--no-print"),
       show_validity: pargs.contains("--show-validity"),

@@ -33,7 +33,7 @@ fn handle_node(stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
 
       inbound_data.append(&mut buf);
 
-      if n == 0 || message_len <= 0 {
+      if n == 0 || message_len == 0 {
         break;
       }
     }
@@ -57,7 +57,7 @@ async fn discover(host: &str, port: i32) {
   send_message(String::from("Hello"), &node).await.unwrap();
 }
 
-async fn send_discovery(nodes: &Vec<Node>) {
+async fn send_discovery(nodes: &[Node]) {
   for node in nodes {
     let message = get_addr(node);
     let _result = send_message(message, node).await.unwrap();

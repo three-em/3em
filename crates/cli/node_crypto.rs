@@ -90,10 +90,7 @@ pub fn verify(public_key: Vec<u8>, signature: Vec<u8>, data: &str) -> bool {
 
   let verify = public_key.verify(scheme, &hasher, &signature[..]);
 
-  match verify {
-    Ok(_) => true,
-    Err(_) => false,
-  }
+  verify.is_ok()
 }
 
 impl GeneratedPair {
