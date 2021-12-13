@@ -391,7 +391,7 @@ impl Arweave {
       } else {
         state = decode_base_64(contract_transaction.data.to_owned());
 
-        if state.len() == 0 {
+        if state.is_empty() {
           state = String::from_utf8(
             self.get_transaction_data(&contract_transaction.id).await,
           )
@@ -500,7 +500,7 @@ impl Arweave {
     .await
   }
 
-  fn get_max_edges(&self, data: &Vec<GQLEdgeInterface>) -> usize {
+  fn get_max_edges(&self, data: &[GQLEdgeInterface]) -> usize {
     let len = data.len();
     if len == MAX_REQUEST {
       MAX_REQUEST - 1

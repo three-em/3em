@@ -106,7 +106,7 @@ impl ArweaveCache {
   pub async fn cache_interactions(
     &self,
     contract_id: String,
-    interactions: &Vec<GQLEdgeInterface>,
+    interactions: &[GQLEdgeInterface],
   ) {
     let cache_file = self.get_cache_interaction_file(contract_id);
     deno_core::serde_json::to_writer(

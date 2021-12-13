@@ -371,7 +371,7 @@ mod tests {
       contract_src_tx_id: String::new(),
       contract_src: contract_source.to_vec(),
       contract_type,
-      init_state: init_state,
+      init_state,
       min_fee: None,
       contract_transaction: TransactionData {
         format: 0,
