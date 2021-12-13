@@ -19,7 +19,9 @@ pub fn get_contract_type(
   let contract_type = maybe_content_type
     .or_else(|| source_transaction.get_tag("Content-Type").ok())
     .or_else(|| contract_transaction.get_tag("Content-Type").ok())
-    .ok_or(AnyError::msg("Contract-Src tag not found in transaction"))?;
+    .ok_or_else(|| {
+      AnyError::msg("Contract-Src tag not found in transaction")
+    })?;
 
   let ty = match &(contract_type.to_lowercase())[..] {
     "application/javascript" => ContractType::JAVASCRIPT,
@@ -33,8 +35,8 @@ pub fn get_contract_type(
 
 pub fn get_sort_key(
   block_height: &usize,
-  block_id: &String,
-  transaction_id: &String,
+  block_id: &str,
+  transaction_id: &str,
 ) -> String {
   let mut hasher_bytes = block_id.to_owned().into_bytes();
   hasher_bytes.append(&mut transaction_id.to_owned().into_bytes());
@@ -97,7 +99,7 @@ mod tests {
 
   fn get_fake_transaction(content_type: &str) -> TransactionData {
     TransactionData {
-      format: 1 as usize,
+      format: 1_usize,
       id: String::from(""),
       last_tx: String::from(""),
       owner: String::from(""),

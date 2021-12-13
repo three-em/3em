@@ -23,6 +23,7 @@ impl Node {
     current_node != diff_node
   }
 
+  #[allow(clippy::inherent_to_string)]
   pub fn to_string(&self) -> String {
     parse_node_ip(self)
   }
@@ -39,7 +40,7 @@ pub async fn send_message(
         let message_as_bytes = message.as_bytes();
         let message_len = message_as_bytes.len();
         let message_length = &usize_to_u8_array(message_len.to_owned() as u32);
-        let magic_number = 0x69 as u8;
+        let magic_number = 0x69_u8;
 
         let mut final_message: Vec<u8> = Vec::new();
         final_message.extend_from_slice(message_length);
@@ -47,7 +48,7 @@ pub async fn send_message(
         final_message.extend_from_slice(&[magic_number]);
 
         let as_bytes = &final_message[..];
-        stream.write(as_bytes).unwrap();
+        stream.write_all(as_bytes).unwrap();
         let mut result: Vec<u8> = Vec::new();
 
         loop {

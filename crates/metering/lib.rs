@@ -1,7 +1,6 @@
 #![allow(unused_assignments)]
 
 use std::borrow::Cow;
-use std::mem::transmute;
 use wasm_encoder::BlockType;
 use wasm_encoder::CodeSection;
 use wasm_encoder::ElementSection;
@@ -735,10 +734,10 @@ fn map_operator(operator: Operator, gas_idx: i32) -> Result<Instruction> {
     Operator::I64Const { value } => Instruction::I64Const(value),
     // Floats and Ints have the same endianness on all supported platforms.
     Operator::F32Const { value } => {
-      Instruction::F32Const(unsafe { transmute::<u32, f32>(value.bits()) })
+      Instruction::F32Const(f32::from_bits(value.bits()))
     }
     Operator::F64Const { value } => {
-      Instruction::F64Const(unsafe { transmute::<u64, f64>(value.bits()) })
+      Instruction::F64Const(f64::from_bits(value.bits()))
     }
     Operator::RefNull { ty } => Instruction::RefNull(map_type(ty)),
     Operator::RefIsNull => Instruction::RefIsNull,

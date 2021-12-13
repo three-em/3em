@@ -659,9 +659,6 @@ impl Machine {
             let index = 4 * 8 - 1 - i;
             self.memory[mem_ptr] = val.byte(index);
           }
-
-          println!("OFFSET: {:?}", offset);
-          self.print_vm_memory();
         }
         Instruction::MStore8 => {
           let offset = self.stack.pop();
@@ -837,18 +834,6 @@ impl Machine {
 
     ExecutionState::Ok
   }
-
-  #[allow(dead_code)]
-  pub fn print_vm_memory(&self) {
-    let mem = &self.memory;
-    for i in 0..mem.len() {
-      if i % 16 == 0 {
-        print!("\n{:x}: ", i);
-      }
-
-      print!("{:#04x} ", mem[i]);
-    }
-  }
 }
 
 #[cfg(test)]
@@ -870,12 +855,12 @@ mod tests {
   fn print_vm_memory(vm: &Machine) {
     let mem = &vm.memory;
     println!("{:?}", mem);
-    for i in 0..mem.len() {
+    for (i, cell) in mem.iter().enumerate() {
       if i % 16 == 0 {
         print!("\n{:x}: ", i);
       }
 
-      print!("{:#04x} ", mem[i]);
+      print!("{:#04x} ", cell);
     }
   }
 

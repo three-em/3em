@@ -22,6 +22,7 @@ pub enum ExecuteResult {
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn raw_execute_contract<
   CachedCallBack: FnOnce(ValidityTable, CachedState) -> ExecuteResult,
 >(
@@ -367,11 +368,11 @@ mod tests {
   ) -> LoadedContract {
     let contract_id = String::from("test");
     LoadedContract {
-      id: contract_id.to_owned(),
+      id: contract_id,
       contract_src_tx_id: String::new(),
       contract_src: contract_source.to_vec(),
       contract_type,
-      init_state: String::from(init_state),
+      init_state,
       min_fee: None,
       contract_transaction: TransactionData {
         format: 0,

@@ -16,7 +16,7 @@ impl ModuleLoader for EmbeddedModuleLoader {
     _is_main: bool,
   ) -> Result<ModuleSpecifier, AnyError> {
     if let Ok(module_specifier) = deno_core::resolve_url(specifier) {
-      if specifier == &self.1 {
+      if specifier == self.1 {
         return Ok(module_specifier);
       }
     }
@@ -36,11 +36,11 @@ impl ModuleLoader for EmbeddedModuleLoader {
     async move {
       let specifier = module_specifier.to_string();
 
-      return Ok(deno_core::ModuleSource {
+      Ok(deno_core::ModuleSource {
         code,
         module_url_specified: specifier.clone(),
         module_url_found: specifier,
-      });
+      })
     }
     .boxed_local()
   }

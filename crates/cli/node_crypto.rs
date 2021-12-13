@@ -19,7 +19,7 @@ fn get_scheme() -> PaddingScheme {
 pub async fn generate_keypair() -> GeneratedPair {
   let pair = tokio::task::spawn_blocking(move || {
     let mut rng = OsRng;
-    let private_key = RsaPrivateKey::new(&mut rng, 2048 as usize).unwrap();
+    let private_key = RsaPrivateKey::new(&mut rng, 2048_usize).unwrap();
     let public_key = RsaPublicKey::from(&private_key);
 
     let private_key_bytes = private_key.to_pkcs1_der().unwrap();
@@ -39,14 +39,14 @@ pub fn to_private_key(
   private_key: Vec<u8>,
 ) -> rsa::pkcs1::Result<RsaPrivateKey> {
   let bytes = &private_key[..];
-  let rsa_private_key = RsaPrivateKey::from_pkcs1_der(bytes);
-  rsa_private_key
+
+  RsaPrivateKey::from_pkcs1_der(bytes)
 }
 
 fn to_public_key(public_key: Vec<u8>) -> rsa::pkcs1::Result<RsaPublicKey> {
   let bytes = &public_key[..];
-  let pkey = RsaPublicKey::from_pkcs1_der(bytes);
-  return pkey;
+
+  RsaPublicKey::from_pkcs1_der(bytes)
 }
 
 pub fn encrypt(public_key: Vec<u8>, data: &str) -> (Vec<u8>, usize) {
@@ -54,7 +54,7 @@ pub fn encrypt(public_key: Vec<u8>, data: &str) -> (Vec<u8>, usize) {
   let rsa = to_public_key(public_key).unwrap();
   let padding = PaddingScheme::new_pkcs1v15_encrypt();
   let data_bytes = data.as_bytes();
-  let enc_data = rsa.encrypt(&mut rng, padding, &data_bytes[..]).unwrap();
+  let enc_data = rsa.encrypt(&mut rng, padding, data_bytes).unwrap();
   let size = &enc_data.len();
   (enc_data, size.to_owned())
 }
@@ -75,9 +75,7 @@ pub fn sign(private_key: Vec<u8>, data: &str) -> Vec<u8> {
 
   let (scheme, hasher) = (get_scheme(), hasher(data.as_bytes()));
 
-  let sign = private_key.sign(scheme, &hasher).unwrap();
-
-  sign
+  private_key.sign(scheme, &hasher).unwrap()
 }
 
 pub fn verify(public_key: Vec<u8>, signature: Vec<u8>, data: &str) -> bool {
@@ -90,10 +88,7 @@ pub fn verify(public_key: Vec<u8>, signature: Vec<u8>, data: &str) -> bool {
 
   let verify = public_key.verify(scheme, &hasher, &signature[..]);
 
-  match verify {
-    Ok(_) => true,
-    Err(_) => false,
-  }
+  verify.is_ok()
 }
 
 impl GeneratedPair {
@@ -132,8 +127,7 @@ mod tests {
   async fn test_encrypt() {
     let keypair = generate_keypair().await;
     let (encrypt, _) = encrypt(keypair.public_key.to_owned(), "Hello Divy");
-    let (decrypt, decrypt_len) =
-      decrypt(keypair.private_key.to_owned(), encrypt);
+    let (decrypt, decrypt_len) = decrypt(keypair.private_key, encrypt);
     assert_eq!(
       String::from_utf8(decrypt[..decrypt_len].to_vec()).unwrap(),
       "Hello Divy"
@@ -169,11 +163,7 @@ mod tests {
       "Hello World",
     );
     assert!(!is_valid);
-    let is_valid = verify(
-      keypair2.public_key.to_owned(),
-      signed.to_owned(),
-      "Hello World!",
-    );
+    let is_valid = verify(keypair2.public_key, signed, "Hello World!");
     assert!(!is_valid);
   }
 
@@ -187,11 +177,7 @@ mod tests {
       "Hello World!",
     );
     assert!(is_valid);
-    let is_valid = verify(
-      keypair.public_key.to_owned(),
-      signed.to_owned(),
-      "Hello World",
-    );
+    let is_valid = verify(keypair.public_key, signed, "Hello World");
     assert!(!is_valid);
   }
 }

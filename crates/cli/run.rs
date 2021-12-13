@@ -4,6 +4,7 @@ use three_em_arweave::arweave::Arweave;
 use three_em_executor::execute_contract;
 use three_em_executor::executor::ExecuteResult;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run(
   port: i32,
   host: String,

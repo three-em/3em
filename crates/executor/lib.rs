@@ -10,7 +10,6 @@ use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
-use three_em_arweave::gql_result::GQLTagInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_evm::Instruction;
 use three_em_evm::U256;
@@ -110,7 +109,7 @@ pub async fn execute_contract(
 }
 
 pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
-  let tag = &(&interaction_tx)
+  let tag = &interaction_tx
     .tags
     .iter()
     .find(|data| &data.name == "Input");
@@ -123,12 +122,13 @@ pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
 
 pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
   let tags = (&interaction_tx.tags).to_owned();
-  let filtered_tags = tags
+  let count = tags
     .iter()
-    .filter(|data| data.name == String::from("Contract"))
+    .filter(|data| data.name == *"Contract")
     .cloned()
-    .collect::<Vec<GQLTagInterface>>();
-  filtered_tags.len() > 1
+    .count();
+
+  count > 1
 }
 
 fn nop_cost_fn(_: &Instruction) -> U256 {
@@ -200,7 +200,7 @@ mod test {
         serde_json::from_value(people.to_owned()).unwrap();
       let is_marton_here = people_struct
         .iter()
-        .find(|data| data.username == String::from("martonlederer"));
+        .find(|data| data.username == *"martonlederer");
       assert!(is_marton_here.is_some());
     } else {
       assert!(false);
