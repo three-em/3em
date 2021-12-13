@@ -202,17 +202,17 @@ impl Runtime {
         .ok_or(Error::Terminated)?;
       let state_key = v8::String::new(scope, "state").unwrap().into();
       let state_obj = state.get(scope, state_key).unwrap();
-
-      let state = v8::Local::<v8::Object>::try_from(state_obj)?;
       self.contract_state = v8::Global::new(scope, state_obj);
 
-      let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
-      let can_evolve = state.get(scope, evolve_key).unwrap();
-      if can_evolve.boolean_value(scope) {
-        let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
-        let evolve = state.get(scope, evolve_key).unwrap();
+      if let Ok(state) = v8::Local::<v8::Object>::try_from(state_obj) {
+        let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
+        let can_evolve = state.get(scope, evolve_key).unwrap();
+        if can_evolve.boolean_value(scope) {
+          let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
+          let evolve = state.get(scope, evolve_key).unwrap();
 
-        return Ok(Some(evolve.to_rust_string_lossy(scope)));
+          return Ok(Some(evolve.to_rust_string_lossy(scope)));
+        }
       }
     };
 
