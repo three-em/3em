@@ -129,12 +129,12 @@ lazy_static! {
 
 impl Arweave {
   pub fn new(port: i32, host: String) -> Arweave {
-    return Arweave {
+    Arweave {
       port,
       host,
       protocol: ArweaveProtocol::HTTPS,
       client: Client::new(),
-    };
+    }
   }
 
   pub async fn get_transaction(
@@ -196,7 +196,7 @@ impl Arweave {
         .find_interactions(contract_id.to_owned())
         .await
       {
-        if cache_interactions.len() != 0 {
+        if !cache_interactions.is_empty() {
           interactions = Some(cache_interactions);
         }
       }
@@ -264,11 +264,10 @@ impl Arweave {
         .into_iter()
         .filter(|p| {
           (p.node.parent.is_none())
-            || (p
+            || p
               .node
               .parent
-              .as_ref()
-              .unwrap_or_else(|| &GQLNodeParent { id: None }))
+              .as_ref().unwrap_or(&GQLNodeParent { id: None })
             .id
             .is_none()
         })
@@ -383,22 +382,20 @@ impl Arweave {
 
       if let Ok(init_state_tag) = contract_transaction.get_tag("Init-State") {
         state = init_state_tag;
+      } else if let Ok(init_state_tag_txid) =
+        contract_transaction.get_tag("Init-State-TX")
+      {
+        let init_state_tx =
+          self.get_transaction(&init_state_tag_txid).await?;
+        state = decode_base_64(init_state_tx.data);
       } else {
-        if let Ok(init_state_tag_txid) =
-          contract_transaction.get_tag("Init-State-TX")
-        {
-          let init_state_tx =
-            self.get_transaction(&init_state_tag_txid).await?;
-          state = decode_base_64(init_state_tx.data);
-        } else {
-          state = decode_base_64(contract_transaction.data.to_owned());
+        state = decode_base_64(contract_transaction.data.to_owned());
 
-          if state.len() <= 0 {
-            state = String::from_utf8(
-              self.get_transaction_data(&contract_transaction.id).await,
-            )
-            .unwrap();
-          }
+        if state.len() <= 0 {
+          state = String::from_utf8(
+            self.get_transaction_data(&contract_transaction.id).await,
+          )
+          .unwrap();
         }
       }
 
@@ -471,7 +468,7 @@ impl Arweave {
   ) -> Vec<GQLTransactionsResultInterface> {
     stream::unfold(State::Next(cursor, variables), |state| async move {
       match state {
-        State::End => return None,
+        State::End => None,
         State::Next(cursor, variables) => {
           let mut new_variables: InteractionVariables = variables.clone();
 
@@ -483,7 +480,7 @@ impl Arweave {
             .unwrap();
 
           if tx.edges.is_empty() {
-            return None;
+            None
           } else {
             let max_requests = self.get_max_edges(&tx.edges);
 
@@ -507,12 +504,10 @@ impl Arweave {
     let len = data.len();
     if len == MAX_REQUEST {
       MAX_REQUEST - 1
+    } else if len == 0 {
+      len
     } else {
-      if len == 0 {
-        len
-      } else {
-        len - 1
-      }
+      len - 1
     }
   }
 

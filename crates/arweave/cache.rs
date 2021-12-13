@@ -108,7 +108,7 @@ impl ArweaveCache {
     contract_id: String,
     interactions: &Vec<GQLEdgeInterface>,
   ) {
-    let cache_file = self.get_cache_interaction_file(contract_id.to_owned());
+    let cache_file = self.get_cache_interaction_file(contract_id);
     deno_core::serde_json::to_writer(
       &File::create(cache_file).unwrap(),
       interactions,
@@ -122,7 +122,7 @@ impl ArweaveCache {
     state: &Value,
     validity: &HashMap<String, bool>,
   ) {
-    let cache_file = self.get_cache_state_file(contract_id.to_owned());
+    let cache_file = self.get_cache_state_file(contract_id);
 
     let content = json!({
         "state": state,
@@ -137,7 +137,7 @@ impl ArweaveCache {
   }
 
   pub async fn delete_cache_interactions(&self, contract_id: String) {
-    let cache_file = self.get_cache_interaction_file(contract_id.to_owned());
+    let cache_file = self.get_cache_interaction_file(contract_id);
     remove_file(cache_file).unwrap();
   }
 

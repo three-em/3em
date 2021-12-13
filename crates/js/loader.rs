@@ -36,11 +36,11 @@ impl ModuleLoader for EmbeddedModuleLoader {
     async move {
       let specifier = module_specifier.to_string();
 
-      return Ok(deno_core::ModuleSource {
+      Ok(deno_core::ModuleSource {
         code,
         module_url_specified: specifier.clone(),
         module_url_found: specifier,
-      });
+      })
     }
     .boxed_local()
   }

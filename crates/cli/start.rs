@@ -29,7 +29,7 @@ fn handle_node(stream: TcpStream) -> Pin<Box<impl Stream<Item = Vec<u8>>>> {
     loop {
       let mut buf = vec![0u8; message_len]; // Allocate strictly what the header indicated, then allocate the left overs.
       let n = stream.read(&mut buf).await.unwrap();
-      message_len = message_len - n;
+      message_len -= n;
 
       inbound_data.append(&mut buf);
 

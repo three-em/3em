@@ -112,7 +112,7 @@ impl Runtime {
       assert!(terminated);
 
       *state_clone.borrow_mut() = HeapLimitState::Exceeded(curr);
-      curr + 5 << 20
+      (curr + 5) << 20
     });
     rt.sync_ops_cache();
 

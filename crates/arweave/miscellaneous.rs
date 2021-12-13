@@ -97,7 +97,7 @@ mod tests {
 
   fn get_fake_transaction(content_type: &str) -> TransactionData {
     TransactionData {
-      format: 1 as usize,
+      format: 1_usize,
       id: String::from(""),
       last_tx: String::from(""),
       owner: String::from(""),
