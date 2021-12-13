@@ -52,7 +52,9 @@ pub async fn execute_contract(
     }),
     tokio::spawn(async move {
       let interactions: Result<(Vec<GQLEdgeInterface>, usize, bool), AnyError> =
-        shared_client2.get_interactions(contract_id, height, cache).await;
+        shared_client2
+          .get_interactions(contract_id, height, cache)
+          .await;
       let (
         result_interactions,
         new_interaction_index,

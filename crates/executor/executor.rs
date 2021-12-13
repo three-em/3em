@@ -79,7 +79,8 @@ pub async fn raw_execute_contract<
             Ok(Some(evolve)) => {
               let mut contract = shared_client
                 .load_contract(contract_id.clone(), Some(evolve), None, true)
-                .await;
+                .await
+                .unwrap();
 
               let transaction = (&contract.contract_transaction).to_owned();
               let contract_info = ContractInfo {
