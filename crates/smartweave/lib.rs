@@ -13,6 +13,8 @@ use std::rc::Rc;
 use std::thread;
 use three_em_arweave::arweave::TransactionData;
 
+pub use three_em_arweave;
+
 pub fn init(info: ContractInfo) -> Extension {
   Extension::builder()
     .js(include_js_files!(

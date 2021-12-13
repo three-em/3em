@@ -59,23 +59,24 @@ pub async fn raw_execute_contract<
         .await
         .unwrap();
 
-        for interaction in interactions {
-          let tx = interaction.node;
-          let input = get_input_from_interaction(&tx);
+        // for interaction in interactions {
+        //   let tx = interaction.node;
+        //   let input = get_input_from_interaction(&tx);
 
-          // TODO: has_multiple_interactions
-          // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
-          let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
+        //   // TODO: has_multiple_interactions
+        //   // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
+        //   let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
 
-          let call_input = serde_json::json!({
-            "input": js_input,
-            "caller": tx.owner.address
-          });
+        //   let call_input = serde_json::json!({
+        //     "input": js_input,
+        //     "caller": tx.owner.address
+        //   });
 
-          let valid = rt.call(call_input).await.is_ok();
-          validity.insert(tx.id, valid);
-        }
+        //   let valid = rt.call(call_input).await.is_ok();
+        //   validity.insert(tx.id, valid);
+        // }
 
+        rt.call_interactions(interactions).await.unwrap();
         let state_val: Value = rt.get_contract_state().unwrap();
 
         if cache {

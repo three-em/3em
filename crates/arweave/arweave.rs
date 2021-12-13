@@ -193,28 +193,24 @@ impl Arweave {
 
     if let Some(mut cache_interactions) = interactions {
       let last_transaction_edge = cache_interactions.last().unwrap();
-      let has_more_from_last_interaction = self
-        .has_more(&variables, last_transaction_edge.cursor.to_owned())
+
+      new_interactions_index = cache_interactions.len();
+      let mut fetch_more_interactions = self
+        .stream_interactions(
+          Some(last_transaction_edge.cursor.to_owned()),
+          variables.to_owned(),
+        )
         .await;
 
-      if has_more_from_last_interaction {
-        // Start from what's going to be the next interaction. if doing len - 1, that would mean we will also include the last interaction cached: not ideal.
-        new_interactions_index = cache_interactions.len();
-        let mut fetch_more_interactions = self
-          .stream_interactions(
-            Some(last_transaction_edge.cursor.to_owned()),
-            variables.to_owned(),
-          )
-          .await;
-
-        for result in fetch_more_interactions {
-          let mut new_tx_infos = result.edges.clone();
-          cache_interactions.append(&mut new_tx_infos);
-        }
-        new_transactions = true;
+      for result in &fetch_more_interactions {
+        let mut new_tx_infos = result.edges.clone();
+        cache_interactions.append(&mut new_tx_infos);
       }
 
-      final_result.append(&mut cache_interactions);
+      if fetch_more_interactions.len() > 0 {
+        new_transactions = true;
+        final_result.append(&mut cache_interactions);
+      }
     } else {
       let mut transactions = self
         .get_next_interaction_page(variables.clone(), false, None)

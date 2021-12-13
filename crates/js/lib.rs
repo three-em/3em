@@ -16,6 +16,8 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
+use three_em_smartweave::three_em_arweave::gql_result::GQLEdgeInterface;
+use three_em_smartweave::three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_smartweave::ContractInfo;
 
 #[derive(Debug, Clone)]
@@ -152,6 +154,52 @@ impl Runtime {
     Ok(serde_v8::from_v8(scope, value)?)
   }
 
+  // Fast path for the common case.
+  pub async fn call_interactions(
+    &mut self,
+    interactions: Vec<GQLEdgeInterface>,
+  ) -> Result<(), AnyError> {
+    let scope = &mut self.rt.handle_scope();
+    let module_obj = self.module.open(scope).to_object(scope).unwrap();
+    let key = v8::String::new(scope, "handle").unwrap().into();
+    let func_obj = module_obj.get(scope, key).unwrap();
+    let func = v8::Local::<v8::Function>::try_from(func_obj)?;
+
+    let mut state =
+      v8::Local::<v8::Value>::new(scope, self.contract_state.clone());
+    let undefined = v8::undefined(scope);
+
+    for interaction in interactions {
+      let tx = interaction.node;
+      let input = get_input_from_interaction(&tx);
+
+      // TODO: has_multiple_interactions
+      // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
+      let js_input: deno_core::serde_json::Value =
+        deno_core::serde_json::from_str(input).unwrap();
+
+      let call_input = deno_core::serde_json::json!({
+        "input": js_input,
+        "caller": tx.owner.address
+      });
+      let action: v8::Local<v8::Value> =
+        serde_v8::to_v8(scope, call_input).unwrap();
+      let mut local = func
+        .call(scope, undefined.into(), &[state, action])
+        .ok_or(Error::Terminated)?;
+
+      let state_value = local.to_object(scope).ok_or(Error::Terminated)?;
+      let state_key = v8::String::new(scope, "state").unwrap().into();
+      let state_obj = state_value.get(scope, state_key).unwrap();
+
+      state = state_obj;
+    }
+
+    self.contract_state = v8::Global::new(scope, state);
+    Ok(())
+  }
+
+  // Relatively slow, for testing runtime fundamentals.
   pub async fn call<R>(&mut self, action: R) -> Result<(), AnyError>
   where
     R: Serialize + 'static,
@@ -207,6 +255,18 @@ impl Runtime {
     };
 
     Ok(())
+  }
+}
+
+pub fn get_input_from_interaction(interaction_tx: &GQLNodeInterface) -> &str {
+  let tag = &(&interaction_tx)
+    .tags
+    .iter()
+    .find(|data| &data.name == "Input");
+
+  match tag {
+    Some(data) => &data.value,
+    None => "",
   }
 }
 
