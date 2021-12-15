@@ -12,4 +12,7 @@
 
   window.ContractError = ContractError;
   window.ContractAssert = ContractAssert;
+
+  // EXTRA
+  window.SMARTWEAVE_HOST = () => Deno.core.opAsync("op_smartweave_get_host");
 })(this);

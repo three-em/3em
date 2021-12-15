@@ -3,7 +3,8 @@ use three_em_executor::execute_contract;
 
 #[tokio::main]
 async fn main() {
-  let arweave = Arweave::new(443, "arweave.net".to_string());
+  let arweave =
+    Arweave::new(443, "arweave.net".to_string(), String::from("https"));
 
   execute_contract(
     arweave,

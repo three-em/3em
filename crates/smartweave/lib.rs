@@ -9,11 +9,18 @@ use deno_core::Extension;
 use deno_core::OpState;
 use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
+use std::ops::DerefMut;
 use std::rc::Rc;
 use std::thread;
 use three_em_arweave::arweave::TransactionData;
 
-pub fn init(info: ContractInfo) -> Extension {
+pub struct ArweaveInfo {
+  port: i32,
+  host: String,
+  protocol: String,
+}
+
+pub fn init(info: ContractInfo, arweave: (i32, String, String)) -> Extension {
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
@@ -31,9 +38,16 @@ pub fn init(info: ContractInfo) -> Extension {
         "op_smartweave_wallet_last_tx",
         op_async(op_smartweave_wallet_last_tx),
       ),
+      ("op_smartweave_get_host", op_async(op_smartweave_get_host)),
     ])
     .state(move |state| {
       state.put(info.clone());
+      let (port, host, protocol) = arweave.clone();
+      state.put(ArweaveInfo {
+        port,
+        host,
+        protocol,
+      });
       Ok(())
     })
     .build()
@@ -69,9 +83,13 @@ pub async fn op_smartweave_wallet_balance(
   address: String,
   _: (),
 ) -> Result<String, AnyError> {
+  let s = _state.borrow();
+
+  let arweave = s.borrow::<ArweaveInfo>();
+
   // Winston string
   let balance =
-    reqwest::get(format!("https://arweave.net/wallet/{}/balance", address))
+    reqwest::get(format!("{}/wallet/{}/balance", get_host(arweave), address))
       .await?
       .text()
       .await?;
@@ -83,8 +101,11 @@ pub async fn op_smartweave_wallet_last_tx(
   address: String,
   _: (),
 ) -> Result<String, AnyError> {
+  let s = _state.borrow();
+  let arweave = s.borrow::<ArweaveInfo>();
+
   let tx =
-    reqwest::get(format!("https://arweave.net/wallet/{}/last_tx", address))
+    reqwest::get(format!("{}/wallet/{}/last_tx", get_host(arweave), address))
       .await?
       .text()
       .await?;
@@ -109,4 +130,25 @@ pub fn read_contract_state(id: String) -> Value {
   })
   .join()
   .unwrap()
+}
+
+pub fn get_host(arweave_info: &ArweaveInfo) -> String {
+  if arweave_info.port == 80 {
+    format!("{}://{}", arweave_info.protocol, arweave_info.host)
+  } else {
+    format!(
+      "{}://{}:{}",
+      arweave_info.protocol, arweave_info.host, arweave_info.port
+    )
+  }
+}
+
+pub async fn op_smartweave_get_host(
+  _state: Rc<RefCell<OpState>>,
+  _parameters: (),
+  _: (),
+) -> Result<String, AnyError> {
+  let s = _state.borrow();
+  let arweave = s.borrow::<ArweaveInfo>();
+  Ok(get_host(arweave))
 }

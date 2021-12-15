@@ -1713,6 +1713,7 @@ dependencies = [
  "deno_url",
  "deno_web",
  "deno_webidl",
+ "lazy_static",
  "reqwest",
  "serde",
  "three_em_arweave",

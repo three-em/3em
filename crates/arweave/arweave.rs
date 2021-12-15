@@ -70,9 +70,9 @@ pub enum ArweaveProtocol {
 
 #[derive(Clone)]
 pub struct Arweave {
-  host: String,
-  port: i32,
-  protocol: ArweaveProtocol,
+  pub host: String,
+  pub port: i32,
+  pub protocol: ArweaveProtocol,
   client: Client,
 }
 
@@ -134,7 +134,7 @@ impl Arweave {
       host,
       protocol: match &protocol[..] {
         "http" => ArweaveProtocol::HTTP,
-        "https" | _ => ArweaveProtocol::HTTPS
+        "https" | _ => ArweaveProtocol::HTTPS,
       },
       client: Client::new(),
     }
@@ -539,11 +539,14 @@ mod tests {
 
   #[tokio::test]
   pub async fn test_build_host() {
-    let arweave = Arweave::new(80, String::from("arweave.net"), String::from("http"));
+    let arweave =
+      Arweave::new(80, String::from("arweave.net"), String::from("http"));
     assert_eq!(arweave.get_host(), "http://arweave.net");
-    let arweave = Arweave::new(443, String::from("arweave.net"), String::from("https"));
+    let arweave =
+      Arweave::new(443, String::from("arweave.net"), String::from("https"));
     assert_eq!(arweave.get_host(), "https://arweave.net:443");
-    let arweave = Arweave::new(500, String::from("arweave.net"), String::from("adksad"));
+    let arweave =
+      Arweave::new(500, String::from("arweave.net"), String::from("adksad"));
     assert_eq!(arweave.get_host(), "https://arweave.net:500");
   }
 }

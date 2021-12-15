@@ -19,7 +19,7 @@ pub async fn run(
   height: Option<usize>,
   no_cache: bool,
 ) -> Result<(), AnyError> {
-  let arweave = Arweave::new(port, host);
+  let arweave = Arweave::new(port, host, protocol);
   let start = std::time::Instant::now();
 
   let execution =
