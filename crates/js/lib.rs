@@ -63,6 +63,7 @@ impl Runtime {
     source: &str,
     init: T,
     contract_info: ContractInfo,
+    arweave: (i32, String, String),
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
@@ -94,7 +95,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(contract_info),
+        three_em_smartweave::init(contract_info, arweave),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -229,6 +230,7 @@ mod test {
       "export async function handle() { return { state: -69 } }",
       (),
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
@@ -252,6 +254,7 @@ export async function handle(slice) {
 "#,
       ZeroCopyBuf::from(buf),
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
@@ -277,6 +280,7 @@ export async function handle() {
 "#,
       (),
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
@@ -302,6 +306,7 @@ export async function handle() {
   "#,
       8,
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
@@ -333,6 +338,7 @@ export async function handle() {
   "#,
       (),
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
@@ -357,6 +363,7 @@ export async function handle() {
   "#,
       (),
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
@@ -376,6 +383,7 @@ export async function handle() {
   "#,
   (),
   ContractInfo::default(),
+        (80, String::from("arweave.net"), String::from("https"))
       )
       .await
       .unwrap();
@@ -398,11 +406,32 @@ export async function handle() {
 }"#,
       (),
       ContractInfo::default(),
+      (80, String::from("arweave.net"), String::from("https")),
     )
     .await
     .unwrap();
 
     let evolved = rt.call(()).await.unwrap();
     assert_eq!(evolved, Some("xxdummy".to_string()));
+  }
+
+  #[tokio::test]
+  async fn test_smartweave_host_ops() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return { state: await SMARTWEAVE_HOST() };
+}
+"#,
+      (),
+      ContractInfo::default(),
+      (12345, String::from("arweave.net"), String::from("http")),
+    )
+    .await
+    .unwrap();
+
+    rt.call(()).await.unwrap();
+    let host = rt.get_contract_state::<String>().unwrap();
+    assert_eq!(host, "http://arweave.net:12345");
   }
 }

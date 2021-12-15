@@ -2,9 +2,9 @@ use crate::{get_input_from_interaction, nop_cost_fn};
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use std::collections::HashMap;
-use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
+use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
@@ -46,6 +46,14 @@ pub async fn raw_execute_contract<
   };
 
   let cache = cache_state.is_some();
+  let arweave_info = (
+    shared_client.port.to_owned(),
+    shared_client.host.to_owned(),
+    match shared_client.protocol.to_owned() {
+      ArweaveProtocol::HTTPS => String::from("https"),
+      ArweaveProtocol::HTTP => String::from("http"),
+    },
+  );
 
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
@@ -58,6 +66,7 @@ pub async fn raw_execute_contract<
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
           contract_info,
+          arweave_info.to_owned(),
         )
         .await
         .unwrap();
@@ -98,6 +107,7 @@ pub async fn raw_execute_contract<
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 contract_info,
+                arweave_info.to_owned(),
               )
               .await
               .unwrap();
@@ -263,7 +273,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string()),
+      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
     )
     .await;
 
@@ -341,7 +351,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string()),
+      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
     )
     .await;
 

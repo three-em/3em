@@ -151,7 +151,8 @@ mod test {
 
   #[tokio::test]
   async fn test_execute_wasm() {
-    let arweave = Arweave::new(80, String::from("arweave.net"));
+    let arweave =
+      Arweave::new(80, String::from("arweave.net"), String::from("https"));
     let result = execute_contract(
       arweave,
       String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ"),
@@ -180,7 +181,8 @@ mod test {
 
   #[tokio::test]
   async fn test_execute_javascript() {
-    let arweave = Arweave::new(80, String::from("arweave.net"));
+    let arweave =
+      Arweave::new(80, String::from("arweave.net"), String::from("https"));
     let result = execute_contract(
       arweave,
       String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE"),
