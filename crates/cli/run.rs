@@ -8,6 +8,7 @@ use three_em_executor::executor::ExecuteResult;
 pub async fn run(
   port: i32,
   host: String,
+  protocol: String,
   tx: String,
   pretty_print: bool,
   no_print: bool,

@@ -10,6 +10,7 @@ pub enum Flags {
   Run {
     host: String,
     port: i32,
+    protocol: String,
     tx: String,
     pretty_print: bool,
     no_print: bool,
@@ -49,6 +50,8 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         .opt_value_from_str("--arweave-host")?
         .unwrap_or_else(|| String::from("arweave.net")),
       port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
+      protocol: pargs.opt_value_from_str("--arweave-protocol")?
+          .unwrap_or_else(|| String::from("https")),
       tx: pargs
         .opt_value_from_str("--contract-id")?
         .unwrap_or_else(|| {
