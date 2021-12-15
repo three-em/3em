@@ -44,6 +44,7 @@ async fn main() -> Result<(), AnyError> {
     Flags::Run {
       port,
       host,
+      protocol,
       tx,
       pretty_print,
       no_print,
@@ -57,6 +58,7 @@ async fn main() -> Result<(), AnyError> {
       run::run(
         port,
         host,
+        protocol,
         tx,
         pretty_print,
         no_print,

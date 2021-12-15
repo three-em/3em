@@ -128,11 +128,14 @@ lazy_static! {
 }
 
 impl Arweave {
-  pub fn new(port: i32, host: String) -> Arweave {
+  pub fn new(port: i32, host: String, protocol: String) -> Arweave {
     Arweave {
       port,
       host,
-      protocol: ArweaveProtocol::HTTPS,
+      protocol: match &protocol[..] {
+        "http" => ArweaveProtocol::HTTP,
+        "https" | _ => ArweaveProtocol::HTTPS
+      },
       client: Client::new(),
     }
   }
@@ -527,5 +530,20 @@ impl Arweave {
       .await?;
 
     Ok(!load_transactions.edges.is_empty())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use crate::arweave::Arweave;
+
+  #[tokio::test]
+  pub async fn test_build_host() {
+    let arweave = Arweave::new(80, String::from("arweave.net"), String::from("http"));
+    assert_eq!(arweave.get_host(), "http://arweave.net");
+    let arweave = Arweave::new(443, String::from("arweave.net"), String::from("https"));
+    assert_eq!(arweave.get_host(), "https://arweave.net:443");
+    let arweave = Arweave::new(500, String::from("arweave.net"), String::from("adksad"));
+    assert_eq!(arweave.get_host(), "https://arweave.net:500");
   }
 }
