@@ -1,10 +1,11 @@
 pub mod executor;
+mod test_util;
 
 use crate::executor::raw_execute_contract;
 use crate::executor::ExecuteResult;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
-use std::collections::HashMap;
+use indexmap::map::IndexMap;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
@@ -47,13 +48,7 @@ pub async fn execute_contract(
 
       let mut interactions = result_interactions;
 
-      interactions.sort_by(|a, b| {
-        let a_sort_key =
-          get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
-        let b_sort_key =
-          get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
-        a_sort_key.cmp(&b_sort_key)
-      });
+      sort_interactions(&mut interactions);
 
       Ok((
         interactions,
@@ -69,7 +64,7 @@ pub async fn execute_contract(
 
   let mut interactions = result_interactions;
 
-  let mut validity: HashMap<String, bool> = HashMap::new();
+  let mut validity: IndexMap<String, bool> = IndexMap::new();
 
   let mut needs_processing = true;
   let mut cache_state: Option<Value> = None;
@@ -131,22 +126,80 @@ pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
   count > 1
 }
 
+pub fn sort_interactions(interactions: &mut Vec<GQLEdgeInterface>) {
+  interactions.sort_by(|a, b| {
+    let a_sort_key =
+      get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
+    let b_sort_key =
+      get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
+    a_sort_key.cmp(&b_sort_key)
+  });
+}
+
 fn nop_cost_fn(_: &Instruction) -> U256 {
   U256::zero()
 }
 
 #[cfg(test)]
 mod test {
-  use crate::execute_contract;
+  use crate::test_util::generate_fake_interaction;
   use crate::ExecuteResult;
+  use crate::{execute_contract, sort_interactions};
   use deno_core::serde_json;
+  use deno_core::serde_json::value::Value::Null;
   use serde::Deserialize;
   use serde::Serialize;
   use three_em_arweave::arweave::Arweave;
+  use three_em_arweave::gql_result::GQLEdgeInterface;
 
   #[derive(Deserialize, Serialize)]
   struct People {
     username: String,
+  }
+
+  #[tokio::test]
+  async fn test_sorting() {
+    // expected:  j7Q8fkIG1mWnZYt8A0eYP46pGXV8sQXBBO51vqOjeGI, mFSUswFVKO8vPU4igACglukRxRuEGH4_ZJ89VdJHnNo, YFlMzDiiGLJvRnS2VSDzqRA5Zv551o-oW29R-FCIj8U
+    let mut interactions: Vec<GQLEdgeInterface> = vec![
+      generate_fake_interaction(
+        Null,
+        "YFlMzDiiGLJvRnS2VSDzqRA5Zv551o-oW29R-FCIj8U",
+        Some(String::from(
+          "J_SFAxga87oQIFctKTT9NkSypZUWRblFIJa03p7TulrkytQaHaTD_ue2MwQQKLj1",
+        )),
+        Some(743424 as usize),
+      ),
+      generate_fake_interaction(
+        Null,
+        "j7Q8fkIG1mWnZYt8A0eYP46pGXV8sQXBBO51vqOjeGI",
+        Some(String::from(
+          "Q9VhW9qp_zKspSG7VswGE6NFsSgxzmP4evuhGIJUqUrq4vBLYCXrPrYcE5DwSODP",
+        )),
+        Some(743316 as usize),
+      ),
+      generate_fake_interaction(
+        Null,
+        "mFSUswFVKO8vPU4igACglukRxRuEGH4_ZJ89VdJHnNo",
+        Some(String::from(
+          "Q9VhW9qp_zKspSG7VswGE6NFsSgxzmP4evuhGIJUqUrq4vBLYCXrPrYcE5DwSODP",
+        )),
+        Some(743316 as usize),
+      ),
+    ];
+
+    sort_interactions(&mut interactions);
+
+    assert_eq!(
+      interactions
+        .iter()
+        .map(|item| String::from(&item.node.id))
+        .collect::<Vec<String>>(),
+      vec![
+        "j7Q8fkIG1mWnZYt8A0eYP46pGXV8sQXBBO51vqOjeGI",
+        "mFSUswFVKO8vPU4igACglukRxRuEGH4_ZJ89VdJHnNo",
+        "YFlMzDiiGLJvRnS2VSDzqRA5Zv551o-oW29R-FCIj8U"
+      ]
+    );
   }
 
   #[tokio::test]

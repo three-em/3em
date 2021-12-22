@@ -740,6 +740,7 @@ checksum = "824845a0bf897a9042383849b02c1bc219c2383772efcd5c6f9766fa4b81aef3"
 dependencies = [
  "autocfg 1.0.1",
  "hashbrown",
+ "serde",
 ]
 
 [[package]]
@@ -1642,6 +1643,7 @@ dependencies = [
  "deno_core",
  "dirs",
  "hex",
+ "indexmap",
  "lazy_static",
  "local_ipaddress",
  "reqwest",
@@ -1667,6 +1669,7 @@ dependencies = [
  "base64",
  "deno_core",
  "hex",
+ "indexmap",
  "reqwest",
  "serde",
  "sha2",

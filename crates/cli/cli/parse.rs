@@ -56,7 +56,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       tx: pargs
         .opt_value_from_str("--contract-id")?
         .unwrap_or_else(|| {
-          String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ")
+          String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")
         }),
       pretty_print: pargs.contains("--pretty-print"),
       no_print: pargs.contains("--no-print"),
@@ -66,7 +66,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
       save_path: pargs
         .opt_value_from_str("--save")?
         .unwrap_or_else(|| String::from("")),
-      height: { pargs.opt_value_from_str("--height").unwrap() },
+      height: { pargs.opt_value_from_str("--height").unwrap_or(Some(999999)) },
       no_cache: pargs.contains("--no-cache"),
     },
   };

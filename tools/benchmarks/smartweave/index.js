@@ -12,7 +12,8 @@ const arweave = Arweave.init({
     await readContract(
       arweave,
       "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE",
-      749180,
+      999999,
+        true
     ),
   );
 })();
