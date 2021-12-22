@@ -230,6 +230,7 @@ mod tests {
     GQLTagInterface,
   };
   use three_em_arweave::miscellaneous::ContractType;
+  use indexmap::map::IndexMap;
 
   #[tokio::test]
   pub async fn test_executor_js() {

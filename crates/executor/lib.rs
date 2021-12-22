@@ -203,6 +203,42 @@ mod test {
   }
 
   #[tokio::test]
+  async fn test_sorting_2() {
+    // expected:  hwwRzR-sB89uQ_hU9UDViQYBmUg-tyf_1C-YmesZbck, ObACsVmx58xdmsH0k0MCdKdqPXyaT5QJl-lZLkjGDjE
+    let mut interactions: Vec<GQLEdgeInterface> = vec![
+      generate_fake_interaction(
+        Null,
+        "ObACsVmx58xdmsH0k0MCdKdqPXyaT5QJl-lZLkjGDjE",
+        Some(String::from(
+          "luiqFPm09idjhj9YiNOxN8MvTGcWLa2oCYPa9WdZsFuJi06oHgSqJ3wv3aXR8Nlq",
+        )),
+        Some(741972 as usize),
+      ),
+      generate_fake_interaction(
+        Null,
+        "hwwRzR-sB89uQ_hU9UDViQYBmUg-tyf_1C-YmesZbck",
+        Some(String::from(
+          "luiqFPm09idjhj9YiNOxN8MvTGcWLa2oCYPa9WdZsFuJi06oHgSqJ3wv3aXR8Nlq",
+        )),
+        Some(741972 as usize),
+      ),
+    ];
+
+    sort_interactions(&mut interactions);
+
+    assert_eq!(
+      interactions
+          .iter()
+          .map(|item| String::from(&item.node.id))
+          .collect::<Vec<String>>(),
+      vec![
+        "hwwRzR-sB89uQ_hU9UDViQYBmUg-tyf_1C-YmesZbck",
+        "ObACsVmx58xdmsH0k0MCdKdqPXyaT5QJl-lZLkjGDjE",
+      ]
+    );
+  }
+
+  #[tokio::test]
   async fn test_execute_wasm() {
     let arweave =
       Arweave::new(80, String::from("arweave.net"), String::from("https"));
