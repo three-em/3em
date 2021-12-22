@@ -191,13 +191,25 @@ pub async fn raw_execute_contract<
       let mut result = vec![];
       for interaction in interactions {
         let tx = interaction.node;
+        let block_info = shared_client
+          .get_transaction_block(&tx.id)
+          .await
+          .unwrap();
+
+        let block_info = three_em_evm::BlockInfo {
+          timestamp: three_em_evm::U256::from(block_info.timestamp),
+          difficulty: three_em_evm::U256::from_str_radix(&block_info.diff, 10).unwrap(),
+          block_hash: three_em_evm::U256::from(block_info.indep_hash.as_bytes()),
+          number: three_em_evm::U256::from(block_info.height),
+        };
+
         let input = get_input_from_interaction(&tx);
         let call_data = hex::decode(input).expect("Failed to decode input");
 
         let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
         machine.set_storage(account_store.clone());
 
-        match machine.execute(&bytecode) {
+        match machine.execute(&bytecode, block_info) {
           ExecutionState::Abort(_) | ExecutionState::Revert => {
             validity.insert(tx.id, false);
           }

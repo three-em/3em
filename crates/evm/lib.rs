@@ -261,6 +261,14 @@ pub enum ExecutionState {
   Ok,
 }
 
+#[derive(Default)]
+pub struct BlockInfo {
+  pub timestamp: U256,
+  pub difficulty: U256,
+  pub block_hash: U256,
+  pub number: U256,
+}
+
 impl Machine {
   pub fn new<T>(cost_fn: T) -> Self
   where
@@ -300,14 +308,17 @@ impl Machine {
     self.storage = storage;
   }
 
-  pub fn execute(&mut self, bytecode: &[u8]) -> ExecutionState {
+  pub fn execute(
+    &mut self,
+    bytecode: &[u8],
+    block_info: BlockInfo,
+  ) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
     while pc < len {
       let opcode = bytecode[pc];
       let inst = match Instruction::try_from(opcode) {
         Ok(inst) => inst,
-        // For ASSERT (0xfe) and friends.
         Err(_) => {
           return ExecutionState::Abort(AbortError::InvalidOpcode);
         }
@@ -590,39 +601,52 @@ impl Machine {
             }
           }
         }
-        Instruction::GasPrice => {
-          // TODO: Gas
-          self.stack.push(U256::zero());
-        }
         Instruction::ExtCodeSize => {
-          // TODO
+          // Fetch the `Contract-Src` from Arweave for the contract.
         }
         Instruction::ExtCodeCopy => {
-          // TODO
+          // Fetch the `Contract-Src` from Arweave for the contract.
         }
         Instruction::ReturnDataSize => {
-          // TODO
+          self.stack.push(U256::from(self.result.len()));
         }
         Instruction::ReturnDataCopy => {
-          // TODO
+          let mem_offset = self.stack.pop().low_u64() as usize;
+          let data_offset = self.stack.pop().low_u64() as usize;
+          let length = self.stack.pop().low_u64() as usize;
+
+          if self.result.len() < data_offset + length {
+            panic!("Return data out of bounds");
+          }
+
+          let data = &self.result[data_offset..data_offset + length];
+
+          if self.memory.len() < mem_offset + 32 {
+            self.memory.resize(mem_offset + 32, 0);
+          }
+
+          for i in 0..32 {
+            if i > data.len() {
+              self.memory[mem_offset + i] = 0;
+            } else {
+              self.memory[mem_offset + i] = data[i];
+            }
+          }
         }
         Instruction::BlockHash => {
-          // TODO
-        }
-        Instruction::Coinbase => {
-          // TODO
+          self.stack.push(block_info.block_hash);
         }
         Instruction::Timestamp => {
-          // TODO
+          self.stack.push(block_info.timestamp);
         }
         Instruction::Number => {
-          // TODO
+          self.stack.push(block_info.number);
         }
         Instruction::Difficulty => {
-          // TODO
+          self.stack.push(block_info.difficulty);
         }
         Instruction::GasLimit => {
-          // TODO
+          self.stack.push(U256::MAX);
         }
         Instruction::Pop => {
           self.stack.pop();
@@ -697,12 +721,10 @@ impl Machine {
         Instruction::GetPc => {
           self.stack.push(U256::from(pc));
         }
-        Instruction::MSize => {
-          // TODO
-          unimplemented!();
-        }
-        Instruction::Gas => {
-          // TODO: remaining gas
+        Instruction::MSize
+        | Instruction::Gas
+        | Instruction::GasPrice
+        | Instruction::Coinbase => {
           self.stack.push(U256::zero());
         }
         Instruction::JumpDest => {}
@@ -789,10 +811,7 @@ impl Machine {
         | Instruction::Log1
         | Instruction::Log2
         | Instruction::Log3
-        | Instruction::Log4 => {
-          // TODO
-          unimplemented!();
-        }
+        | Instruction::Log4 => {}
         Instruction::Create => {
           // TODO
         }
@@ -874,7 +893,7 @@ mod tests {
       Instruction::Push1 as u8,
       0x02,
       Instruction::Add as u8,
-    ]);
+    ], Default::default());
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x03));
@@ -906,7 +925,7 @@ mod tests {
       Instruction::Swap1 as u8,
       Instruction::Pop as u8,
       Instruction::Swap1 as u8,
-    ]);
+    ], Default::default());
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x03));
@@ -922,7 +941,7 @@ mod tests {
       Instruction::Push1 as u8,
       0x04,
       Instruction::SDiv as u8,
-    ]);
+    ], Default::default());
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x02));
@@ -1048,7 +1067,7 @@ mod tests {
     let mut machine =
       Machine::new_with_data(test_cost_fn, hex!("4f2be91f").to_vec());
 
-    let status = machine.execute(&hex_code);
+    let status = machine.execute(&hex_code, Default::default());
     assert_eq!(status, ExecutionState::Ok);
 
     assert_eq!(machine.result.len(), 32);
@@ -1067,7 +1086,7 @@ mod tests {
       Instruction::Push1 as u8,
       0x40,
       Instruction::MStore as u8,
-    ]);
+    ], Default::default());
     assert_eq!(status, ExecutionState::Ok);
   }
 
@@ -1082,7 +1101,7 @@ mod tests {
     let bytes = hex!("6010600052602060002050");
     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(&bytes);
+    let status = machine.execute(&bytes, Default::default());
     assert_eq!(status, ExecutionState::Ok);
   }
 
@@ -1091,7 +1110,7 @@ mod tests {
     let bytes = hex!("608060405234801561001057600080fd5b506040518060400160405280600a81526020017f6c6974746c6564697679000000000000000000000000000000000000000000008152506000908051906020019061005c929190610062565b50610166565b82805461006e90610134565b90600052602060002090601f01602090048101928261009057600085556100d7565b82601f106100a957805160ff19168380011785556100d7565b828001600101855582156100d7579182015b828111156100d65782518255916020019190600101906100bb565b5b5090506100e491906100e8565b5090565b5b808211156101015760008160009055506001016100e9565b5090565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061014c57607f821691505b602082108114156101605761015f610105565b5b50919050565b6104a8806101756000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80633a525c291461003b5780636b701e0814610059575b600080fd5b610043610075565b604051610050919061025d565b60405180910390f35b610073600480360381019061006e91906103c8565b610107565b005b60606000805461008490610440565b80601f01602080910402602001604051908101604052809291908181526020018280546100b090610440565b80156100fd5780601f106100d2576101008083540402835291602001916100fd565b820191906000526020600020905b8154815290600101906020018083116100e057829003601f168201915b5050505050905090565b806000908051906020019061011d929190610121565b5050565b82805461012d90610440565b90600052602060002090601f01602090048101928261014f5760008555610196565b82601f1061016857805160ff1916838001178555610196565b82800160010185558215610196579182015b8281111561019557825182559160200191906001019061017a565b5b5090506101a391906101a7565b5090565b5b808211156101c05760008160009055506001016101a8565b5090565b600081519050919050565b600082825260208201905092915050565b60005b838110156101fe5780820151818401526020810190506101e3565b8381111561020d576000848401525b50505050565b6000601f19601f8301169050919050565b600061022f826101c4565b61023981856101cf565b93506102498185602086016101e0565b61025281610213565b840191505092915050565b600060208201905081810360008301526102778184610224565b905092915050565b6000604051905090565b600080fd5b600080fd5b600080fd5b600080fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b6102d582610213565b810181811067ffffffffffffffff821117156102f4576102f361029d565b5b80604052505050565b600061030761027f565b905061031382826102cc565b919050565b600067ffffffffffffffff8211156103335761033261029d565b5b61033c82610213565b9050602081019050919050565b82818337600083830152505050565b600061036b61036684610318565b6102fd565b90508281526020810184848401111561038757610386610298565b5b610392848285610349565b509392505050565b600082601f8301126103af576103ae610293565b5b81356103bf848260208601610358565b91505092915050565b6000602082840312156103de576103dd610289565b5b600082013567ffffffffffffffff8111156103fc576103fb61028e565b5b6104088482850161039a565b91505092915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061045857607f821691505b6020821081141561046c5761046b610411565b5b5091905056fea264697066735822122007a3fec27bf391246bb4a62e66c81e304129cd8c6427df54eb8e9cebec9c658f64736f6c634300080a0033");
     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(&bytes);
+    let status = machine.execute(&bytes, Default::default());
     assert_eq!(status, ExecutionState::Ok);
   }
 
@@ -1112,7 +1131,7 @@ mod tests {
     );
     machine.set_storage(storage);
 
-    let status = machine.execute(&bytes);
+    let status = machine.execute(&bytes, Default::default());
     assert_eq!(status, ExecutionState::Ok);
 
     assert_eq!(machine.result.len(), 96);
