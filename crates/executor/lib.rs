@@ -14,6 +14,7 @@ use three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_evm::Instruction;
 use three_em_evm::U256;
+use std::cmp::Ordering;
 
 pub async fn execute_contract(
   arweave: Arweave,
