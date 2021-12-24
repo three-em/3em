@@ -223,6 +223,7 @@ mod tests {
   use crate::test_util::generate_fake_interaction;
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
+  use indexmap::map::IndexMap;
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
   use three_em_arweave::gql_result::{
@@ -230,7 +231,6 @@ mod tests {
     GQLTagInterface,
   };
   use three_em_arweave::miscellaneous::ContractType;
-  use indexmap::map::IndexMap;
 
   #[tokio::test]
   pub async fn test_executor_js() {
