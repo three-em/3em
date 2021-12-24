@@ -39,7 +39,7 @@ pub fn get_sort_key(
   transaction_id: &str,
 ) -> String {
   let mut hasher_bytes = block_id.to_owned().into_bytes();
-  hasher_bytes.append(&mut transaction_id.to_ascii_lowercase().to_owned().into_bytes());
+  hasher_bytes.append(&mut transaction_id.to_owned().into_bytes());
   let hashed = hex::encode(hasher(&hasher_bytes[..]));
   let height = format!("000000{}", block_height);
 
