@@ -58,6 +58,11 @@ pub struct GQLNodeParent {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GQLBundled {
+  pub id: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GQLNodeInterface {
   pub id: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -84,6 +89,9 @@ pub struct GQLNodeInterface {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[serde(default)]
   pub parent: Option<GQLNodeParent>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub bundledIn: Option<GQLBundled>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

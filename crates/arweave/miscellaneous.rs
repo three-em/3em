@@ -38,12 +38,15 @@ pub fn get_sort_key(
   block_id: &str,
   transaction_id: &str,
 ) -> String {
-  let mut hasher_bytes = block_id.to_owned().into_bytes();
-  hasher_bytes.append(&mut transaction_id.to_owned().into_bytes());
+  let mut hasher_bytes =
+    base64::decode_config(block_id, base64::URL_SAFE_NO_PAD).unwrap();
+  let mut tx_id =
+    base64::decode_config(transaction_id, base64::URL_SAFE_NO_PAD).unwrap();
+  hasher_bytes.append(&mut tx_id);
   let hashed = hex::encode(hasher(&hasher_bytes[..]));
-  let height = format!("000000{}", block_height);
+  let height = format!("000000{}", *block_height);
 
-  format!("{},{}", height, hashed)
+  format!("{},{}", &height[height.len() - 12..], hashed)
 }
 
 #[cfg(test)]
