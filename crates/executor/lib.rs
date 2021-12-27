@@ -142,13 +142,7 @@ pub fn sort_interactions(interactions: &mut Vec<GQLEdgeInterface>) {
       get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
     let b_sort_key =
       get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
-    // a_sort_key.cmp(&b_sort_key)
-    println!(
-      "{} cmp {}: {:#?}",
-      a_sort_key,
-      b_sort_key,
-      strcoll(&a_sort_key, &b_sort_key)
-    );
+
     strcoll(&a_sort_key, &b_sort_key)
   });
 }
