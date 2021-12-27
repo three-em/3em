@@ -9,7 +9,6 @@ use deno_core::Extension;
 use deno_core::OpState;
 use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
-use std::ops::DerefMut;
 use std::rc::Rc;
 use std::thread;
 use three_em_arweave::arweave::TransactionData;
