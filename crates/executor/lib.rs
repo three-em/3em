@@ -16,6 +16,9 @@ use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_evm::Instruction;
 use three_em_evm::U256;
 use lexical_sort::{lexical_cmp, natural_lexical_only_alnum_cmp, only_alnum_cmp, natural_only_alnum_cmp, natural_lexical_cmp, natural_cmp, lexical_only_alnum_cmp};
+use rust_icu_ustring as ustring;
+use rust_icu_ucol as ucol;
+use std::convert::TryFrom;
 
 pub async fn execute_contract(
   arweave: Arweave,
@@ -129,12 +132,16 @@ pub fn has_multiple_interactions(interaction_tx: &GQLNodeInterface) -> bool {
 }
 
 pub fn sort_interactions(interactions: &mut Vec<GQLEdgeInterface>) {
+  let collator = ucol::UCollator::try_from("en-US").expect("collator");
   interactions.sort_by(|a, b| {
     let a_sort_key =
       get_sort_key(&a.node.block.height, &a.node.block.id, &a.node.id);
     let b_sort_key =
       get_sort_key(&b.node.block.height, &b.node.block.id, &b.node.id);
-    a_sort_key.cmp(&b_sort_key)
+    let first = ustring::UChar::try_from(a_sort_key);
+    let second = ustring::UChar::try_from(b_sort_key);
+    // a_sort_key.cmp(&b_sort_key)
+    collator.strcoll(&first, &second)
   });
 }
 
