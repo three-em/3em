@@ -887,13 +887,16 @@ mod tests {
   fn test_basic() {
     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(&[
-      Instruction::Push1 as u8,
-      0x01,
-      Instruction::Push1 as u8,
-      0x02,
-      Instruction::Add as u8,
-    ], Default::default());
+    let status = machine.execute(
+      &[
+        Instruction::Push1 as u8,
+        0x01,
+        Instruction::Push1 as u8,
+        0x02,
+        Instruction::Add as u8,
+      ],
+      Default::default(),
+    );
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x03));
@@ -917,15 +920,18 @@ mod tests {
   fn test_swap_jump() {
     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(&[
-      Instruction::Push1 as u8,
-      0x00,
-      Instruction::Push1 as u8,
-      0x03,
-      Instruction::Swap1 as u8,
-      Instruction::Pop as u8,
-      Instruction::Swap1 as u8,
-    ], Default::default());
+    let status = machine.execute(
+      &[
+        Instruction::Push1 as u8,
+        0x00,
+        Instruction::Push1 as u8,
+        0x03,
+        Instruction::Swap1 as u8,
+        Instruction::Pop as u8,
+        Instruction::Swap1 as u8,
+      ],
+      Default::default(),
+    );
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x03));
@@ -935,13 +941,16 @@ mod tests {
   fn test_sdiv() {
     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(&[
-      Instruction::Push1 as u8,
-      0x02,
-      Instruction::Push1 as u8,
-      0x04,
-      Instruction::SDiv as u8,
-    ], Default::default());
+    let status = machine.execute(
+      &[
+        Instruction::Push1 as u8,
+        0x02,
+        Instruction::Push1 as u8,
+        0x04,
+        Instruction::SDiv as u8,
+      ],
+      Default::default(),
+    );
 
     assert_eq!(status, ExecutionState::Ok);
     assert_eq!(machine.stack.pop(), U256::from(0x02));
@@ -1080,13 +1089,16 @@ mod tests {
     let mut machine = Machine::new(test_cost_fn);
 
     // memory[0x40:0x60] = 0x80
-    let status = machine.execute(&[
-      Instruction::Push1 as u8,
-      0x80,
-      Instruction::Push1 as u8,
-      0x40,
-      Instruction::MStore as u8,
-    ], Default::default());
+    let status = machine.execute(
+      &[
+        Instruction::Push1 as u8,
+        0x80,
+        Instruction::Push1 as u8,
+        0x40,
+        Instruction::MStore as u8,
+      ],
+      Default::default(),
+    );
     assert_eq!(status, ExecutionState::Ok);
   }
 

@@ -194,15 +194,16 @@ pub async fn raw_execute_contract<
       let mut result = vec![];
       for interaction in interactions {
         let tx = interaction.node;
-        let block_info = shared_client
-          .get_transaction_block(&tx.id)
-          .await
-          .unwrap();
+        let block_info =
+          shared_client.get_transaction_block(&tx.id).await.unwrap();
 
         let block_info = three_em_evm::BlockInfo {
           timestamp: three_em_evm::U256::from(block_info.timestamp),
-          difficulty: three_em_evm::U256::from_str_radix(&block_info.diff, 10).unwrap(),
-          block_hash: three_em_evm::U256::from(block_info.indep_hash.as_bytes()),
+          difficulty: three_em_evm::U256::from_str_radix(&block_info.diff, 10)
+            .unwrap(),
+          block_hash: three_em_evm::U256::from(
+            block_info.indep_hash.as_bytes(),
+          ),
           number: three_em_evm::U256::from(block_info.height),
         };
 
