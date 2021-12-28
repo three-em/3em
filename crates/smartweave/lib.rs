@@ -71,10 +71,9 @@ pub fn op_smartweave_init(
   _: (),
 ) -> Result<ContractInfo, AnyError> {
   let contract = state
-    .try_take::<ContractInfo>()
-    .ok_or_else(|| type_error("Contract info missing."))?;
+    .borrow::<ContractInfo>();
 
-  Ok(contract)
+  Ok(contract.to_owned())
 }
 
 pub async fn op_smartweave_wallet_balance(

@@ -233,6 +233,57 @@ mod tests {
   use three_em_arweave::miscellaneous::ContractType;
 
   #[tokio::test]
+  async fn test_globals_js() {
+    let init_state = serde_json::json!({});
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/globals_contract.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let fake_interactions = vec![
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "evolve",
+          // Contract Source for "Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"
+          "value": "C0F9QvOOJNR2DDIicWeL9B-C5vFrtczmOjpW_3FCQBQ",
+        }),
+        "tx1",
+        None,
+        None,
+      ),
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "contribute",
+        }),
+        "tx2",
+        None,
+        None,
+      ),
+    ];
+
+    let result = raw_execute_contract(
+      String::from("Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"),
+      fake_contract,
+      fake_interactions,
+      IndexMap::new(),
+      None,
+      true,
+      |_, _| {
+        panic!("not implemented");
+      },
+      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
+    )
+        .await;
+
+    if let ExecuteResult::V8(value, validity) = result {
+      println!("{}", value);
+    }
+
+  }
+
+  #[tokio::test]
   pub async fn test_executor_js() {
     let init_state = serde_json::json!({
       "users": []
