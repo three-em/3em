@@ -28,6 +28,13 @@ macro_rules! repr_u8 {
   }
 }
 
+fn to_signed(value: U256) -> U256 {
+  match value.bit(255) {
+    true => (!value).overflowing_add(U256::one()).0,
+    false => value,
+  }
+}
+
 repr_u8! {
   // EVM instructions
   #[repr(u8)]
@@ -357,13 +364,6 @@ impl Machine {
           self.stack.push(lhs / rhs);
         }
         Instruction::SDiv => {
-          fn to_signed(value: U256) -> U256 {
-            match value.bit(255) {
-              true => (!value).overflowing_add(U256::one()).0,
-              false => value,
-            }
-          }
-
           let dividend = to_signed(self.stack.pop());
           let divisor = to_signed(self.stack.pop());
           const U256_ZERO: U256 = U256::zero();
@@ -397,7 +397,28 @@ impl Machine {
           self.stack.push(res);
         }
         Instruction::SMod => {
-          // TODO
+          fn to_signed(value: U256) -> U256 {
+            match value.bit(255) {
+              true => (!value).overflowing_add(U256::one()).0,
+              false => value,
+            }
+          }
+
+          let lhs = self.stack.pop();
+          let signed_lhs = to_signed(lhs);
+          let sign = lhs.bit(255);
+
+          let rhs = to_signed(self.stack.pop());
+
+          if rhs == U256::zero() {
+            self.stack.push(U256::zero());
+          } else {
+            let value = signed_lhs % rhs;
+            self.stack.push(match sign {
+              true => (!value).overflowing_add(U256::one()).0,
+              false => value,
+            });
+          }
         }
         Instruction::AddMod => {
           let a = self.stack.pop();
@@ -430,7 +451,20 @@ impl Machine {
           self.stack.push(lhs.overflowing_pow(rhs).0)
         }
         Instruction::SignExtend => {
-          // TODO
+          let pos = self.stack.pop();
+          let value = self.stack.pop();
+
+          if pos > U256::from(32) {
+            self.stack.push(value);
+          } else {
+            let bit_pos = (pos.low_u64() * 8 + 7) as usize;
+            let bit = value.bit(bit_pos);
+
+            let mask = (U256::one() << bit_pos) - U256::one();
+            let result = if bit { value | !mask } else { value & mask };
+
+            self.stack.push(result);
+          }
         }
         Instruction::Lt => {
           let lhs = self.stack.pop();
@@ -449,10 +483,52 @@ impl Machine {
             .push(if lhs > rhs { U256::one() } else { U256::zero() });
         }
         Instruction::SLt => {
-          // TODO
+          let (lhs, l_sign) = {
+            let lhs = self.stack.pop();
+            let l_sign = lhs.bit(255);
+            (to_signed(lhs), l_sign)
+          };
+
+          let (rhs, r_sign) = {
+            let rhs = self.stack.pop();
+            let r_sign = rhs.bit(255);
+            (to_signed(rhs), r_sign)
+          };
+
+          let result = match (l_sign, r_sign) {
+            (false, false) => lhs < rhs,
+            (true, true) => lhs > rhs,
+            (true, false) => true,
+            (false, true) => false,
+          };
+
+          self
+            .stack
+            .push(if result { U256::one() } else { U256::zero() });
         }
         Instruction::SGt => {
-          // TODO
+          let (lhs, l_sign) = {
+            let lhs = self.stack.pop();
+            let l_sign = lhs.bit(255);
+            (to_signed(lhs), l_sign)
+          };
+
+          let (rhs, r_sign) = {
+            let rhs = self.stack.pop();
+            let r_sign = rhs.bit(255);
+            (to_signed(rhs), r_sign)
+          };
+
+          let result = match (l_sign, r_sign) {
+            (false, false) => lhs > rhs,
+            (true, true) => lhs < rhs,
+            (true, false) => false,
+            (false, true) => true,
+          };
+
+          self
+            .stack
+            .push(if result { U256::one() } else { U256::zero() });
         }
         Instruction::Shr => {
           let rhs = self.stack.pop();
