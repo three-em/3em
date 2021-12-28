@@ -5,11 +5,30 @@
   // Intentional copy.
   const BigNumber = window.BigNumber;
 
-  function getContract() {
-    const data = Deno.core.opSync("op_smartweave_init");
-    getContract = () => data;
-    return data;
-  }
+  // function getContract() {
+  //   const data = Deno.core.opSync("op_smartweave_init");
+  //   getContract = () => data;
+  //   return data;
+  // }
+
+    function getInteraction() {
+      const env = window.env.toObject();
+      return {
+        transaction: {
+          id: env["TX_ID"],
+          owner: env["TX_OWNER_ADDRESS"],
+          target: env["TX_TARGET"],
+          quantity: env["TX_QUANTITY"],
+          reward: env["TX_REWARDS"],
+          tags: JSON.parse(env["TX_TAGS"])
+        },
+        block: {
+          height: parseInt(env["BLOCK_HEIGHT"]),
+          indep_hash: env["BLOCK_ID"],
+          timestamp: parseInt(env["BLOCK_TIMESTAMP"])
+        }
+      }
+    }
 
   // Partially adapted from arweave-js
   // https://github.com/ArweaveTeam/arweave-js/blob/master/src/common/lib/crypto/webcrypto-driver.ts
@@ -303,11 +322,11 @@
 
   class SmartWeave {
     get transaction() {
-      return getContract().transaction;
+      return getInteraction().transaction;
     }
 
     get block() {
-      return getContract().block;
+      return getInteraction().block;
     }
 
     get arweave() {

@@ -5,12 +5,14 @@ use indexmap::map::IndexMap;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
-use three_em_arweave::gql_result::GQLEdgeInterface;
+use three_em_arweave::gql_result::{GQLEdgeInterface, GQLNodeInterface};
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_js::Runtime;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
+use std::collections::HashMap;
+use std::env;
 
 pub type ValidityTable = IndexMap<String, bool>;
 pub type CachedState = Option<Value>;
@@ -55,6 +57,11 @@ pub async fn raw_execute_contract<
     },
   );
 
+  // Clean env before execution
+  for (key, _) in env::vars() {
+    env::remove_var(key);
+  }
+
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
       if needs_processing {
@@ -73,6 +80,9 @@ pub async fn raw_execute_contract<
 
         for interaction in interactions {
           let tx = interaction.node;
+
+          set_env_from_interaction(&tx);
+
           let input = get_input_from_interaction(&tx);
 
           // TODO: has_multiple_interactions
@@ -153,6 +163,9 @@ pub async fn raw_execute_contract<
 
         for interaction in interactions {
           let tx = interaction.node;
+
+          set_env_from_interaction(&tx);
+
           let input = get_input_from_interaction(&tx);
           let wasm_input: Value =
             deno_core::serde_json::from_str(input).unwrap();
@@ -217,6 +230,18 @@ pub async fn raw_execute_contract<
   }
 }
 
+fn set_env_from_interaction(interaction: &GQLNodeInterface) {
+  env::set_var("TX_ID", &interaction.id);
+  env::set_var("TX_OWNER_ADDRESS", &interaction.owner.address);
+  env::set_var("TX_TARGET", (&interaction.recipient).to_owned().unwrap_or_else(|| String::from("null")));
+  env::set_var("TX_TAGS", serde_json::to_string(&interaction.tags).unwrap_or_else(|_| String::from("{}")));
+  env::set_var("TX_QUANTITY", (&interaction.quantity).to_owned().unwrap().winston.unwrap());
+  env::set_var("TX_REWARDS", (&interaction.fee).to_owned().unwrap().winston.unwrap());
+  env::set_var("BLOCK_ID", &interaction.block.id);
+  env::set_var("BLOCK_HEIGHT", (&interaction.block.height).to_string());
+  env::set_var("BLOCK_TIMESTAMP", (&interaction.block.timestamp).to_string());
+}
+
 #[cfg(test)]
 mod tests {
   use crate::executor::{raw_execute_contract, ExecuteResult};
@@ -226,10 +251,7 @@ mod tests {
   use indexmap::map::IndexMap;
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
-  use three_em_arweave::gql_result::{
-    GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface, GQLOwnerInterface,
-    GQLTagInterface,
-  };
+  use three_em_arweave::gql_result::{GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface, GQLOwnerInterface, GQLTagInterface, GQLAmountInterface};
   use three_em_arweave::miscellaneous::ContractType;
 
   #[tokio::test]
@@ -242,26 +264,29 @@ mod tests {
       init_state.to_string(),
     );
 
-    let fake_interactions = vec![
-      generate_fake_interaction(
-        serde_json::json!({
-          "function": "evolve",
-          // Contract Source for "Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"
-          "value": "C0F9QvOOJNR2DDIicWeL9B-C5vFrtczmOjpW_3FCQBQ",
-        }),
-        "tx1",
-        None,
-        None,
-      ),
-      generate_fake_interaction(
-        serde_json::json!({
-          "function": "contribute",
-        }),
-        "tx2",
-        None,
-        None,
-      ),
-    ];
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+    );
+    transaction1.node.owner.address = String::from("SUPERMAN1293120");
+    transaction1.node.recipient = Some(String::from("RECIPIENT1234"));
+    transaction1.node.tags.push(GQLTagInterface {
+      name: String::from("MyTag"),
+      value: String::from("Christpoher Nolan is awesome")
+    });
+    transaction1.node.quantity = Some(GQLAmountInterface {
+      winston: Some(String::from("100")),
+      ar: None
+    });
+    transaction1.node.fee = Some(GQLAmountInterface {
+      winston: Some(String::from("100")),
+      ar: None
+    });
+    transaction1.node.block.timestamp = 12301239;
+
+    let fake_interactions = vec![transaction1];
 
     let result = raw_execute_contract(
       String::from("Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"),
@@ -278,7 +303,9 @@ mod tests {
         .await;
 
     if let ExecuteResult::V8(value, validity) = result {
-      println!("{}", value);
+      assert_eq!(value, serde_json::json!({"txId":"tx1","txOwner":"SUPERMAN1293120","txTarget":"RECIPIENT1234","txQuantity":"100","txReward":"100","txTags":[{"name":"Input","value":"{}"},{"name":"MyTag","value":"Christpoher Nolan is awesome"}],"txHeight":2,"txIndepHash":"ABCD-EFG","txTimestamp":12301239,"winstonToAr":true,"arToWinston":true,"compareArWinston":1}));
+    } else {
+      panic!("Unexpected entry");
     }
 
   }

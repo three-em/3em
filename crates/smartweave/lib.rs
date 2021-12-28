@@ -10,8 +10,9 @@ use deno_core::OpState;
 use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::thread;
+use std::{thread, env};
 use three_em_arweave::arweave::TransactionData;
+use std::collections::HashMap;
 
 pub struct ArweaveInfo {
   port: i32,
@@ -26,9 +27,11 @@ pub fn init(info: ContractInfo, arweave: (i32, String, String)) -> Extension {
       "bignumber.js",
       "smartweave.js",
       "contract-assert.js",
+      "env.js",
     ))
     .ops(vec![
       ("op_smartweave_init", op_sync(op_smartweave_init)),
+      ("op_three_em_env", op_sync(op_three_em_env)),
       (
         "op_smartweave_wallet_balance",
         op_async(op_smartweave_wallet_balance),
@@ -74,6 +77,14 @@ pub fn op_smartweave_init(
     .borrow::<ContractInfo>();
 
   Ok(contract.to_owned())
+}
+
+pub fn op_three_em_env(
+  state: &mut OpState,
+  _: (),
+  _: (),
+) -> Result<HashMap<String, String>, AnyError> {
+  Ok(env::vars().collect())
 }
 
 pub async fn op_smartweave_wallet_balance(
