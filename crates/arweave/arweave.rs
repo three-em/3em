@@ -1,8 +1,8 @@
 use crate::cache::ArweaveCache;
-use crate::gql_result::GQLEdgeInterface;
 use crate::gql_result::GQLNodeParent;
 use crate::gql_result::GQLResultInterface;
 use crate::gql_result::GQLTransactionsResultInterface;
+use crate::gql_result::{GQLBundled, GQLEdgeInterface};
 use crate::miscellaneous::get_contract_type;
 use crate::miscellaneous::ContractType;
 use crate::utils::decode_base_64;
@@ -307,6 +307,14 @@ impl Arweave {
               .parent
               .as_ref()
               .unwrap_or(&GQLNodeParent { id: None })
+              .id
+              .is_none()
+            || (p.node.bundledIn.is_none())
+            || p
+              .node
+              .bundledIn
+              .as_ref()
+              .unwrap_or(&GQLBundled { id: None })
               .id
               .is_none()
         })

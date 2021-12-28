@@ -1,8 +1,8 @@
 use crate::arweave::LoadedContract;
 use crate::gql_result::GQLEdgeInterface;
 use deno_core::serde_json::{json, Value};
+use indexmap::map::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::{create_dir_all, remove_file, File};
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -16,7 +16,7 @@ pub struct ArweaveCache {
 #[derive(Serialize, Deserialize)]
 pub struct StateResult {
   pub state: Value,
-  pub validity: HashMap<String, bool>,
+  pub validity: IndexMap<String, bool>,
 }
 
 impl Default for ArweaveCache {
@@ -126,7 +126,7 @@ impl ArweaveCache {
     &self,
     contract_id: String,
     state: &Value,
-    validity: &HashMap<String, bool>,
+    validity: &IndexMap<String, bool>,
   ) {
     let cache_file = self.get_cache_state_file(contract_id);
 

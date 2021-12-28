@@ -1,7 +1,7 @@
 use crate::{get_input_from_interaction, nop_cost_fn};
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
-use std::collections::HashMap;
+use indexmap::map::IndexMap;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
@@ -12,7 +12,7 @@ use three_em_js::Runtime;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
 
-pub type ValidityTable = HashMap<String, bool>;
+pub type ValidityTable = IndexMap<String, bool>;
 pub type CachedState = Option<Value>;
 
 pub enum ExecuteResult {
@@ -29,7 +29,7 @@ pub async fn raw_execute_contract<
   contract_id: String,
   loaded_contract: LoadedContract,
   interactions: Vec<GQLEdgeInterface>,
-  mut validity: HashMap<String, bool>,
+  mut validity: IndexMap<String, bool>,
   cache_state: Option<Value>,
   needs_processing: bool,
   on_cached: CachedCallBack,
@@ -114,7 +114,10 @@ pub async fn raw_execute_contract<
 
               true
             }
-            Err(_) => false,
+            Err(err) => {
+              println!("Error for {} as {}", &tx.id, err);
+              false
+            }
           };
 
           validity.insert(tx.id, valid);
@@ -229,9 +232,10 @@ pub async fn raw_execute_contract<
 #[cfg(test)]
 mod tests {
   use crate::executor::{raw_execute_contract, ExecuteResult};
+  use crate::test_util::generate_fake_interaction;
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
-  use std::collections::HashMap;
+  use indexmap::map::IndexMap;
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
   use three_em_arweave::gql_result::{
@@ -258,6 +262,8 @@ mod tests {
           "name": "Andres"
         }),
         "tx1",
+        None,
+        None,
       ),
       generate_fake_interaction(
         serde_json::json!({
@@ -265,6 +271,8 @@ mod tests {
           "name": "Tate"
         }),
         "tx2",
+        None,
+        None,
       ),
       generate_fake_interaction(
         serde_json::json!({
@@ -272,6 +280,8 @@ mod tests {
           "name": "Divy"
         }),
         "tx3",
+        None,
+        None,
       ),
     ];
 
@@ -279,7 +289,7 @@ mod tests {
       String::new(),
       fake_contract,
       fake_interactions,
-      HashMap::new(),
+      IndexMap::new(),
       None,
       true,
       |_, _| {
@@ -344,12 +354,16 @@ mod tests {
           "value": "C0F9QvOOJNR2DDIicWeL9B-C5vFrtczmOjpW_3FCQBQ",
         }),
         "tx1",
+        None,
+        None,
       ),
       generate_fake_interaction(
         serde_json::json!({
           "function": "contribute",
         }),
         "tx2",
+        None,
+        None,
       ),
     ];
 
@@ -357,7 +371,7 @@ mod tests {
       String::from("Zwp7r7Z10O0TuF6lmFApB7m5lJIrE5RbLAVWg_WKNcU"),
       fake_contract,
       fake_interactions,
-      HashMap::new(),
+      IndexMap::new(),
       None,
       true,
       |_, _| {
@@ -409,36 +423,6 @@ mod tests {
         signature: String::new(),
         data_size: String::new(),
         data_root: String::new(),
-      },
-    }
-  }
-
-  pub fn generate_fake_interaction(input: Value, id: &str) -> GQLEdgeInterface {
-    GQLEdgeInterface {
-      cursor: String::new(),
-      node: GQLNodeInterface {
-        id: String::from(id),
-        anchor: None,
-        signature: None,
-        recipient: None,
-        owner: GQLOwnerInterface {
-          address: String::new(),
-          key: None,
-        },
-        fee: None,
-        quantity: None,
-        data: None,
-        tags: vec![GQLTagInterface {
-          name: String::from("Input"),
-          value: input.to_string(),
-        }],
-        block: GQLBlockInterface {
-          id: String::new(),
-          timestamp: 0,
-          height: 0,
-          previous: None,
-        },
-        parent: None,
       },
     }
   }
