@@ -642,11 +642,29 @@ impl Machine {
           self.stack.push(U256::from(data.as_slice()));
         }
         Instruction::CallDataSize => {
-          println!("{:?}", self.data.len());
           self.stack.push(U256::from(self.data.len()));
         }
         Instruction::CallDataCopy => {
-          // TODO
+          let mem_offset = self.stack.pop();
+
+          let offset = self.stack.pop();
+          let size = self.stack.pop();
+
+          if offset > U256::from(self.data.len())
+            || offset.overflowing_add(size).1
+          {
+            return ExecutionState::Ok;
+          }
+
+          let offset = offset.low_u64() as usize;
+          let size = size.low_u64() as usize;
+          let end = std::cmp::min(offset + size, self.data.len());
+          let mut data = self.data[offset..end].to_vec();
+          data.resize(32, 0u8);
+
+          let mem_offset = mem_offset.low_u64() as usize;
+          self.memory[mem_offset..mem_offset + 32]
+            .copy_from_slice(data.as_slice());
         }
         Instruction::CodeSize => {
           self.stack.push(U256::from(len));
