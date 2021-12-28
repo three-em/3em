@@ -1,10 +1,7 @@
 export function handle(state, action) {
-    const data = Deno.core.opSync("op_smartweave_init", new Uint8Array());
     return {
         state: {
-            ...data,
-            // ...state,
-            // txId: SmartWeave.transaction.id,
+            txId: SmartWeave.transaction.id,
             // txOwner: SmartWeave.transaction.owner,
             // txTarget: SmartWeave.transaction.target,
             // txQuantity: SmartWeave.transaction.quantity,

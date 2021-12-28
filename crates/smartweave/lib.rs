@@ -67,7 +67,7 @@ pub struct ContractInfo {
 
 pub fn op_smartweave_init(
   state: &mut OpState,
-  _zero_copy: ZeroCopyBuf,
+  _: (),
   _: (),
 ) -> Result<ContractInfo, AnyError> {
   let contract = state
