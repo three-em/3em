@@ -142,10 +142,7 @@ pub async fn raw_execute_contract<
 
               true
             }
-            Err(err) => {
-              println!("Error for {} as {}", &tx.id, err);
-              false
-            }
+            Err(_) => false
           };
 
           validity.insert(tx.id, valid);
