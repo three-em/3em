@@ -29,6 +29,8 @@ jobs:
       - name: Publish artifacts
         uses: actions/upload-artifact@v2
         with:
-          files: |
+          name: three-em
+          path: |
             target/release/three_em
             target/release/three_em.exe
+          if-no-files-found: warn
