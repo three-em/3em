@@ -5,6 +5,7 @@ use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
+use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
@@ -149,12 +150,31 @@ impl Runtime {
     Ok(serde_v8::from_v8(scope, value)?)
   }
 
-  pub async fn call<R>(&mut self, action: R) -> Result<Option<String>, AnyError>
+  pub async fn call<R>(
+    &mut self,
+    action: R,
+    interaction_data: Option<Value>,
+  ) -> Result<Option<String>, AnyError>
   where
     R: Serialize + 'static,
   {
     let global = {
       let scope = &mut self.rt.handle_scope();
+      let context = scope.get_current_context();
+
+      {
+        if interaction_data.is_some() {
+          let inner_scope = &mut v8::ContextScope::new(scope, context);
+
+          let global = context.global(inner_scope);
+          let v8_key =
+            serde_v8::to_v8(inner_scope, "currentInteraction").unwrap();
+          let v8_val =
+            serde_v8::to_v8(inner_scope, interaction_data.unwrap()).unwrap();
+          global.set(inner_scope, v8_key, v8_val);
+        }
+      };
+
       let action: v8::Local<v8::Value> =
         serde_v8::to_v8(scope, action).unwrap();
 
