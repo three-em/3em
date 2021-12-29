@@ -41,6 +41,11 @@ const appendBenchmarks = async () => {
     benchmarkPath,
     JSON.stringify(newBenchmarks, null, 2),
   );
+
+  await Deno.run({
+    cmd: ["node", "generate_benchmark_img.js"],
+    cwd: "./tools/benchmarks"
+  }).status();
 };
 
 await appendBenchmarks();
