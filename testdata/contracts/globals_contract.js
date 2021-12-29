@@ -1,7 +1,6 @@
 export function handle(state, action) {
     return {
         state: {
-            hello: globalThis.hello,
             txId: SmartWeave.transaction.id,
             txOwner: SmartWeave.transaction.owner,
             txTarget: SmartWeave.transaction.target,

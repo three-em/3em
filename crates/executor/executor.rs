@@ -182,8 +182,6 @@ pub async fn raw_execute_contract<
         for interaction in interactions {
           let tx = interaction.node;
 
-          set_env_from_interaction(&tx);
-
           let input = get_input_from_interaction(&tx);
           let wasm_input: Value =
             deno_core::serde_json::from_str(input).unwrap();
@@ -246,55 +244,6 @@ pub async fn raw_execute_contract<
       ExecuteResult::Evm(account_store, result, validity)
     }
   }
-}
-
-fn set_env_from_interaction(interaction: &GQLNodeInterface) {
-  // Clean env before execution
-  for (key, _) in env::vars() {
-    env::remove_var(key);
-  }
-
-  env::set_var("TX_ID", &interaction.id);
-  env::set_var("TX_OWNER_ADDRESS", &interaction.owner.address);
-  env::set_var(
-    "TX_TARGET",
-    (&interaction.recipient)
-      .to_owned()
-      .unwrap_or_else(|| String::from("null")),
-  );
-  env::set_var(
-    "TX_TAGS",
-    serde_json::to_string(&interaction.tags)
-      .unwrap_or_else(|_| String::from("{}")),
-  );
-  env::set_var(
-    "TX_QUANTITY",
-    (&interaction.quantity)
-      .to_owned()
-      .unwrap_or_else(|| GQLAmountInterface {
-        winston: Some(String::new()),
-        ar: Some(String::new()),
-      })
-      .winston
-      .unwrap(),
-  );
-  env::set_var(
-    "TX_REWARDS",
-    (&interaction.fee)
-      .to_owned()
-      .unwrap_or_else(|| GQLAmountInterface {
-        winston: Some(String::new()),
-        ar: Some(String::new()),
-      })
-      .winston
-      .unwrap(),
-  );
-  env::set_var("BLOCK_ID", &interaction.block.id);
-  env::set_var("BLOCK_HEIGHT", (&interaction.block.height).to_string());
-  env::set_var(
-    "BLOCK_TIMESTAMP",
-    (&interaction.block.timestamp).to_string(),
-  );
 }
 
 #[cfg(test)]
