@@ -26,9 +26,9 @@ jobs:
           files: |
             target/release/three_em
             target/release/three_em.exe
-        - name: Publish artifacts
-          uses: actions/upload-artifact@v2
-          with:
-            files: |
-              target/release/three_em
-              target/release/three_em.exe
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          files: |
+            target/release/three_em
+            target/release/three_em.exe
