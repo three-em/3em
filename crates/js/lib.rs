@@ -408,7 +408,12 @@ export async function handle() {
       .await
       .unwrap();
 
-    let err = rt.call((), None).await.unwrap_err().downcast::<Error>().unwrap();
+    let err = rt
+      .call((), None)
+      .await
+      .unwrap_err()
+      .downcast::<Error>()
+      .unwrap();
     assert_eq!(err, Error::Terminated);
 
     match rt.state() {
