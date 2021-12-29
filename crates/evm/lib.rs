@@ -909,7 +909,22 @@ impl Machine {
         Instruction::Create => {
           // TODO
         }
-        Instruction::Call
+        Instruction::Call => {
+          // 1. Call parameters
+          let gas = self.stack.pop();
+          let addr = self.stack.pop();
+          let value = self.stack.pop();
+          let in_offset = self.stack.pop().low_u64() as usize;
+          let in_size = self.stack.pop().low_u64() as usize;
+          let out_offset = self.stack.pop();
+          let out_size = self.stack.pop();
+
+          // 2. Extract input data from memory
+          let args = &bytecode[in_offset..in_offset + in_size];
+
+          // 3. Call
+
+        }
         | Instruction::CallCode
         | Instruction::DelegateCall => {
           // TODO
