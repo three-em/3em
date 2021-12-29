@@ -255,7 +255,7 @@ mod test {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
 
     let value = rt.get_contract_state::<i32>().unwrap();
     assert_eq!(value, -69);
@@ -279,7 +279,7 @@ export async function handle(slice) {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let hash = rt.get_contract_state::<[u8; 20]>().unwrap();
     assert_eq!(
       hash.to_vec(),
@@ -305,11 +305,11 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
     assert_eq!(rand1, 0.3800000002095474);
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
     assert_eq!(rand2, 0.1933761369163034);
   }
@@ -331,11 +331,11 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand1 = rt.get_contract_state::<[u8; 8]>().unwrap();
     assert_eq!(rand1.as_ref(), &[127, 111, 44, 205, 178, 63, 42, 187]);
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand2 = rt.get_contract_state::<[u8; 8]>().unwrap();
     assert_eq!(rand2.as_ref(), &[123, 105, 39, 142, 148, 124, 1, 198]);
   }
@@ -363,7 +363,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(&()).await.unwrap();
+    rt.call(&(), None).await.unwrap();
     let gced = rt.get_contract_state::<bool>().unwrap();
     assert_eq!(gced, false);
   }
@@ -388,7 +388,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let exists = rt.get_contract_state::<bool>().unwrap();
     assert_eq!(exists, true);
   }
@@ -408,7 +408,7 @@ export async function handle() {
       .await
       .unwrap();
 
-    let err = rt.call(()).await.unwrap_err().downcast::<Error>().unwrap();
+    let err = rt.call((), None).await.unwrap_err().downcast::<Error>().unwrap();
     assert_eq!(err, Error::Terminated);
 
     match rt.state() {
@@ -431,7 +431,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    let evolved = rt.call(()).await.unwrap();
+    let evolved = rt.call((), None).await.unwrap();
     assert_eq!(evolved, Some("xxdummy".to_string()));
   }
 
@@ -450,7 +450,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let host = rt.get_contract_state::<String>().unwrap();
     assert_eq!(host, "http://arweave.net:12345");
   }
