@@ -10,7 +10,7 @@ use deno_core::OpState;
 use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::thread;
+use std::{env, thread};
 use three_em_arweave::arweave::TransactionData;
 
 pub struct ArweaveInfo {
@@ -67,14 +67,12 @@ pub struct ContractInfo {
 
 pub fn op_smartweave_init(
   state: &mut OpState,
-  _zero_copy: ZeroCopyBuf,
+  _: (),
   _: (),
 ) -> Result<ContractInfo, AnyError> {
-  let contract = state
-    .try_take::<ContractInfo>()
-    .ok_or_else(|| type_error("Contract info missing."))?;
+  let contract = state.borrow::<ContractInfo>();
 
-  Ok(contract)
+  Ok(contract.to_owned())
 }
 
 pub async fn op_smartweave_wallet_balance(

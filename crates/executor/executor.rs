@@ -2,10 +2,14 @@ use crate::{get_input_from_interaction, nop_cost_fn};
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use indexmap::map::IndexMap;
+use std::collections::HashMap;
+use std::env;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
-use three_em_arweave::gql_result::GQLEdgeInterface;
+use three_em_arweave::gql_result::{
+  GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
+};
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_js::Runtime;
@@ -73,6 +77,7 @@ pub async fn raw_execute_contract<
 
         for interaction in interactions {
           let tx = interaction.node;
+
           let input = get_input_from_interaction(&tx);
 
           // TODO: has_multiple_interactions
@@ -84,7 +89,30 @@ pub async fn raw_execute_contract<
             "caller": tx.owner.address
           });
 
-          let valid = match rt.call(call_input).await {
+          let interaction_context = serde_json::json!({
+                    "transaction": {
+                      "id": &tx.id,
+                      "owner": &tx.owner.address,
+                      "target": &tx.recipient.to_owned().unwrap_or_else(|| String::from("null")),
+                      "quantity": &tx.quantity.to_owned().unwrap_or_else(|| GQLAmountInterface {
+            winston: Some(String::new()),
+            ar: Some(String::new())
+          }).winston.unwrap(),
+                      "reward": &tx.fee.to_owned().unwrap_or_else(|| GQLAmountInterface {
+            winston: Some(String::new()),
+            ar: Some(String::new())
+          }).winston.unwrap(),
+                      "tags": &tx.tags
+                    },
+                    "block": {
+                      "indep_hash":  &tx.block.id,
+                      "height": &tx.block.height,
+                      "timestamp": &tx.block.timestamp
+                    }
+                  });
+
+          let valid = match rt.call(call_input, Some(interaction_context)).await
+          {
             Ok(None) => true,
             Ok(Some(evolve)) => {
               let contract = shared_client
@@ -153,6 +181,7 @@ pub async fn raw_execute_contract<
 
         for interaction in interactions {
           let tx = interaction.node;
+
           let input = get_input_from_interaction(&tx);
           let wasm_input: Value =
             deno_core::serde_json::from_str(input).unwrap();
@@ -227,10 +256,68 @@ mod tests {
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
   use three_em_arweave::gql_result::{
-    GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface, GQLOwnerInterface,
-    GQLTagInterface,
+    GQLAmountInterface, GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface,
+    GQLOwnerInterface, GQLTagInterface,
   };
   use three_em_arweave::miscellaneous::ContractType;
+
+  #[tokio::test]
+  async fn test_globals_js() {
+    let init_state = serde_json::json!({});
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/globals_contract.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1123123123123123123213213123",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+      Some(String::from("SUPERMAN1293120")),
+      Some(String::from("RECIPIENT1234")),
+      Some(GQLTagInterface {
+        name: String::from("MyTag"),
+        value: String::from("Christpoher Nolan is awesome"),
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(12301239),
+    );
+
+    let fake_interactions = vec![transaction1];
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract,
+      fake_interactions,
+      IndexMap::new(),
+      None,
+      true,
+      |_, _| {
+        panic!("not implemented");
+      },
+      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
+    )
+    .await;
+
+    if let ExecuteResult::V8(value, validity) = result {
+      assert_eq!(
+        value,
+        serde_json::json!({"txId":"tx1123123123123123123213213123","txOwner":"SUPERMAN1293120","txTarget":"RECIPIENT1234","txQuantity":"100","txReward":"100","txTags":[{"name":"Input","value":"{}"},{"name":"MyTag","value":"Christpoher Nolan is awesome"}],"txHeight":2,"txIndepHash":"ABCD-EFG","txTimestamp":12301239,"winstonToAr":true,"arToWinston":true,"compareArWinston":1})
+      );
+    } else {
+      panic!("Unexpected entry");
+    }
+  }
 
   #[tokio::test]
   pub async fn test_executor_js() {
@@ -252,6 +339,12 @@ mod tests {
         "tx1",
         None,
         None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
       ),
       generate_fake_interaction(
         serde_json::json!({
@@ -261,6 +354,12 @@ mod tests {
         "tx2",
         None,
         None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
       ),
       generate_fake_interaction(
         serde_json::json!({
@@ -268,6 +367,12 @@ mod tests {
           "name": "Divy"
         }),
         "tx3",
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
         None,
         None,
       ),
@@ -344,12 +449,24 @@ mod tests {
         "tx1",
         None,
         None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
       ),
       generate_fake_interaction(
         serde_json::json!({
           "function": "contribute",
         }),
         "tx2",
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
         None,
         None,
       ),

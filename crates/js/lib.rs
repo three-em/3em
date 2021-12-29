@@ -5,6 +5,7 @@ use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
+use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
@@ -149,12 +150,31 @@ impl Runtime {
     Ok(serde_v8::from_v8(scope, value)?)
   }
 
-  pub async fn call<R>(&mut self, action: R) -> Result<Option<String>, AnyError>
+  pub async fn call<R>(
+    &mut self,
+    action: R,
+    interaction_data: Option<Value>,
+  ) -> Result<Option<String>, AnyError>
   where
     R: Serialize + 'static,
   {
     let global = {
       let scope = &mut self.rt.handle_scope();
+      let context = scope.get_current_context();
+
+      {
+        if interaction_data.is_some() {
+          let inner_scope = &mut v8::ContextScope::new(scope, context);
+
+          let global = context.global(inner_scope);
+          let v8_key =
+            serde_v8::to_v8(inner_scope, "currentInteraction").unwrap();
+          let v8_val =
+            serde_v8::to_v8(inner_scope, interaction_data.unwrap()).unwrap();
+          global.set(inner_scope, v8_key, v8_val);
+        }
+      };
+
       let action: v8::Local<v8::Value> =
         serde_v8::to_v8(scope, action).unwrap();
 
@@ -235,7 +255,7 @@ mod test {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
 
     let value = rt.get_contract_state::<i32>().unwrap();
     assert_eq!(value, -69);
@@ -259,7 +279,7 @@ export async function handle(slice) {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let hash = rt.get_contract_state::<[u8; 20]>().unwrap();
     assert_eq!(
       hash.to_vec(),
@@ -285,11 +305,11 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
     assert_eq!(rand1, 0.3800000002095474);
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
     assert_eq!(rand2, 0.1933761369163034);
   }
@@ -311,11 +331,11 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand1 = rt.get_contract_state::<[u8; 8]>().unwrap();
     assert_eq!(rand1.as_ref(), &[127, 111, 44, 205, 178, 63, 42, 187]);
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let rand2 = rt.get_contract_state::<[u8; 8]>().unwrap();
     assert_eq!(rand2.as_ref(), &[123, 105, 39, 142, 148, 124, 1, 198]);
   }
@@ -343,7 +363,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(&()).await.unwrap();
+    rt.call(&(), None).await.unwrap();
     let gced = rt.get_contract_state::<bool>().unwrap();
     assert_eq!(gced, false);
   }
@@ -368,7 +388,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let exists = rt.get_contract_state::<bool>().unwrap();
     assert_eq!(exists, true);
   }
@@ -388,7 +408,12 @@ export async function handle() {
       .await
       .unwrap();
 
-    let err = rt.call(()).await.unwrap_err().downcast::<Error>().unwrap();
+    let err = rt
+      .call((), None)
+      .await
+      .unwrap_err()
+      .downcast::<Error>()
+      .unwrap();
     assert_eq!(err, Error::Terminated);
 
     match rt.state() {
@@ -411,7 +436,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    let evolved = rt.call(()).await.unwrap();
+    let evolved = rt.call((), None).await.unwrap();
     assert_eq!(evolved, Some("xxdummy".to_string()));
   }
 
@@ -430,7 +455,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(()).await.unwrap();
+    rt.call((), None).await.unwrap();
     let host = rt.get_contract_state::<String>().unwrap();
     assert_eq!(host, "http://arweave.net:12345");
   }
