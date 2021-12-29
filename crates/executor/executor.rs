@@ -142,7 +142,7 @@ pub async fn raw_execute_contract<
 
               true
             }
-            Err(_) => false
+            Err(_) => false,
           };
 
           validity.insert(tx.id, valid);
