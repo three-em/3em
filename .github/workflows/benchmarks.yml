@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: '16'
       - run: npm install
+      - run: cd tools/benchmarks && npm install && cd ../../
       - name: Run benchmark
         run: deno run --allow-all tools/benchmarks/run_benchmark.js
       - name: Commit report
