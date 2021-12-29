@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3EM Benchmark Chart</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+</head>
+<body>
+<label class="switch">
+    <input type="checkbox" id="togBtn">
+    <div class="slider round"></div>
+</label>
+<div style="max-height: 100vh; max-width: 100vw; width: 100vw; height: 35vh;">
+<canvas id="myChart"></canvas>
+</div>
+<script type="module">
+    const benchmarks = await fetch("./benchmark.json");
+    const json = await benchmarks.json();
+    const sortedJson = json.sort((a, b) => a.createdAtTime - b.createdAtTime)
+    const mapBenchmarks = sortedJson.map(item => item.benchmark);
+    let ctx = document.getElementById('myChart').getContext('2d');
+    const buildChart = (type) => new Chart(ctx, {
+        type: type,
+        data: {
+            labels: sortedJson.map(item => item.createdAt),
+            datasets: [{
+                label: '3EM JS',
+                data: mapBenchmarks.map(item => ((item.js || {}).mean || 0)),
+                fill: false,
+                borderColor: '#3d88ad',
+                backgroundColor: '#3d88ad',
+                tension: 0.1
+            },
+                {
+                    label: '3EM WASM',
+                    data: mapBenchmarks.map(item => ((item.wasm || {}).mean || 0)),
+                    fill: false,
+                    borderColor: 'rgb(3,22,68)',
+                    backgroundColor: 'rgb(3,22,68)',
+                    tension: 0.1
+            },
+                {
+                    label: '3EM EVM',
+                    data: mapBenchmarks.map(item => ((item.evm || {}).mean || 0)),
+                    fill: false,
+                    borderColor: 'rgb(42,218,187)',
+                    backgroundColor: 'rgb(42,218,187)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Redstone',
+                    data: mapBenchmarks.map(item => ((item.redstoneJs || {}).mean || 0)),
+                    fill: false,
+                    borderColor: 'rgb(215,10,10)',
+                    backgroundColor: 'rgb(215,10,10)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Smartweave',
+                    data: mapBenchmarks.map(item => ((item.smartweaveJs || {}).mean || 0)),
+                    fill: false,
+                    borderColor: 'rgb(103,102,102)',
+                    backgroundColor: 'rgb(103,102,102)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            scales:{
+                x: {
+                    display: false
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+        }
+
+    });
+    let chart = buildChart('line');
+
+    let isLine = true;
+    document.querySelector("#togBtn").addEventListener( 'click', function(){
+        chart.destroy();
+        chart = buildChart(isLine ? 'bar' : 'line');
+        isLine = !isLine;
+    });
+
+</script>
+<style>
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 90px;
+        height: 34px;
+    }
+
+    .switch input {display:none;}
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ca2222;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #2ab934;
+    }
+
+    input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(55px);
+    }
+
+    /*------ ADDED CSS ---------*/
+    .slider:after
+    {
+        content:'Line';
+        color: white;
+        display: block;
+        position: absolute;
+        transform: translate(-50%,-50%);
+        top: 50%;
+        left: 50%;
+        font-size: 10px;
+        font-family: Verdana, sans-serif;
+    }
+
+    input:checked + .slider:after
+    {
+        content:'Bar';
+    }
+
+    /*--------- END --------*/
+</style>
+</body>
+</html>
