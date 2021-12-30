@@ -86,9 +86,6 @@ jobs:
         with:
           path: artifacts
 
-      # - name: Prep Changelog
-      #   uses: [changelog generator]
-
       - name: Release
         uses: ncipollo/release-action@v1
         with:
@@ -98,5 +95,5 @@ jobs:
           allowUpdates: true
           replacesArtifacts: true
           artifacts: 'artifacts/**/*.zip'
-          # bodyFile: 'CHANGELOG.md'
+          generateReleaseNotes: true
           token: ${{ github.token }}
