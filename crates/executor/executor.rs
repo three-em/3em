@@ -36,6 +36,7 @@ pub async fn raw_execute_contract<
   mut validity: IndexMap<String, bool>,
   cache_state: Option<Value>,
   needs_processing: bool,
+  show_errors: bool,
   on_cached: CachedCallBack,
   shared_client: Arweave,
 ) -> ExecuteResult {
@@ -142,7 +143,12 @@ pub async fn raw_execute_contract<
 
               true
             }
-            Err(_) => false,
+            Err(err) => {
+              if show_errors {
+                println!("{}", err);
+              }
+              false
+            }
           };
 
           validity.insert(tx.id, valid);
@@ -189,9 +195,19 @@ pub async fn raw_execute_contract<
 
           let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
           let exec = rt.call(&mut state, &mut input);
-          let valid = exec.is_ok();
+          let valid_with_result = match exec {
+            Ok(result) => (true, Some(result)),
+            Err(err) => {
+              if show_errors {
+                println!("{}", err);
+              }
+              (false, None)
+            }
+          };
+          let valid = valid_with_result.0;
+
           if valid {
-            state = exec.unwrap();
+            state = valid_with_result.1.unwrap();
           }
           validity.insert(tx.id, valid);
         }
@@ -301,6 +317,7 @@ mod tests {
       IndexMap::new(),
       None,
       true,
+      false,
       |_, _| {
         panic!("not implemented");
       },
@@ -384,6 +401,7 @@ mod tests {
       IndexMap::new(),
       None,
       true,
+      false,
       |_, _| {
         panic!("not implemented");
       },
@@ -478,6 +496,7 @@ mod tests {
       IndexMap::new(),
       None,
       true,
+      false,
       |_, _| {
         panic!("not implemented");
       },
