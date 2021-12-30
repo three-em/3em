@@ -21,6 +21,14 @@ pub enum Flags {
     height: Option<usize>,
     no_cache: bool,
   },
+  DryRun {
+    host: String,
+    port: i32,
+    protocol: String,
+    pretty_print: bool,
+    show_validity: bool,
+    file: String,
+  },
 }
 
 fn parse_node_limit(
@@ -44,6 +52,20 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         .opt_value_from_str("--host")?
         .unwrap_or_else(|| String::from("127.0.0.1")),
       node_capacity: parse_node_limit(&mut pargs).unwrap(),
+    },
+    "dry-run" => Flags::DryRun {
+      host: pargs
+        .opt_value_from_str("--arweave-host")?
+        .unwrap_or_else(|| String::from("arweave.net")),
+      port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
+      protocol: pargs
+        .opt_value_from_str("--arweave-protocol")?
+        .unwrap_or_else(|| String::from("https")),
+      pretty_print: pargs.contains("--pretty-print"),
+      show_validity: pargs.contains("--show-validity"),
+      file: pargs
+        .value_from_str("--file")
+        .expect("dry-run requires --file"),
     },
     "run" | _ => Flags::Run {
       host: pargs

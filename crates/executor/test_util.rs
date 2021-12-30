@@ -1,8 +1,10 @@
 use deno_core::serde_json::Value;
+use three_em_arweave::arweave::{LoadedContract, TransactionData};
 use three_em_arweave::gql_result::{
   GQLAmountInterface, GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface,
   GQLOwnerInterface, GQLTagInterface,
 };
+use three_em_arweave::miscellaneous::ContractType;
 
 pub fn generate_fake_interaction(
   input: Value,
@@ -48,6 +50,36 @@ pub fn generate_fake_interaction(
       },
       parent: None,
       bundledIn: None,
+    },
+  }
+}
+
+pub fn generate_fake_loaded_contract_data(
+  contract_source: &[u8],
+  contract_type: ContractType,
+  init_state: String,
+) -> LoadedContract {
+  let contract_id = String::from("test");
+  LoadedContract {
+    id: contract_id,
+    contract_src_tx_id: String::new(),
+    contract_src: contract_source.to_vec(),
+    contract_type,
+    init_state,
+    min_fee: None,
+    contract_transaction: TransactionData {
+      format: 0,
+      id: String::new(),
+      last_tx: String::new(),
+      owner: String::new(),
+      tags: Vec::new(),
+      target: String::new(),
+      quantity: String::new(),
+      data: String::new(),
+      reward: String::new(),
+      signature: String::new(),
+      data_size: String::new(),
+      data_root: String::new(),
     },
   }
 }

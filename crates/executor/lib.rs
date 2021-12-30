@@ -1,5 +1,5 @@
 pub mod executor;
-mod test_util;
+pub mod test_util;
 
 use crate::executor::raw_execute_contract;
 use crate::executor::ExecuteResult;

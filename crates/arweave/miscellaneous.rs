@@ -4,7 +4,7 @@ use deno_core::error::AnyError;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub enum ContractType {
   JAVASCRIPT,
   WASM,

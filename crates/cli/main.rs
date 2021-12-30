@@ -1,5 +1,6 @@
 mod cli;
 mod core_nodes;
+mod dry_run;
 mod messages;
 mod node;
 mod node_crypto;
@@ -70,6 +71,17 @@ async fn main() -> Result<(), AnyError> {
         no_cache,
       )
       .await?;
+    }
+    Flags::DryRun {
+      host,
+      port,
+      protocol,
+      pretty_print,
+      show_validity,
+      file,
+    } => {
+      dry_run::dry_run(port, host, protocol, pretty_print, show_validity, file)
+        .await?;
     }
   };
 
