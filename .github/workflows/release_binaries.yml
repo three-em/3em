@@ -1,36 +1,103 @@
-on: workflow_dispatch
+name: Rust
+
+on:
+  pull_request:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      release: # set to true to trigger a release
+        description: Trigger a release
+        required: false
+        default: 'false'
+      tag: # example: x.y.z-rc.w
+        description: Release tag
+        required: false
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    name: build / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    outputs:
+      commit: ${{ steps.commit.outputs.hash }}
+
     strategy:
-      matrix:
-        os: [macOS-latest, windows-2019]
       fail-fast: true
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
-      - name: Clone repository
+      - name: Checkout repo
         uses: actions/checkout@v2
-      - name: Install Cargo
-        uses: hecrj/setup-rust-action@v1
+
+      - name: Get commit hash # For release notes
+        id: commit
+        run: echo "::set-output name=hash::$(git rev-parse --short HEAD)"
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: nightly
-          components: rustfmt
-      - name: Create release
-        run: cargo build --release --all-targets
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          toolchain: stable
+          override: true
+          default: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
         with:
-          files: |
-            target/release/three_em
-            target/release/three_em.exe
-      - name: Publish artifacts
+          command: build
+          args: --release --locked --all-targets
+
+      - name: Zip linux release
+        if: startsWith(matrix.os, 'ubuntu')
+        working-directory: target/release
+        run: zip -r three_em-x86_64-unknown-linux-gnu.zip three_em
+
+      - name: Zip mac release
+        if: startsWith(matrix.os, 'macos')
+        working-directory: target/release
+        run: zip -r three_em-x86_64-apple-darwin.zip three_em
+
+      - name: Zip windows release
+        if: startsWith(matrix.os, 'windows')
+        working-directory: target/release
+        run: Compress-Archive -CompressionLevel Optimal -Force -Path three_em.exe -DestinationPath three_em-x86_64-pc-windows-msvc.zip
+
+      - name: Upload Builds
         uses: actions/upload-artifact@v2
         with:
-          name: three-em
-          path: |
-            target/release/three_em
-            target/release/three_em.exe
-          if-no-files-found: warn
+          name: ${{ matrix.os }}
+          path: target/release/*.zip
+          if-no-files-found: error
+          # retention-days: 7
+
+  release:
+    if: github.event.inputs.release == "true" && github.event.inputs.tag != ""
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download Builds
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      # - name: Prep Changelog
+      #   uses: [changelog generator]
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.event.inputs.tag }}
+          name: v${{ github.event.inputs.tag }}
+          prerelease: contains(github.event.inputs.tag, "-")
+          allowUpdates: true
+          replacesArtifacts: true
+          artifacts: 'artifacts/**/*.zip'
+          # bodyFile: 'CHANGELOG.md'
+          token: ${{ github.token }}
