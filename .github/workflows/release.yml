@@ -75,7 +75,7 @@ jobs:
           # retention-days: 7
 
   release:
-    if: github.event.inputs.release == "true" && github.event.inputs.tag != ""
+    if: github.event.inputs.release == 'true' && github.event.inputs.tag != ''
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -91,7 +91,7 @@ jobs:
         with:
           tag: ${{ github.event.inputs.tag }}
           name: v${{ github.event.inputs.tag }}
-          prerelease: contains(github.event.inputs.tag, "-")
+          prerelease: contains(github.event.inputs.tag, '-')
           discussionCategory: announcements
           draft: true
           allowUpdates: true
