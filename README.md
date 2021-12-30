@@ -91,6 +91,8 @@ The following flags are available for `three_em run`:
   - Maximum height to be used during evaluation
 - `--no-cache`
   - Whether it should use 3EM's built-in cache system
+- `--show-errors`
+  - Whether errors from failed interactions should be printed
 
 **Example**
 

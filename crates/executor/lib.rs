@@ -24,6 +24,7 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
   cache: bool,
+  show_errors: bool,
 ) -> Result<ExecuteResult, AnyError> {
   let contract_id_copy = contract_id.to_owned();
   let shared_id = contract_id.clone();
@@ -96,6 +97,7 @@ pub async fn execute_contract(
       validity,
       cache_state,
       needs_processing,
+      show_errors,
       |validity_table, cache_state| {
         ExecuteResult::V8(cache_state.unwrap(), validity_table)
       },
@@ -344,6 +346,7 @@ mod test {
       None,
       Some(838269),
       false,
+      false,
     )
     .await
     .unwrap();
@@ -384,6 +387,7 @@ mod test {
       None,
       Some(822062),
       false,
+      false,
     )
     .await
     .unwrap();
@@ -413,6 +417,7 @@ mod test {
       None,
       None,
       None,
+      false,
       false,
     )
     .await

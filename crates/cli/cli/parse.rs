@@ -20,6 +20,7 @@ pub enum Flags {
     save_path: String,
     height: Option<usize>,
     no_cache: bool,
+    show_errors: bool,
   },
   DryRun {
     host: String,
@@ -90,6 +91,7 @@ pub fn parse() -> Result<Flags, pico_args::Error> {
         .unwrap_or_else(|| String::from("")),
       height: { pargs.opt_value_from_str("--height").unwrap() },
       no_cache: pargs.contains("--no-cache"),
+      show_errors: pargs.contains("--show-errors"),
     },
   };
 

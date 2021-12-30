@@ -118,6 +118,7 @@ pub async fn dry_run_result(
     IndexMap::new(),
     None,
     true,
+    true,
     |_, _| panic!("Unimplemented"),
     Arweave::new(port, host, protocol),
   )
