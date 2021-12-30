@@ -1,4 +1,5 @@
 <p align="center">
+<img src="https://raw.githubusercontent.com/3distributed/3em/main/docs/logo.png" alt="3EM Logo" width="110" height="110">
 <h3 align="center">3EM</h3>
 
   <p align="center">
@@ -59,6 +60,11 @@ Please refer to the ["helpers"](https://github.com/3distributed/3em/tree/main/he
 
 - `three_em run`
   - Runs a contract deployed to Arweave given certain options.
+- `three_em dry-run`
+  - Runs a local contract which has not yet been deployed to Arweave.
+  - Only JS and WASM contracts are accepted during `dry-run`.
+
+-----------------------------
 
 ### run
 The following flags are available for `three_em run`:
@@ -99,5 +105,26 @@ The following flags are available for `three_em run`:
 three_em run --contract-id t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE
 ```
 
+----------------------
 
-
+### dry-run
+The following flags are available for `three_em dry-run`:
+- `--file`
+  - File path for dry run JSON input.
+  - Please refer to our dry run documentation [here](https://github.com/3distributed/3em/tree/main/docs/dry_run.md)
+- `--arweave-host` | `string`
+  - URL of gateway to be used during execution
+  - Default: arweave.net
+- `--arweave-port` | `number`
+  - Port of gateway to be used during execution
+  - Default: 443
+- `--arweave-protocol` | `string`
+  - Network protocol to be used during execution
+  - Default: https
+- `--pretty-print` | `boolean`
+  - Whether output should be printed in a prettified JSON form
+  - Default: false
+- `--show-validity` | `boolean`
+  - Whether output should contain the validity table of evaluated interactions
+  
+`dry-run` requires a JSON file containing the _dry-run_ structure, for more information about it please refer to [our dry run guide](https://github.com/3distributed/3em/tree/main/docs/dry_run.md).
