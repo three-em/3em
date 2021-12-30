@@ -28,31 +28,30 @@ For more information on how we solved the issues mentioned above, please refer t
 
 ## Benchmarks
 
-- [Bar chart benchmark](https://github.com/3distributed/3em/blob/main/data/benchmark_bar.png)
-- [Line chart benchmark](https://github.com/3distributed/3em/blob/main/data/benchmark_line.png)
+![Bar chart benchmark](./data/benchmark_bar.png)
+
+![Line chart benchmark](./data/benchmark_line.png)
 
 **Note**: Benchmarking is done using `hyperfine` with a max execution of 10 attempts. It measures contracts up to 105 interactions.
 
-## Multi-Language Support
+## Multi-language support
 
 3EM supports contracts written in:
-- JS
-- Web Assembly (Such as a Rust contracts compiled into WASM)
-- EVM Contracts (Any language that compiles to Ethereum Byte Code such as Solidity)
+- JavaScript
+- WebAssembly (Rust, AssemblyScript, etc.)
+- EVM bytecode (Solidity, Yul, etc)
 
-Please refer to our [test data](https://github.com/3distributed/3em/tree/main/testdata) for guidance.
+Please refer to the ["helpers"](https://github.com/3distributed/3em/tree/main/helpers) for details on writing contracts.
 
 ## Smartweave Compatability
 
-3EM aims to follow the SmartWeave standard ([See more](https://github.com/ArweaveTeam/SmartWeave/blob/master/CONTRACT-GUIDE.md)). This essentially means two things:
+3EM follows the SmartWeave [contract design](https://github.com/ArweaveTeam/SmartWeave/blob/master/CONTRACT-GUIDE.md). This essentially means two things:
 - Contracts need to be deployed to Arweave in order for 3EM to run them
-- All contracts follow the same logic SmartWeave uses & 3EM also exposes the SmartWeave APIs that are available during execution.
+- 3EM is capable of running existing Smartweave contracts and exposes backward compatible APIs (like the `SmartWeave` global)
 
 ## Determinism
 
-3EM isolates every non-deterministic behavior and makes it deterministic. This is done by a technique called "Seeding". For example, you are still allowed to use APIs like `Math.Random` and while it will give you a different value every time you call it, it will have a deterministic seed, you can read more about it in our technical guide.
-
-By making non-deterministic behaviors deterministic, 3EM ensures the same output across contracts, even if they are considered faulty.
+3EM execution is deterministic. Random operations have a constant seed and Non deterministic APIs are overriden with their deterministic version. You can read more about it in our technical guide.
 
 ## CLI
 
@@ -71,7 +70,7 @@ The following flags are available for `three_em run`:
   - Default: 443
 - `--arweave-protocol` | `string`
   - Network protocol to be used during execution
-  - Default: HTTPS
+  - Default: https
 - `--contract-id` | `string`
   - ID of contract to be evaluated
 - `--pretty-print` | `boolean`
