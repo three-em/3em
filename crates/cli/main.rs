@@ -22,7 +22,7 @@ static BANNER: &str = r#"
 ╚═════╝     ╚══════╝    ╚═╝     ╚═╝
 
 The Web3 Execution Machine
-Languages supported: Javascript, Rust, C++, C, C#.
+Languages supported: Javascript, Solidity, Rust, C++, C, AssemblyScript, Zig, Vyper.
 "#;
 
 #[tokio::main]
