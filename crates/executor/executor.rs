@@ -246,7 +246,9 @@ pub async fn raw_execute_contract<
 #[cfg(test)]
 mod tests {
   use crate::executor::{raw_execute_contract, ExecuteResult};
-  use crate::test_util::generate_fake_interaction;
+  use crate::test_util::{
+    generate_fake_interaction, generate_fake_loaded_contract_data,
+  };
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
   use indexmap::map::IndexMap;
@@ -496,36 +498,6 @@ mod tests {
       assert_eq!(value_state.is_some(), true);
 
       assert_eq!(value.get("v").unwrap(), 0.6666666666666667_f64);
-    }
-  }
-
-  pub fn generate_fake_loaded_contract_data(
-    contract_source: &[u8],
-    contract_type: ContractType,
-    init_state: String,
-  ) -> LoadedContract {
-    let contract_id = String::from("test");
-    LoadedContract {
-      id: contract_id,
-      contract_src_tx_id: String::new(),
-      contract_src: contract_source.to_vec(),
-      contract_type,
-      init_state,
-      min_fee: None,
-      contract_transaction: TransactionData {
-        format: 0,
-        id: String::new(),
-        last_tx: String::new(),
-        owner: String::new(),
-        tags: Vec::new(),
-        target: String::new(),
-        quantity: String::new(),
-        data: String::new(),
-        reward: String::new(),
-        signature: String::new(),
-        data_size: String::new(),
-        data_root: String::new(),
-      },
     }
   }
 }

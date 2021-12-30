@@ -1621,6 +1621,7 @@ dependencies = [
  "deno_core",
  "deno_crypto",
  "hex",
+ "indexmap",
  "local_ipaddress",
  "pico-args",
  "reqwest",
