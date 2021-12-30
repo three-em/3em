@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       release: # set to true to trigger a release
@@ -34,10 +35,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
-
-      - name: Get commit hash # For release notes
-        id: commit
-        run: echo "::set-output name=hash::$(git rev-parse --short HEAD)"
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
