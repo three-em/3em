@@ -92,6 +92,8 @@ jobs:
           tag: ${{ github.event.inputs.tag }}
           name: v${{ github.event.inputs.tag }}
           prerelease: contains(github.event.inputs.tag, "-")
+          discussionCategory: announcements
+          draft: true
           allowUpdates: true
           replacesArtifacts: true
           artifacts: 'artifacts/**/*.zip'
