@@ -49,6 +49,19 @@ pub struct TransactionData {
   pub data_root: String,
 }
 
+#[derive(Deserialize, Serialize, Default, Clone)]
+pub struct BlockInfo {
+  pub timestamp: u64,
+  pub diff: String,
+  pub indep_hash: String,
+  pub height: u64,
+}
+
+#[derive(Deserialize, Serialize, Default, Clone)]
+pub struct TransactionStatus {
+  pub block_indep_hash: String,
+}
+
 impl TransactionData {
   pub fn get_tag(&self, tag: &str) -> Result<String, AnyError> {
     // Encodes the tag instead of decoding the keys.
@@ -162,6 +175,28 @@ impl Arweave {
       .await
       .unwrap();
     request.bytes().await.unwrap().to_vec()
+  }
+
+  pub async fn get_transaction_block(
+    &self,
+    transaction_id: &str,
+  ) -> reqwest::Result<BlockInfo> {
+    let request = self
+      .client
+      .get(format!("{}/tx/{}/status", self.get_host(), transaction_id))
+      .send()
+      .await?;
+
+    let status = request.json::<TransactionStatus>().await?;
+    let block_hash = status.block_indep_hash;
+
+    let request = self
+      .client
+      .get(format!("{}/block/hash/{}", self.get_host(), block_hash))
+      .send()
+      .await?;
+
+    request.json::<BlockInfo>().await
   }
 
   pub async fn get_network_info(&self) -> NetworkInfo {

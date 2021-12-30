@@ -236,13 +236,45 @@ pub async fn raw_execute_contract<
       let mut result = vec![];
       for interaction in interactions {
         let tx = interaction.node;
+        let block_info =
+          shared_client.get_transaction_block(&tx.id).await.unwrap();
+
+        let block_info = three_em_evm::BlockInfo {
+          timestamp: three_em_evm::U256::from(block_info.timestamp),
+          difficulty: three_em_evm::U256::from_str_radix(&block_info.diff, 10)
+            .unwrap(),
+          block_hash: three_em_evm::U256::from(
+            block_info.indep_hash.as_bytes(),
+          ),
+          number: three_em_evm::U256::from(block_info.height),
+        };
+
         let input = get_input_from_interaction(&tx);
         let call_data = hex::decode(input).expect("Failed to decode input");
 
         let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
         machine.set_storage(account_store.clone());
 
-        match machine.execute(&bytecode) {
+        machine.set_fetcher(Box::new(|address: &three_em_evm::U256| {
+          let mut id = [0u8; 32];
+          address.to_big_endian(&mut id);
+          let id = String::from_utf8_lossy(&id).to_string();
+          let contract = deno_core::futures::executor::block_on(
+            shared_client.load_contract(id, None, None, cache),
+          )
+          .expect("evm call: Failed to load contract");
+
+          let bytecode = hex::decode(contract.contract_src.as_slice())
+            .expect("Failed to decode contract bytecode");
+          let store = hex::decode(contract.init_state.as_bytes())
+            .expect("Failed to decode account state");
+
+          let store = Storage::from_raw(&store);
+
+          Some(three_em_evm::ContractInfo { store, bytecode })
+        }));
+
+        match machine.execute(&bytecode, block_info) {
           ExecutionState::Abort(_) | ExecutionState::Revert => {
             validity.insert(tx.id, false);
           }

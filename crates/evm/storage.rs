@@ -14,6 +14,7 @@ pub struct Storage {
   pub inner: HashMap<U256, HashMap<U256, U256>>,
 }
 
+/// Storage is the EVM account cum storage implementation.
 impl Storage {
   pub fn new(owner: U256) -> Self {
     let mut inner = HashMap::new();
