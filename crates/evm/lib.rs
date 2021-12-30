@@ -239,13 +239,14 @@ impl Stack {
   }
 }
 
-pub struct Machine {
+pub struct Machine<'a> {
   pub stack: Stack,
   state: U256,
   memory: Vec<u8>,
   pub result: Vec<u8>,
   // The cost function.
   cost_fn: Box<dyn Fn(&Instruction) -> U256>,
+  fetch_contract: Box<dyn Fn(&U256) -> Option<ContractInfo> + 'a>,
   // Total gas used so far.
   // gas_used += cost_fn(instruction)
   gas_used: U256,
@@ -268,7 +269,7 @@ pub enum ExecutionState {
   Ok,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct BlockInfo {
   pub timestamp: U256,
   pub difficulty: U256,
@@ -276,7 +277,12 @@ pub struct BlockInfo {
   pub number: U256,
 }
 
-impl Machine {
+pub struct ContractInfo {
+  pub store: Storage,
+  pub bytecode: Vec<u8>,
+}
+
+impl<'a> Machine<'a> {
   pub fn new<T>(cost_fn: T) -> Self
   where
     T: Fn(&Instruction) -> U256 + 'static,
@@ -287,6 +293,7 @@ impl Machine {
       memory: Vec::new(),
       result: Vec::new(),
       cost_fn: Box::new(cost_fn),
+      fetch_contract: Box::new(|_| None),
       gas_used: U256::zero(),
       data: Vec::new(),
       storage: Storage::new(U256::zero()),
@@ -306,6 +313,7 @@ impl Machine {
       cost_fn: Box::new(cost_fn),
       gas_used: U256::zero(),
       data,
+      fetch_contract: Box::new(|_| None),
       storage: Storage::new(U256::zero()),
       owner: U256::zero(),
     }
@@ -313,6 +321,13 @@ impl Machine {
 
   pub fn set_storage(&mut self, storage: Storage) {
     self.storage = storage;
+  }
+
+  pub fn set_fetcher(
+    &mut self,
+    fetcher: Box<dyn Fn(&U256) -> Option<ContractInfo> + 'a>,
+  ) {
+    self.fetch_contract = fetcher;
   }
 
   pub fn execute(
@@ -910,25 +925,47 @@ impl Machine {
           // TODO
         }
         Instruction::Call => {
-          // 1. Call parameters
-          let gas = self.stack.pop();
+          // Call parameters
+          let _gas = self.stack.pop();
           let addr = self.stack.pop();
-          let value = self.stack.pop();
+          let _value = self.stack.pop();
           let in_offset = self.stack.pop().low_u64() as usize;
           let in_size = self.stack.pop().low_u64() as usize;
-          let out_offset = self.stack.pop();
-          let out_size = self.stack.pop();
+          let out_offset = self.stack.pop().low_u64() as usize;
+          let out_size = self.stack.pop().low_u64() as usize;
 
-          // 2. Extract input data from memory
-          let args = &bytecode[in_offset..in_offset + in_size];
+          let input = &bytecode[in_offset..in_offset + in_size];
 
-          // 3. Call
+          let mut evm = Self::new_with_data(|_| U256::zero(), input.to_vec());
+          let contract = (self.fetch_contract)(&addr)
+            .expect("No fetch contract handler provided.");
+          evm.set_storage(contract.store);
 
+          evm.execute(&contract.bytecode, block_info.clone());
+
+          self.memory[out_offset..out_offset + out_size]
+            .copy_from_slice(&evm.result);
         }
-        | Instruction::CallCode
-        | Instruction::DelegateCall => {
-          // TODO
-          unimplemented!();
+        Instruction::CallCode | Instruction::DelegateCall => {
+          // Call parameters
+          let _gas = self.stack.pop();
+          let addr = self.stack.pop();
+          let in_offset = self.stack.pop().low_u64() as usize;
+          let in_size = self.stack.pop().low_u64() as usize;
+          let out_offset = self.stack.pop().low_u64() as usize;
+          let out_size = self.stack.pop().low_u64() as usize;
+
+          let input = &bytecode[in_offset..in_offset + in_size];
+
+          let mut evm = Self::new_with_data(|_| U256::zero(), input.to_vec());
+          let contract = (self.fetch_contract)(&addr)
+            .expect("No fetch contract handler provided.");
+          evm.set_storage(contract.store);
+
+          evm.execute(&contract.bytecode, block_info.clone());
+
+          self.memory[out_offset..out_offset + out_size]
+            .copy_from_slice(&evm.result);
         }
         Instruction::Return => {
           let offset = self.stack.pop();

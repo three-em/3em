@@ -213,6 +213,25 @@ pub async fn raw_execute_contract<
         let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
         machine.set_storage(account_store.clone());
 
+        machine.set_fetcher(Box::new(|address: &three_em_evm::U256| {
+          let mut id = [0u8; 32];
+          address.to_big_endian(&mut id);
+          let id = String::from_utf8_lossy(&id).to_string();
+          let contract = deno_core::futures::executor::block_on(
+            shared_client.load_contract(id, None, None, cache),
+          )
+          .expect("evm call: Failed to load contract");
+
+          let bytecode = hex::decode(contract.contract_src.as_slice())
+            .expect("Failed to decode contract bytecode");
+          let store = hex::decode(contract.init_state.as_bytes())
+            .expect("Failed to decode account state");
+
+          let store = Storage::from_raw(&store);
+
+          Some(three_em_evm::ContractInfo { store, bytecode })
+        }));
+
         match machine.execute(&bytecode, block_info) {
           ExecutionState::Abort(_) | ExecutionState::Revert => {
             validity.insert(tx.id, false);
