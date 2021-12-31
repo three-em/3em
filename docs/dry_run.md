@@ -71,7 +71,7 @@ export interface DryRunFile {
 
 ## Test Example
 
-Please refer to [our dry run example](https://github.com/3distributed/3em/tree/main/testdata/contracts) to see the usage of the configuration file and the source code.
+Please refer to [our dry run example](https://github.com/3distributed/3em/tree/main/docs/dry_run) to see the usage of the configuration file and the source code.
 
 ## Creating a Dry-Run
 
