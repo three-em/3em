@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use deno_core::serde_json::Value;
 use three_em_arweave::arweave::{LoadedContract, TransactionData};
 use three_em_arweave::gql_result::{
