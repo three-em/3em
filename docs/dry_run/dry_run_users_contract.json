@@ -1,0 +1,41 @@
+{
+    "contractType": "JAVASCRIPT",
+    "contractSource": "dry_run_contract.js",
+    "initialState": {
+        "users": []
+    },
+    "interactions": [
+        {
+            "id": "tx1",
+            "caller": "ap-address",
+            "input": {
+                "function": "add",
+                "name": "Andres Pirela"
+            }
+        },
+        {
+            "id": "tx2",
+            "caller": "divy-address",
+            "input": {
+                "function": "add",
+                "name": "Divy"
+            }
+        },
+        {
+            "id": "tx3",
+            "caller": "tate-address",
+            "input": {
+                "function": "none",
+                "name": "Tate"
+            }
+        },
+        {
+            "id": "tx4",
+            "caller": "some-other-address",
+            "input": {
+                "function": "add",
+                "name": "Some Other"
+            }
+        }
+    ]
+}
