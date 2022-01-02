@@ -12,7 +12,7 @@ In collaboration with:
 
 3EM is capable of running JS, WASM, and EVM contracts. To make this possible, we use two technologies: 
 - V8 Engine ([See more](https://github.com/denoland/rusty_v8))
-- EVM byte code interpreter ([Included in our codebase](https://github.com/3distributed/3em/blob/main/crates/evm/lib.rs))
+- EVM byte code interpreter ([Included in our codebase](https://github.com/three-em/3em/blob/main/crates/evm/lib.rs))
 
 ## JS & WASM Context Isolation 
 
@@ -21,8 +21,6 @@ By using direct bindings with V8, we can accomplish a whole list of things:
 - No unsafe function is exposed
   - For example, someone running a contract which uses `require("fs")` inside SmartWeave through NodeJS
 - Fully deterministic by removing and seeding non-deterministic APIs such as `Math.Random`
-
-In a way, you can think of 3EM as some sort of Javascript & WASM runtime with a few small differences such as users are not able to make any system calls in contrast to any popular JS runtime which are meant to do this.  
 
 By isolating the aforementioned behaviors, 3EM becomes an extremely secure sandbox for smart contracts in the Arweave Ecosystem, but it also reduces a lot of execution overhead at a lower level since only what is needed is provided and executed.
 
@@ -35,7 +33,7 @@ In order to achieve this, we have mocked certain APIs such as [`WeakRef`](https:
 As mentioned before, 3EM is capable of interpreting EVM Byte Code used by the Ethereum Virtual Machine (EVM). This essentially means, you can write smart contracts using Solidity or other languages that compiled into EVM code inside the Arweave ecosystem. Though, running EVM contracts does not necessarily mean that they will be fully compatible with Arweave, more precisely, 3EM:
 - `CALL` opcode is not fully implemented and might give unexpected results
 - `CREATE` opcode is not implemented
-  - A follow-up discussion for `CREATE` is available [here](https://github.com/3distributed/3em/discussions/79). If this is vital for you, please expose your use case.
+  - A follow-up discussion for `CREATE` is available [here](https://github.com/three-em/3em/discussions/79). If this is vital for you, please expose your use case.
 
 ## Built-in Cache
 3EM integrates a built-in cache system for JS and WASM contracts. Essentially, this cache system speeds up the execution of contracts in a reliable way.

@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/3distributed/3em/main/docs/logo.png" alt="3EM Logo" width="110" height="110">
+<img src="https://raw.githubusercontent.com/three-em/3em/main/docs/logo.png" alt="3EM Logo" width="110" height="110">
 <h3 align="center">3EM</h3>
 
   <p align="center">
@@ -25,7 +25,7 @@ After receiving multiple feedback from different individuals and teams, we reali
 - Security
 - Multi-language support
 
-For more information on how we solved the issues mentioned above, please refer to our [technical guide](https://github.com/3distributed/3em/tree/main/docs/technical_guide.md).
+For more information on how we solved the issues mentioned above, please refer to our [technical guide](https://github.com/three-em/3em/tree/main/docs/technical_guide.md).
 
 ## Benchmarks
 
@@ -42,7 +42,7 @@ For more information on how we solved the issues mentioned above, please refer t
 - WebAssembly (Rust, AssemblyScript, etc.)
 - EVM bytecode (Solidity, Yul, etc)
 
-Please refer to the ["helpers"](https://github.com/3distributed/3em/tree/main/helpers) for details on writing contracts.
+Please refer to the ["helpers"](https://github.com/three-em/3em/tree/main/helpers) for details on writing contracts.
 
 ## Smartweave Compatability
 
@@ -111,7 +111,7 @@ three_em run --contract-id t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE
 The following flags are available for `three_em dry-run`:
 - `--file`
   - File path for dry run JSON input.
-  - Please refer to our dry run documentation [here](https://github.com/3distributed/3em/tree/main/docs/dry_run.md)
+  - Please refer to our dry run documentation [here](https://github.com/three-em/3em/tree/main/docs/dry_run.md)
 - `--arweave-host` | `string`
   - URL of gateway to be used during execution
   - Default: arweave.net
@@ -127,4 +127,4 @@ The following flags are available for `three_em dry-run`:
 - `--show-validity` | `boolean`
   - Whether output should contain the validity table of evaluated interactions
   
-`dry-run` requires a JSON file containing the _dry-run_ structure, for more information about it please refer to [our dry run guide](https://github.com/3distributed/3em/tree/main/docs/dry_run.md).
+`dry-run` requires a JSON file containing the _dry-run_ structure, for more information about it please refer to [our dry run guide](https://github.com/three-em/3em/tree/main/docs/dry_run.md).
