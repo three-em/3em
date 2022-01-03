@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/three-em/3em/main/docs/logo.png" alt="3EM Logo" width="110" height="110">
+<img src="https://3em.dev/logo.svg" alt="3EM Logo" width="110" height="110">
 <h3 align="center">3EM</h3>
 
   <p align="center">
