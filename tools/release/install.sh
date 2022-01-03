@@ -20,7 +20,7 @@ else
   zip_url="https://github.com/three-em/3em/releases/download/${1}/three_em-${target}.zip"
 fi
 
-install_dir="${3EM_INSTALL:-$HOME/.3em}"
+install_dir="${THREE_EM_INSTALL:-$HOME/.3em}"
 bin_dir="$install_dir/bin"
 exe="$bin_dir/three_em"
 
