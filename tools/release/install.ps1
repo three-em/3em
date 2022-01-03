@@ -56,4 +56,4 @@ if (!(";$Path;".ToLower() -like "*;$BinDir;*".ToLower())) {
 }
 
 Write-Output "3em was installed successfully to $3emExe"
-Write-Output "Run 'three_em --help' to get started"
+Write-Output "Head over to https://3em.dev to get started!"
