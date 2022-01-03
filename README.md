@@ -1,6 +1,6 @@
 <p align="center">
-<img src="https://3em.dev/logo.svg" alt="3EM Logo" width="110" height="110">
-<h3 align="center">3EM</h3>
+<img src="https://3em.dev/logo.svg" alt="3em Logo" width="110" height="110">
+<h3 align="center">3em</h3>
 
   <p align="center">
     A blazingly fast, secure, reliable, multi-language execution environment for smart contracts inside the <a href="https://arweave.org">Arweave</a> ecosystem.
@@ -11,14 +11,14 @@
 Special thanks to:
 <ul>
     <li>
-        <a href="https://verto.exchange">Verto Exchange</a> for incubating this project as well as all their members which have been key part of conceiving 3EM.
+        <a href="https://verto.exchange">Verto Exchange</a> for incubating this project as well as all their members which have been key part of conceiving 3em.
     </li>
 </ul>
 </p>
 
 ## Purpose
 
-3EM was conceived as an alternate solution to [SmartWeave](https://github.com/ArweaveTeam/SmartWeave) while still accomplishing the same goal: Simple & Scalable smart contracts on the Arweave protocol.
+3em was conceived as an alternate solution to [SmartWeave](https://github.com/ArweaveTeam/SmartWeave) while still accomplishing the same goal: Simple & Scalable smart contracts on the Arweave protocol.
 
 After receiving multiple feedback from different individuals and teams, we realize there were 3 main issues that needed to be solved:
 - Speed
@@ -37,7 +37,7 @@ For more information on how we solved the issues mentioned above, please refer t
 
 ## Multi-language support
 
-3EM supports contracts written in:
+3em supports contracts written in:
 - JavaScript
 - WebAssembly (Rust, AssemblyScript, etc.)
 - EVM bytecode (Solidity, Yul, etc)
@@ -46,13 +46,13 @@ Please refer to the ["helpers"](https://github.com/three-em/3em/tree/main/helper
 
 ## Smartweave Compatability
 
-3EM follows the SmartWeave [contract design](https://github.com/ArweaveTeam/SmartWeave/blob/master/CONTRACT-GUIDE.md). This essentially means two things:
+3em follows the SmartWeave [contract design](https://github.com/ArweaveTeam/SmartWeave/blob/master/CONTRACT-GUIDE.md). This essentially means two things:
 - Contracts need to be deployed to Arweave in order for 3EM to run them
-- 3EM is capable of running existing Smartweave contracts and exposes backward compatible APIs (like the `SmartWeave` global)
+- 3em is capable of running existing Smartweave contracts and exposes backward compatible APIs (like the `SmartWeave` global)
 
 ## Determinism
 
-3EM execution is deterministic. Random operations have a constant seed and Non deterministic APIs are overriden with their deterministic version. You can read more about it in our technical guide.
+3em execution is deterministic. Random operations have a constant seed and Non deterministic APIs are overriden with their deterministic version. You can read more about it in our technical guide.
 
 ## CLI
 
@@ -95,7 +95,7 @@ The following flags are available for `three_em run`:
 - `--height` | `number`
   - Maximum height to be used during evaluation
 - `--no-cache`
-  - Whether it should use 3EM's built-in cache system
+  - Whether it should use 3em's built-in cache system
 - `--show-errors`
   - Whether errors from failed interactions should be printed
 
