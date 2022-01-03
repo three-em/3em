@@ -42,7 +42,7 @@ else
   *) shell_profile=".bash_profile" ;;
   esac
   echo "Manually add the directory to your \$HOME/$shell_profile (or similar)"
-  echo "  export 3EM_INSTALL=\"$install_dir\""
-  echo "  export PATH=\"\$3EM_INSTALL/bin:\$PATH\""
+  echo "  export TEM_INSTALL=\"$install_dir\""
+  echo "  export PATH=\"\$TEM_INSTALL/bin:\$PATH\""
   echo "Head over to https://3em.dev to get started!"
 fi
