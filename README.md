@@ -27,6 +27,20 @@ After receiving multiple feedback from different individuals and teams, we reali
 
 For more information on how we solved the issues mentioned above, please refer to our [technical guide](https://github.com/three-em/3em/tree/main/docs/technical_guide.md).
 
+## Install
+
+**With Shell:**
+
+```sh
+curl -fsSL https://3em.dev/install.sh | sh
+```
+
+**With PowerShell:**
+
+```powershell
+iwr https://3em.dev/install.ps1 -useb | iex
+```
+
 ## Benchmarks
 
 ![Bar chart benchmark](./data/benchmark_bar.png)
