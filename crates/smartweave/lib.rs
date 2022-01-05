@@ -19,39 +19,6 @@ pub struct ArweaveInfo {
   protocol: String,
 }
 
-pub fn init(info: ContractInfo, arweave: (i32, String, String)) -> Extension {
-  Extension::builder()
-    .js(include_js_files!(
-      prefix "3em:smartweave",
-      "bignumber.js",
-      "smartweave.js",
-      "contract-assert.js",
-    ))
-    .ops(vec![
-      ("op_smartweave_init", op_sync(op_smartweave_init)),
-      (
-        "op_smartweave_wallet_balance",
-        op_async(op_smartweave_wallet_balance),
-      ),
-      (
-        "op_smartweave_wallet_last_tx",
-        op_async(op_smartweave_wallet_last_tx),
-      ),
-      ("op_smartweave_get_host", op_async(op_smartweave_get_host)),
-    ])
-    .state(move |state| {
-      state.put(info.clone());
-      let (port, host, protocol) = arweave.clone();
-      state.put(ArweaveInfo {
-        port,
-        host,
-        protocol,
-      });
-      Ok(())
-    })
-    .build()
-}
-
 #[derive(Serialize, Default, Clone)]
 pub struct ContractBlock {
   pub height: usize,
@@ -65,14 +32,35 @@ pub struct ContractInfo {
   pub block: ContractBlock,
 }
 
-pub fn op_smartweave_init(
-  state: &mut OpState,
-  _: (),
-  _: (),
-) -> Result<ContractInfo, AnyError> {
-  let contract = state.borrow::<ContractInfo>();
-
-  Ok(contract.to_owned())
+pub fn init(arweave: (i32, String, String)) -> Extension {
+  Extension::builder()
+    .js(include_js_files!(
+      prefix "3em:smartweave",
+      "bignumber.js",
+      "smartweave.js",
+      "contract-assert.js",
+    ))
+    .ops(vec![
+      (
+        "op_smartweave_wallet_balance",
+        op_async(op_smartweave_wallet_balance),
+      ),
+      (
+        "op_smartweave_wallet_last_tx",
+        op_async(op_smartweave_wallet_last_tx),
+      ),
+      ("op_smartweave_get_host", op_async(op_smartweave_get_host)),
+    ])
+    .state(move |state| {
+      let (port, host, protocol) = arweave.clone();
+      state.put(ArweaveInfo {
+        port,
+        host,
+        protocol,
+      });
+      Ok(())
+    })
+    .build()
 }
 
 pub async fn op_smartweave_wallet_balance(
