@@ -45,6 +45,12 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+pub enum CallResult {
+  // Contract wants to "evolve"
+  Evolve(String),
+  Result(v8::Global<v8::Value>),
+}
+
 pub struct Runtime {
   rt: JsRuntime,
   module: v8::Global<v8::Value>,
@@ -154,7 +160,7 @@ impl Runtime {
     &mut self,
     action: R,
     interaction_data: Option<Value>,
-  ) -> Result<Option<String>, AnyError>
+  ) -> Result<Option<CallResult>, AnyError>
   where
     R: Serialize + 'static,
   {
@@ -218,8 +224,10 @@ impl Runtime {
         .to_object(scope)
         .ok_or(Error::Terminated)?;
       let state_key = v8::String::new(scope, "state").unwrap().into();
+
       let state_obj = state.get(scope, state_key).unwrap();
-      self.contract_state = v8::Global::new(scope, state_obj);
+
+      
 
       if let Some(state) = state_obj.to_object(scope) {
         let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
@@ -227,7 +235,17 @@ impl Runtime {
         if can_evolve.boolean_value(scope) {
           let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
           let evolve = state.get(scope, evolve_key).unwrap();
-          return Ok(Some(evolve.to_rust_string_lossy(scope)));
+          return Ok(Some(CallResult::Evolve(
+            evolve.to_rust_string_lossy(scope),
+          )));
+        }
+
+        let result_key = v8::String::new(scope, "result").unwrap().into();
+        let result = state.get(scope, result_key).unwrap();
+        if !result.is_null_or_undefined() {
+          return Ok(Some(CallResult::Result(v8::Global::new(scope, result))));
+        } else {
+          self.contract_state = v8::Global::new(scope, state_obj);
         }
       }
     };

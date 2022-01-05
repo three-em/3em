@@ -13,6 +13,7 @@ use three_em_arweave::gql_result::{
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_js::Runtime;
+use three_em_js::CallResult;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
 
@@ -115,7 +116,7 @@ pub async fn raw_execute_contract<
           let valid = match rt.call(call_input, Some(interaction_context)).await
           {
             Ok(None) => true,
-            Ok(Some(evolve)) => {
+            Ok(Some(CallResult::Evolve(evolve))) => {
               let contract = shared_client
                 .load_contract(contract_id.clone(), Some(evolve), None, true)
                 .await
@@ -143,6 +144,7 @@ pub async fn raw_execute_contract<
 
               true
             }
+            Ok(Some(CallResult::Result(_))) => true,
             Err(err) => {
               if show_errors {
                 println!("{}", err);
