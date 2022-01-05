@@ -13,7 +13,6 @@ use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
-use three_em_smartweave::ContractInfo;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -63,7 +62,6 @@ impl Runtime {
   pub async fn new<T>(
     source: &str,
     init: T,
-    contract_info: ContractInfo,
     arweave: (i32, String, String),
   ) -> Result<Self, AnyError>
   where
@@ -96,7 +94,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(contract_info, arweave),
+        three_em_smartweave::init(arweave),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -242,14 +240,12 @@ mod test {
   use crate::HeapLimitState;
   use crate::Runtime;
   use deno_core::ZeroCopyBuf;
-  use three_em_smartweave::ContractInfo;
 
   #[tokio::test]
   async fn test_runtime() {
     let mut rt = Runtime::new(
       "export async function handle() { return { state: -69 } }",
       (),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -273,7 +269,6 @@ export async function handle(slice) {
 }
 "#,
       ZeroCopyBuf::from(buf),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -299,7 +294,6 @@ export async function handle() {
 }
 "#,
       (),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -325,7 +319,6 @@ export async function handle() {
   }
   "#,
       8,
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -357,7 +350,6 @@ export async function handle() {
   }
   "#,
       (),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -382,7 +374,6 @@ export async function handle() {
   }
   "#,
       (),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -402,7 +393,6 @@ export async function handle() {
   }
   "#,
   (),
-  ContractInfo::default(),
         (80, String::from("arweave.net"), String::from("https"))
       )
       .await
@@ -430,7 +420,6 @@ export async function handle() {
   return { state: { canEvolve: true, evolve: "xxdummy" } };
 }"#,
       (),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
@@ -449,7 +438,6 @@ export async function handle() {
 }
 "#,
       (),
-      ContractInfo::default(),
       (12345, String::from("arweave.net"), String::from("http")),
     )
     .await
