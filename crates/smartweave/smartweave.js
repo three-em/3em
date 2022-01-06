@@ -79,7 +79,7 @@
       return verifyWith32 || verifyWith0;
     }
 
-    async hash(data, algorithm) {
+    async hash(data, algorithm = "SHA-256") {
       let digest = await subtle.digest(algorithm, data);
       return new Uint8Array(digest);
     }
