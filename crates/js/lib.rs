@@ -237,11 +237,10 @@ impl Runtime {
       }
 
       let state_obj = state.get(scope, state_key).unwrap();
-
-      // Update the contract state.
-      self.contract_state = v8::Global::new(scope, state_obj);
-
       if let Some(state) = state_obj.to_object(scope) {
+        // Update the contract state.
+        self.contract_state = v8::Global::new(scope, state_obj);
+
         // Contract evolution.
         let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
         let can_evolve = state.get(scope, evolve_key).unwrap();
@@ -482,7 +481,6 @@ export async function handle() {
   return { result: "Hello, World!" };
 }"#,
       (),
-      ContractInfo::default(),
       (80, String::from("arweave.net"), String::from("https")),
     )
     .await
