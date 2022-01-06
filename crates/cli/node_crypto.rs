@@ -117,6 +117,7 @@ impl GeneratedPair {
   }
 }
 
+#[cfg(not(debug_assertions))]
 #[cfg(test)]
 mod tests {
   use crate::node_crypto::{

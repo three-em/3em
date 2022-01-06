@@ -1,6 +1,7 @@
 (function (window) {
   const { crypto } = window.__bootstrap.crypto;
   const { subtle } = crypto;
+  const { TextEncoder, TextDecoder } = window.__bootstrap.encoding;
 
   // Intentional copy.
   const BigNumber = window.BigNumber;
@@ -78,7 +79,7 @@
       return verifyWith32 || verifyWith0;
     }
 
-    async hash(data, algorithm) {
+    async hash(data, algorithm = "SHA-256") {
       let digest = await subtle.digest(algorithm, data);
       return new Uint8Array(digest);
     }

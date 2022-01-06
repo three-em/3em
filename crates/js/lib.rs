@@ -44,6 +44,14 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+// TODO(@littledivy): Maybe add a Null variant?
+#[derive(Debug, PartialEq)]
+pub enum CallResult {
+  // Contract wants to "evolve"
+  Evolve(String),
+  Result(v8::Global<v8::Value>),
+}
+
 pub struct Runtime {
   rt: JsRuntime,
   module: v8::Global<v8::Value>,
@@ -139,6 +147,10 @@ impl Runtime {
     self.state.borrow().clone()
   }
 
+  pub fn scope(&mut self) -> v8::HandleScope {
+    self.rt.handle_scope()
+  }
+
   pub fn get_contract_state<T>(&mut self) -> Result<T, AnyError>
   where
     T: DeserializeOwned + 'static,
@@ -152,7 +164,7 @@ impl Runtime {
     &mut self,
     action: R,
     interaction_data: Option<Value>,
-  ) -> Result<Option<String>, AnyError>
+  ) -> Result<Option<CallResult>, AnyError>
   where
     R: Serialize + 'static,
   {
@@ -216,16 +228,28 @@ impl Runtime {
         .to_object(scope)
         .ok_or(Error::Terminated)?;
       let state_key = v8::String::new(scope, "state").unwrap().into();
-      let state_obj = state.get(scope, state_key).unwrap();
-      self.contract_state = v8::Global::new(scope, state_obj);
 
+      // Return value.
+      let result_key = v8::String::new(scope, "result").unwrap().into();
+      let result = state.get(scope, result_key).unwrap();
+      if !result.is_null_or_undefined() {
+        return Ok(Some(CallResult::Result(v8::Global::new(scope, result))));
+      }
+
+      let state_obj = state.get(scope, state_key).unwrap();
       if let Some(state) = state_obj.to_object(scope) {
+        // Update the contract state.
+        self.contract_state = v8::Global::new(scope, state_obj);
+
+        // Contract evolution.
         let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
         let can_evolve = state.get(scope, evolve_key).unwrap();
         if can_evolve.boolean_value(scope) {
           let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
           let evolve = state.get(scope, evolve_key).unwrap();
-          return Ok(Some(evolve.to_rust_string_lossy(scope)));
+          return Ok(Some(CallResult::Evolve(
+            evolve.to_rust_string_lossy(scope),
+          )));
         }
       }
     };
@@ -236,6 +260,7 @@ impl Runtime {
 
 #[cfg(test)]
 mod test {
+  use crate::CallResult;
   use crate::Error;
   use crate::HeapLimitState;
   use crate::Runtime;
@@ -426,7 +451,7 @@ export async function handle() {
     .unwrap();
 
     let evolved = rt.call((), None).await.unwrap();
-    assert_eq!(evolved, Some("xxdummy".to_string()));
+    assert_eq!(evolved, Some(CallResult::Evolve("xxdummy".to_string())));
   }
 
   #[tokio::test]
@@ -446,5 +471,38 @@ export async function handle() {
     rt.call((), None).await.unwrap();
     let host = rt.get_contract_state::<String>().unwrap();
     assert_eq!(host, "http://arweave.net:12345");
+  }
+
+  #[tokio::test]
+  async fn test_contract_result() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return { result: "Hello, World!" };
+}"#,
+      (),
+      (80, String::from("arweave.net"), String::from("https")),
+    )
+    .await
+    .unwrap();
+
+    let result = rt
+      .call((), None)
+      .await
+      .unwrap()
+      .expect("Expected CallResult");
+
+    match result {
+      CallResult::Result(value) => {
+        let scope = &mut rt.scope();
+        let local = v8::Local::new(scope, value);
+        let value: String = deno_core::serde_v8::from_v8(scope, local).unwrap();
+        assert_eq!(value, "Hello, World!".to_string());
+      }
+      CallResult::Evolve(evolve) => panic!(
+        "Expected CallResult::Result, got CallResult::Evolve({})",
+        evolve
+      ),
+    }
   }
 }
