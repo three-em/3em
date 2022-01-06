@@ -42,15 +42,6 @@ pub async fn raw_execute_contract<
   shared_client: Arweave,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
-  let contract_info = ContractInfo {
-    transaction,
-    block: ContractBlock {
-      height: 0,
-      indep_hash: String::from(""),
-      timestamp: String::from(""),
-    },
-  };
-
   let cache = cache_state.is_some();
   let arweave_info = (
     shared_client.port.to_owned(),
@@ -71,7 +62,6 @@ pub async fn raw_execute_contract<
         let mut rt = Runtime::new(
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
-          contract_info,
           arweave_info.to_owned(),
         )
         .await
@@ -122,21 +112,10 @@ pub async fn raw_execute_contract<
                 .await
                 .unwrap();
 
-              let transaction = (&contract.contract_transaction).to_owned();
-              let contract_info = ContractInfo {
-                transaction,
-                block: ContractBlock {
-                  height: 0,
-                  indep_hash: String::from(""),
-                  timestamp: String::from(""),
-                },
-              };
-
               let state: Value = rt.get_contract_state().unwrap();
               rt = Runtime::new(
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
-                contract_info,
                 arweave_info.to_owned(),
               )
               .await
@@ -170,6 +149,15 @@ pub async fn raw_execute_contract<
       }
     }
     ContractType::WASM => {
+      let contract_info = ContractInfo {
+        transaction,
+        block: ContractBlock {
+          height: 0,
+          indep_hash: String::from(""),
+          timestamp: String::from(""),
+        },
+      };
+
       if needs_processing {
         let wasm = loaded_contract.contract_src.as_slice();
 
