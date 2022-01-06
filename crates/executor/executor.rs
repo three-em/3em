@@ -58,8 +58,10 @@ pub async fn raw_execute_contract<
           deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap()
         });
 
+        let contract_source = &(String::from_utf8(loaded_contract.contract_src).unwrap());
+
         let mut rt = Runtime::new(
-          &(String::from_utf8(loaded_contract.contract_src).unwrap()),
+          contract_source,
           state,
           arweave_info.to_owned(),
         )
@@ -102,7 +104,7 @@ pub async fn raw_execute_contract<
                     }
                   });
 
-          let valid = match rt.call(call_input, Some(interaction_context)).await
+          let valid = match rt.call(call_input.to_owned(), Some(interaction_context)).await
           {
             Ok(None) => true,
             Ok(Some(evolve)) => {

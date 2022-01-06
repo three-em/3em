@@ -13,6 +13,7 @@ use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
+use deno_core::v8::Local;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -216,10 +217,37 @@ impl Runtime {
         .to_object(scope)
         .ok_or(Error::Terminated)?;
       let state_key = v8::String::new(scope, "state").unwrap().into();
-      let state_obj = state.get(scope, state_key).unwrap();
-      self.contract_state = v8::Global::new(scope, state_obj);
+      let state_obj_maybe = state.get(scope, state_key);
+      let result_key = v8::String::new(scope, "result").unwrap().into();
+      let result_obj_maybe = state.get(scope, result_key);
 
-      if let Some(state) = state_obj.to_object(scope) {
+      let is_result_some = result_obj_maybe.is_some();
+      let is_state_some = state_obj_maybe.is_some();
+      let mut curr_state: Option<Local<deno_core::v8::Value>> = None;
+      if is_state_some || is_result_some {
+        let state_str = v8::String::new(scope, "state").unwrap().into();
+        if is_result_some {
+          let result = result_obj_maybe.unwrap();
+          let result_state = result.to_object(scope).ok_or(Error::Terminated)?;
+          let result_state_val = result_state.get(scope, state_str);
+          if let Some(state_val) = result_state_val {
+            curr_state = Some(state_val.to_owned());
+            self.contract_state = v8::Global::new(scope, state_val);
+          }
+        } else if is_state_some {
+          let state_some = state_obj_maybe.unwrap();
+          let state_result = state_some.to_object(scope).ok_or(Error::Terminated)?;
+          let state_val = state_result.get(scope, state_str);
+          if let Some(state_output) = state_val {
+            curr_state = Some(state_output.to_owned());
+            self.contract_state = v8::Global::new(scope, state_output);
+          }
+        }
+      }
+
+      // self.contract_state = v8::Global::new(scope, state_obj);
+
+      if let Some(state) = curr_state.unwrap().to_object(scope) {
         let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
         let can_evolve = state.get(scope, evolve_key).unwrap();
         if can_evolve.boolean_value(scope) {
