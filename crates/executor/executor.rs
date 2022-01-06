@@ -12,8 +12,8 @@ use three_em_arweave::gql_result::{
 };
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
-use three_em_js::Runtime;
 use three_em_js::CallResult;
+use three_em_js::Runtime;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
 
