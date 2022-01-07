@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chartjs-node-canvas": "^4.1.5",
-    "redstone-smartweave": "^0.4.11"
+    "chart.js": "^3.7.0",
+    "chartjs-node-canvas": "^4.1.5"
   }
 }

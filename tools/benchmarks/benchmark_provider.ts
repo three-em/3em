@@ -39,9 +39,6 @@ export const benchmark3em = async (
         case Providers.SMARTWEAVE:
           executor = SMARTWEAVE_JS_CMD;
           break;
-        case Providers.REDSTONE:
-          executor = REDSTONE_JS_CMD;
-          break;
       }
       params = executor(benchmarkRuns, config.file);
       break;

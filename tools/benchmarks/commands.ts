@@ -55,13 +55,3 @@ export const SMARTWEAVE_JS_CMD = (runs: number, filePath: string) => {
   );
 };
 
-export const REDSTONE_JS_CMD = (runs: number, filePath: string) => {
-  return buildCommand(
-    [
-      "node",
-      "tools/benchmarks/redstone/index.js",
-    ],
-    runs,
-    filePath,
-  );
-};
