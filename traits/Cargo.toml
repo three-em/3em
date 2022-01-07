@@ -1,0 +1,13 @@
+[package]
+name = "three_em_traits"
+version = "0.1.0"
+authors = ["Divy Srivastava <dj.srivastava23@gmail.com>", "andreespirela <andreespirela@outlook.com>"]
+edition = "2021"
+resolver = "2"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1.52"

@@ -9,6 +9,8 @@ members = [
   "./crates/smartweave",
   "./crates/wasm",
   "./tools/benchmarks/3em",
+  "./v8",
+  "./traits",
 ]
 resolver = "2"
 

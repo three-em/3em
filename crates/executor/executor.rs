@@ -2,14 +2,10 @@ use crate::{get_input_from_interaction, nop_cost_fn};
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use indexmap::map::IndexMap;
-use std::collections::HashMap;
-use std::env;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::ARWEAVE_CACHE;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
-use three_em_arweave::gql_result::{
-  GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
-};
+use three_em_arweave::gql_result::{GQLAmountInterface, GQLEdgeInterface};
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_js::CallResult;

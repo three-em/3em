@@ -3,9 +3,6 @@ use indexmap::map::IndexMap;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
-use std::error::Error;
-use std::fs::File;
-use std::io::{BufReader, Write};
 use std::path::Path;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::gql_result::{
