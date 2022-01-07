@@ -27,12 +27,6 @@ export const runBenchmarks = async () => {
       file: "./smartweave-js-benchmark.json",
       provider: Providers.SMARTWEAVE,
     }),
-    redstoneJs: await benchmark3em({
-      type: ContractTypes.JS,
-      runs: 10,
-      file: "./redstone-js-benchmark.json",
-      provider: Providers.REDSTONE,
-    }),
   };
 
   return benchmarksRuns;

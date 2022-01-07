@@ -39,14 +39,6 @@ const canvasRenderService = new ChartJSNodeCanvas({ width, height, backgroundCol
                     tension: 0.1
                 },
                 {
-                    label: 'Redstone',
-                    data: mapBenchmarks.map(item => ((item.redstoneJs || {}).mean || 0)),
-                    fill: false,
-                    borderColor: 'rgb(215,10,10)',
-                    backgroundColor: 'rgb(215,10,10)',
-                    tension: 0.1
-                },
-                {
                     label: 'Smartweave',
                     data: mapBenchmarks.map(item => ((item.smartweaveJs || {}).mean || 0)),
                     fill: false,
