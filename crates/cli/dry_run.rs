@@ -16,6 +16,8 @@ use three_em_executor::executor::{raw_execute_contract, ExecuteResult};
 use three_em_executor::test_util::{
   generate_fake_interaction, generate_fake_loaded_contract_data,
 };
+use three_em_arweave::cache::CacheExt;
+use three_em_arweave::cache::ArweaveCache;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -120,7 +122,7 @@ pub async fn dry_run_result(
     true,
     true,
     |_, _| panic!("Unimplemented"),
-    Arweave::new(port, host, protocol),
+    Arweave::new(port, host, protocol, ArweaveCache::new()),
   )
   .await;
   execution

@@ -1,8 +1,10 @@
 use deno_core::error::AnyError;
 use std::io::Write;
 use three_em_arweave::arweave::Arweave;
+use three_em_arweave::cache::ArweaveCache;
 use three_em_executor::execute_contract;
 use three_em_executor::executor::ExecuteResult;
+use three_em_arweave::cache::CacheExt;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn run(
@@ -20,7 +22,7 @@ pub async fn run(
   no_cache: bool,
   show_errors: bool,
 ) -> Result<(), AnyError> {
-  let arweave = Arweave::new(port, host, protocol);
+  let arweave = Arweave::new(port, host, protocol, ArweaveCache::new());
   let start = std::time::Instant::now();
 
   let execution =

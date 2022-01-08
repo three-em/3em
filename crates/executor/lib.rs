@@ -10,7 +10,7 @@ use std::cmp::Ordering;
 use std::ffi::CString;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
-use three_em_arweave::arweave::ARWEAVE_CACHE;
+use three_em_arweave::arweave::get_cache;
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
@@ -74,7 +74,7 @@ pub async fn execute_contract(
 
   if cache {
     let get_cached_state =
-      ARWEAVE_CACHE.find_state(contract_id_copy.to_owned()).await;
+      get_cache().lock().unwrap().find_state(contract_id_copy.to_owned());
 
     if let Some(cached_state) = get_cached_state {
       cache_state = Some(cached_state.state);

@@ -9,6 +9,10 @@ name = "bench"
 path = "main.rs"
 
 [[bin]]
+name = "bench_lru"
+path = "js_mem.rs"
+
+[[bin]]
 name = "bench_wasm"
 path = "wasm.rs"
 
