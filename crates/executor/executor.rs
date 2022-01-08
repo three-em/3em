@@ -21,6 +21,7 @@ use three_em_arweave::cache::StateResult;
 pub type ValidityTable = IndexMap<String, bool>;
 pub type CachedState = Option<Value>;
 
+#[derive(Clone)]
 pub enum ExecuteResult {
   V8(Value, ValidityTable),
   Evm(Storage, Vec<u8>, ValidityTable),
@@ -40,7 +41,7 @@ pub async fn raw_execute_contract<
   needs_processing: bool,
   show_errors: bool,
   on_cached: CachedCallBack,
-  shared_client: Arweave,
+  shared_client: &Arweave,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
   let cache = cache_state.is_some();

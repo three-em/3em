@@ -1702,6 +1702,8 @@ dependencies = [
  "hex",
  "indexmap",
  "libc",
+ "lru",
+ "once_cell",
  "reqwest",
  "serde",
  "sha2",

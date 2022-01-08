@@ -233,19 +233,22 @@ impl Arweave {
       None => self.get_network_info().await.height,
     };
 
-    let variables = self
-      .get_default_gql_variables(contract_id.to_owned(), height_result)
-      .await;
-
     if cache {
       if let Some(cache_interactions) = get_cache().lock().unwrap()
         .find_interactions(contract_id.to_owned())
       {
         if !cache_interactions.is_empty() {
+          if height.is_some() {
+            return Ok((cache_interactions, 0, false));
+          }
           interactions = Some(cache_interactions);
         }
       }
     }
+
+    let variables = self
+      .get_default_gql_variables(contract_id.to_owned(), height_result)
+      .await;
 
     let mut final_result: Vec<GQLEdgeInterface> = Vec::new();
     let mut new_transactions = false;

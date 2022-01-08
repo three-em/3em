@@ -9,7 +9,7 @@ async fn main() {
     Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new());
 
   execute_contract(
-    arweave,
+    &arweave,
     "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE".to_string(),
     None,
     None,
