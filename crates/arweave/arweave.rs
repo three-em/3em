@@ -9,10 +9,14 @@ use crate::utils::decode_base_64;
 use deno_core::error::AnyError;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
-use lazy_static::lazy_static;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
+use crate::cache::CacheExt;
+use once_cell::sync::OnceCell;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::fmt::Debug;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
@@ -136,12 +140,16 @@ enum State {
 
 pub static MAX_REQUEST: usize = 100;
 
-lazy_static! {
-  pub static ref ARWEAVE_CACHE: ArweaveCache = ArweaveCache::new();
+static ARWEAVE_CACHE: OnceCell<Arc<Mutex<dyn CacheExt + Send + Sync>>> = OnceCell::new();
+
+pub fn get_cache() -> &'static Arc<Mutex<dyn CacheExt + Send + Sync>> {
+  ARWEAVE_CACHE.get().expect("cache is not initialized")
 }
 
 impl Arweave {
-  pub fn new(port: i32, host: String, protocol: String) -> Arweave {
+  pub fn new<T>(port: i32, host: String, protocol: String, cache: T) -> Arweave where T: CacheExt + Send + Sync + Debug + 'static {
+    ARWEAVE_CACHE.set(Arc::new(Mutex::new(cache))).unwrap();
+
     Arweave {
       port,
       host,
@@ -225,20 +233,22 @@ impl Arweave {
       None => self.get_network_info().await.height,
     };
 
-    let variables = self
-      .get_default_gql_variables(contract_id.to_owned(), height_result)
-      .await;
-
     if cache {
-      if let Some(cache_interactions) = ARWEAVE_CACHE
+      if let Some(cache_interactions) = get_cache().lock().unwrap()
         .find_interactions(contract_id.to_owned())
-        .await
       {
         if !cache_interactions.is_empty() {
+          if height.is_some() {
+            return Ok((cache_interactions, 0, false));
+          }
           interactions = Some(cache_interactions);
         }
       }
     }
+
+    let variables = self
+      .get_default_gql_variables(contract_id.to_owned(), height_result)
+      .await;
 
     let mut final_result: Vec<GQLEdgeInterface> = Vec::new();
     let mut new_transactions = false;
@@ -321,9 +331,8 @@ impl Arweave {
         .collect();
 
       if cache {
-        ARWEAVE_CACHE
-          .cache_interactions(contract_id, &filtered)
-          .await;
+        get_cache().lock().unwrap()
+          .cache_interactions(contract_id, &filtered);
       }
 
       to_return = filtered;
@@ -406,7 +415,7 @@ impl Arweave {
     let mut result: Option<LoadedContract> = None;
 
     if cache {
-      result = ARWEAVE_CACHE.find_contract(contract_id.to_owned()).await;
+      result = get_cache().lock().unwrap().find_contract(contract_id.to_owned());
     }
 
     if result.is_some() {
@@ -464,7 +473,7 @@ impl Arweave {
       };
 
       if cache {
-        ARWEAVE_CACHE.cache_contract(&final_result).await;
+        get_cache().lock().unwrap().cache_contract(&final_result);
       }
 
       Ok(final_result)

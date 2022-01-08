@@ -5,7 +5,7 @@ use indexmap::map::IndexMap;
 use std::collections::HashMap;
 use std::env;
 use three_em_arweave::arweave::LoadedContract;
-use three_em_arweave::arweave::ARWEAVE_CACHE;
+use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
 use three_em_arweave::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
@@ -16,10 +16,12 @@ use three_em_js::CallResult;
 use three_em_js::Runtime;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
+use three_em_arweave::cache::StateResult;
 
 pub type ValidityTable = IndexMap<String, bool>;
 pub type CachedState = Option<Value>;
 
+#[derive(Clone)]
 pub enum ExecuteResult {
   V8(Value, ValidityTable),
   Evm(Storage, Vec<u8>, ValidityTable),
@@ -39,7 +41,7 @@ pub async fn raw_execute_contract<
   needs_processing: bool,
   show_errors: bool,
   on_cached: CachedCallBack,
-  shared_client: Arweave,
+  shared_client: &Arweave,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
   let cache = cache_state.is_some();
@@ -138,9 +140,11 @@ pub async fn raw_execute_contract<
         let state_val: Value = rt.get_contract_state().unwrap();
 
         if cache {
-          ARWEAVE_CACHE
-            .cache_states(contract_id, &state_val, &validity)
-            .await;
+          get_cache().lock().unwrap()
+            .cache_states(contract_id,StateResult {
+              state: state_val.clone(),
+              validity: validity.clone(),
+            });
         }
 
         ExecuteResult::V8(state_val, validity)
@@ -205,9 +209,11 @@ pub async fn raw_execute_contract<
         let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
         if cache {
-          ARWEAVE_CACHE
-            .cache_states(contract_id, &state, &validity)
-            .await;
+          get_cache().lock().unwrap()
+            .cache_states(contract_id, StateResult {
+              state: state.clone(),
+              validity: validity.clone(),
+            });
         }
 
         ExecuteResult::V8(state, validity)
@@ -343,7 +349,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
+      Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new()),
     )
     .await;
 
@@ -427,7 +433,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
+      Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new()),
     )
     .await;
 
@@ -522,7 +528,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string(), String::from("https")),
+      Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new()),
     )
     .await;
 
