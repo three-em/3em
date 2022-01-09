@@ -3,15 +3,20 @@ use crate::gql_result::GQLEdgeInterface;
 use deno_core::serde_json::Value;
 use indexmap::map::IndexMap;
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use std::fs::{create_dir_all, remove_file, File};
 use std::io::BufReader;
 use std::path::PathBuf;
-use std::fmt::Debug;
 
 pub trait CacheExt: Debug {
-  fn new() -> Self where Self: Sized;
+  fn new() -> Self
+  where
+    Self: Sized;
   fn find_contract(&mut self, contract_id: String) -> Option<LoadedContract>;
-  fn find_interactions(&mut self, contract_id: String) -> Option<Vec<GQLEdgeInterface>>;
+  fn find_interactions(
+    &mut self,
+    contract_id: String,
+  ) -> Option<Vec<GQLEdgeInterface>>;
   fn find_state(&mut self, contract_id: String) -> Option<StateResult>;
   fn cache_contract(&mut self, loaded_contract: &LoadedContract);
   fn cache_interactions(
@@ -19,11 +24,7 @@ pub trait CacheExt: Debug {
     contract_id: String,
     interactions: &[GQLEdgeInterface],
   );
-  fn cache_states(
-    &mut self,
-    contract_id: String,
-    state: StateResult,
-  );
+  fn cache_states(&mut self, contract_id: String, state: StateResult);
 }
 
 #[derive(Debug)]
@@ -66,10 +67,7 @@ impl CacheExt for ArweaveCache {
     }
   }
 
-  fn find_contract(
-    &mut self,
-    contract_id: String,
-  ) -> Option<LoadedContract> {
+  fn find_contract(&mut self, contract_id: String) -> Option<LoadedContract> {
     let cache_file = self.get_cache_file(contract_id);
 
     let file = File::open(cache_file);
@@ -142,11 +140,7 @@ impl CacheExt for ArweaveCache {
     .unwrap();
   }
 
-  fn cache_states(
-    &mut self,
-    contract_id: String,
-    state: StateResult,
-  ) {
+  fn cache_states(&mut self, contract_id: String, state: StateResult) {
     let cache_file = self.get_cache_state_file(contract_id);
     deno_core::serde_json::to_writer(
       &File::create(cache_file).unwrap(),
@@ -154,7 +148,6 @@ impl CacheExt for ArweaveCache {
     )
     .unwrap();
   }
-
 }
 
 impl ArweaveCache {

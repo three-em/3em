@@ -5,6 +5,10 @@ authors = ["andresspirela <abdresspirela@outlook.com>", "Divy Srivastava <dj.sri
 edition = "2021"
 
 [[bin]]
+name = "bench_fh"
+path = "main_fh.rs"
+
+[[bin]]
 name = "bench"
 path = "main.rs"
 

@@ -17,8 +17,8 @@ performance = [b["times"] for b in results]
 
 fig, ax = plt.subplots()
 
-three_em_times = performance[0]
-ypoints_0 = np.array(three_em_times)
+three_em_fh_times = performance[0]
+ypoints_0 = np.array(three_em_fh_times)
 ax.plot(ypoints_0, color = 'b', label='3em JS')
 ax.legend()
 
@@ -34,7 +34,12 @@ ax.legend()
 
 smartweave_times = performance[3]
 ypoints_3 = np.array(smartweave_times)
-ax.plot(ypoints_3, color = 'r', label='Smartweave JS')
+ax.plot(ypoints_3, color = 'orange', label='Smartweave JS')
+ax.legend()
+
+three_em_times = performance[4]
+ypoints_4 = np.array(three_em_times)
+ax.plot(ypoints_4, color = 'black', label='3em JS (fh)')
 ax.legend()
 
 ax.set_xlabel('iterations')

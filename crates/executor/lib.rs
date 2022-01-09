@@ -6,21 +6,22 @@ use crate::executor::ExecuteResult;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
 use indexmap::map::IndexMap;
+use lru::LruCache;
+use once_cell::sync::Lazy;
 use std::cmp::Ordering;
 use std::ffi::CString;
+use std::sync::Mutex;
+use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
-use three_em_arweave::arweave::get_cache;
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_evm::Instruction;
 use three_em_evm::U256;
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
-use lru::LruCache;
 
-static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> = Lazy::new(|| Mutex::new(LruCache::unbounded()));
+static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
+  Lazy::new(|| Mutex::new(LruCache::unbounded()));
 
 pub async fn execute_contract(
   arweave: &Arweave,
@@ -38,7 +39,8 @@ pub async fn execute_contract(
   let contract_id_copy = contract_id.to_owned();
   let contract_id_copy2 = contract_id.to_owned();
   let shared_id = contract_id.clone();
-  let (loaded_contract, interactions) = tokio::join!(async move {
+  let (loaded_contract, interactions) = tokio::join!(
+    async move {
       let contract: Result<LoadedContract, AnyError> = arweave
         .load_contract(shared_id, contract_src_tx, contract_content_type, cache)
         .await;
@@ -80,8 +82,10 @@ pub async fn execute_contract(
   let mut cache_state: Option<Value> = None;
 
   if cache {
-    let get_cached_state =
-      get_cache().lock().unwrap().find_state(contract_id_copy.to_owned());
+    let get_cached_state = get_cache()
+      .lock()
+      .unwrap()
+      .find_state(contract_id_copy.to_owned());
 
     if let Some(cached_state) = get_cached_state {
       cache_state = Some(cached_state.state);
@@ -95,7 +99,7 @@ pub async fn execute_contract(
   if cache && is_cache_state_present && are_there_new_interactions {
     interactions = (&interactions[new_interaction_index..]).to_vec();
   }
-  
+
   let result = raw_execute_contract(
     contract_id_copy.to_owned(),
     loaded_contract,
@@ -110,7 +114,7 @@ pub async fn execute_contract(
     arweave,
   )
   .await;
-  
+
   LRU_CACHE.lock().unwrap().put(contract_id, result.clone());
 
   Ok(result)

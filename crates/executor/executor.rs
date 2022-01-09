@@ -4,9 +4,10 @@ use deno_core::serde_json::Value;
 use indexmap::map::IndexMap;
 use std::collections::HashMap;
 use std::env;
-use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::get_cache;
+use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
+use three_em_arweave::cache::StateResult;
 use three_em_arweave::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
 };
@@ -16,7 +17,6 @@ use three_em_js::CallResult;
 use three_em_js::Runtime;
 use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
-use three_em_arweave::cache::StateResult;
 
 pub type ValidityTable = IndexMap<String, bool>;
 pub type CachedState = Option<Value>;
@@ -140,11 +140,13 @@ pub async fn raw_execute_contract<
         let state_val: Value = rt.get_contract_state().unwrap();
 
         if cache {
-          get_cache().lock().unwrap()
-            .cache_states(contract_id,StateResult {
+          get_cache().lock().unwrap().cache_states(
+            contract_id,
+            StateResult {
               state: state_val.clone(),
               validity: validity.clone(),
-            });
+            },
+          );
         }
 
         ExecuteResult::V8(state_val, validity)
@@ -209,11 +211,13 @@ pub async fn raw_execute_contract<
         let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
         if cache {
-          get_cache().lock().unwrap()
-            .cache_states(contract_id, StateResult {
+          get_cache().lock().unwrap().cache_states(
+            contract_id,
+            StateResult {
               state: state.clone(),
               validity: validity.clone(),
-            });
+            },
+          );
         }
 
         ExecuteResult::V8(state, validity)
@@ -349,7 +353,12 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new()),
+      Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
     )
     .await;
 
@@ -433,7 +442,12 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new()),
+      Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
     )
     .await;
 
@@ -528,7 +542,12 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(443, "arweave.net".to_string(), String::from("https"), ArweaveCache::new()),
+      Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
     )
     .await;
 

@@ -13,7 +13,7 @@ args = parser.parse_args()
 plt.rcdefaults()
 fig, ax = plt.subplots()
 
-entities = ('3em JS', '3em EVM', '3em WASM', 'Smartweave JS')
+entities = ('3em JS', '3em EVM', '3em WASM', 'Smartweave JS', '3em JS (fh)')
 y_pos = np.arange(len(entities))
 
 with open(args.file) as f:
