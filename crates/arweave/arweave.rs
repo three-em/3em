@@ -1,4 +1,5 @@
 use crate::cache::ArweaveCache;
+use crate::cache::CacheExt;
 use crate::gql_result::GQLNodeParent;
 use crate::gql_result::GQLResultInterface;
 use crate::gql_result::GQLTransactionsResultInterface;
@@ -9,14 +10,13 @@ use crate::utils::decode_base_64;
 use deno_core::error::AnyError;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
+use once_cell::sync::OnceCell;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
-use crate::cache::CacheExt;
-use once_cell::sync::OnceCell;
+use std::fmt::Debug;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::fmt::Debug;
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
@@ -140,14 +140,18 @@ enum State {
 
 pub static MAX_REQUEST: usize = 100;
 
-static ARWEAVE_CACHE: OnceCell<Arc<Mutex<dyn CacheExt + Send + Sync>>> = OnceCell::new();
+static ARWEAVE_CACHE: OnceCell<Arc<Mutex<dyn CacheExt + Send + Sync>>> =
+  OnceCell::new();
 
 pub fn get_cache() -> &'static Arc<Mutex<dyn CacheExt + Send + Sync>> {
   ARWEAVE_CACHE.get().expect("cache is not initialized")
 }
 
 impl Arweave {
-  pub fn new<T>(port: i32, host: String, protocol: String, cache: T) -> Arweave where T: CacheExt + Send + Sync + Debug + 'static {
+  pub fn new<T>(port: i32, host: String, protocol: String, cache: T) -> Arweave
+  where
+    T: CacheExt + Send + Sync + Debug + 'static,
+  {
     ARWEAVE_CACHE.set(Arc::new(Mutex::new(cache))).unwrap();
 
     Arweave {
@@ -234,7 +238,9 @@ impl Arweave {
     };
 
     if cache {
-      if let Some(cache_interactions) = get_cache().lock().unwrap()
+      if let Some(cache_interactions) = get_cache()
+        .lock()
+        .unwrap()
         .find_interactions(contract_id.to_owned())
       {
         if !cache_interactions.is_empty() {
@@ -331,7 +337,9 @@ impl Arweave {
         .collect();
 
       if cache {
-        get_cache().lock().unwrap()
+        get_cache()
+          .lock()
+          .unwrap()
           .cache_interactions(contract_id, &filtered);
       }
 
@@ -415,7 +423,10 @@ impl Arweave {
     let mut result: Option<LoadedContract> = None;
 
     if cache {
-      result = get_cache().lock().unwrap().find_contract(contract_id.to_owned());
+      result = get_cache()
+        .lock()
+        .unwrap()
+        .find_contract(contract_id.to_owned());
     }
 
     if result.is_some() {

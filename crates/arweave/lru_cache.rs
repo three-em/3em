@@ -1,6 +1,6 @@
 use crate::arweave::LoadedContract;
-use crate::cache::StateResult;
 use crate::cache::CacheExt;
+use crate::cache::StateResult;
 use crate::gql_result::GQLEdgeInterface;
 use lru::LruCache;
 
@@ -20,10 +20,7 @@ impl CacheExt for ArweaveLruCache {
     }
   }
 
-  fn find_contract(
-    &mut self,
-    contract_id: String,
-  ) -> Option<LoadedContract> {
+  fn find_contract(&mut self, contract_id: String) -> Option<LoadedContract> {
     self.contracts.get_mut(&contract_id).cloned()
   }
 
@@ -52,11 +49,7 @@ impl CacheExt for ArweaveLruCache {
     self.interactions.put(contract_id, interactions.to_vec());
   }
 
-  fn cache_states(
-    &mut self,
-    contract_id: String,
-    state: StateResult,
-  ) {
+  fn cache_states(&mut self, contract_id: String, state: StateResult) {
     self.states.put(contract_id, state);
   }
 }
