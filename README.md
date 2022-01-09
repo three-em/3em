@@ -43,11 +43,46 @@ iwr https://3em.dev/install.ps1 -useb | iex
 
 ## Benchmarks
 
-![Bar chart benchmark](./data/benchmark_bar.png)
+> Note about `redstone-smartweave` benchmarks.
+>
+> The benchmarks shown earlier were wrong and we decided to remove them.
+> `redstone-smartweave` might soon switch to their own gateways making comparsion irrelevant. 
+>
+> You can find a fair overview of 3em & `redstone-smartweave` 0.4.12 [here](https://github.com/littledivy/3em_redstone_benchmarks)
 
-![Line chart benchmark](./data/benchmark_line.png)
 
-**Note**: Benchmarking is done using `hyperfine` with a max execution of 10 attempts. It measures contracts up to 105 interactions.
+## CLI benchmarks
+
+Measures:
+* Startup time
+* Filesystem cache
+* Execution performance
+* Interaction loading
+
+```bash
+$ hyperfine 'target/release/bench' 'target/release/bench_evm' 'target/release/bench_wasm' 'node tools/benchmarks/smartweave/index.js' -r 20 --export-json bench.json
+```
+
+![](bench.png)
+
+![](bench2.png)
+
+yes, `3em JS` is barely 0.05ms ;)
+
+```
+Summary
+  'target/release/bench' ran
+   57.24 ± 16.10 times faster than 'target/release/bench_wasm'
+   66.18 ± 13.17 times faster than 'target/release/bench_evm'
+  248.87 ± 49.64 times faster than 'node tools/benchmarks/smartweave/index.js'
+```
+
+* The JavaScript contract used in `3em JS` and `SmartWeave JS` is `t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE` at a **fixed** block height of `749180`.
+* The WebAssembly contract source used in `3em WASM` can be found [here](testdata/01_wasm/01_wasm.rs). The block height is  **not** fixed.
+* The EVM contract source used in `3em EVM` can be found [here](testdata/evm/state1.sol). The block height is **not** fixed.
+* There are functional differences between evm and wasm contracts and the number of interactions (except the JavaScript contract).
+* The gateway used is `arweave.net`
+* Host information can be found [here](https://github.com/littledivy/3em_redstone_benchmarks/blob/main/system_info.txt)
 
 ## Multi-language support
 
