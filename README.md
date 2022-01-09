@@ -78,10 +78,11 @@ $ hyperfine 'target/release/bench' 'target/release/bench_evm' 'target/release/be
 
 ```
 Summary
-  'target/release/bench' ran
-   57.24 ± 16.10 times faster than 'target/release/bench_wasm'
-   66.18 ± 13.17 times faster than 'target/release/bench_evm'
-  248.87 ± 49.64 times faster than 'node tools/benchmarks/smartweave/index.js'
+  'target/release/bench_fh' ran
+   15.57 ± 6.84 times faster than 'target/release/bench_wasm'
+   16.37 ± 7.72 times faster than 'target/release/bench'
+   19.47 ± 9.36 times faster than 'target/release/bench_evm'
+   67.79 ± 29.33 times faster than 'node tools/benchmarks/smartweave/index.js'
 ```
 
 - The JavaScript contract used in `3em JS` and `SmartWeave JS` is
