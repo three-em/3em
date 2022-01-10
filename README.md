@@ -48,17 +48,6 @@ curl -fsSL https://3em.dev/install.sh | sh
 iwr https://3em.dev/install.ps1 -useb | iex
 ```
 
-## Benchmarks
-
-> Note about `redstone-smartweave` benchmarks.
->
-> The benchmarks shown earlier were wrong and we decided to remove them.
-> `redstone-smartweave` might soon switch to their own gateways making
-> comparsion irrelevant.
->
-> You can find a fair overview of 3em & `redstone-smartweave` 0.4.12
-> [here](https://github.com/littledivy/3em_redstone_benchmarks)
-
 ## CLI benchmarks
 
 Measures:
