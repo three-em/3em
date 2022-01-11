@@ -79,11 +79,11 @@ pub fn parse() -> Result<ParseResult, pico_args::Error> {
       "dry-run" => ParseResult::Known {
         flag: Flags::DryRun {
           host: pargs
-            .opt_value_from_str("--arweave-host")?
+            .opt_value_from_str("--host")?
             .unwrap_or_else(|| String::from("arweave.net")),
-          port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
+          port: pargs.opt_value_from_str("--port")?.unwrap_or(80),
           protocol: pargs
-            .opt_value_from_str("--arweave-protocol")?
+            .opt_value_from_str("--protocol")?
             .unwrap_or_else(|| String::from("https")),
           pretty_print: pargs.contains("--pretty-print"),
           show_validity: pargs.contains("--show-validity"),
@@ -93,11 +93,11 @@ pub fn parse() -> Result<ParseResult, pico_args::Error> {
       "run" => ParseResult::Known {
         flag: Flags::Run {
           host: pargs
-            .opt_value_from_str("--arweave-host")?
+            .opt_value_from_str("--host")?
             .unwrap_or_else(|| String::from("arweave.net")),
-          port: pargs.opt_value_from_str("--arweave-port")?.unwrap_or(80),
+          port: pargs.opt_value_from_str("--port")?.unwrap_or(80),
           protocol: pargs
-            .opt_value_from_str("--arweave-protocol")?
+            .opt_value_from_str("--protocol")?
             .unwrap_or_else(|| String::from("https")),
           tx: pargs.opt_value_from_str("--contract-id").unwrap(),
           pretty_print: pargs.contains("--pretty-print"),

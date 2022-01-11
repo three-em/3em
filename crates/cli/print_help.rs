@@ -8,9 +8,9 @@ pub fn print_help(sub_command: Option<&str>) {
             Runs a local contract with local interactions provided in a configuration file.
 
             Options:
-                --arweave-host   Gateway url to be used by SmartWeave APIs   (Default: arweave.net)   [string]
-                --arweave-port   Gateway port to be used   (Default: 443)   [string]
-                --arweave-protocol   Protocol to be used for gateway communication (Default: https)   [http|https]
+                --host   Gateway url to be used by SmartWeave APIs   (Default: arweave.net)   [string]
+                --port   Gateway port to be used   (Default: 443)   [string]
+                --protocol   Protocol to be used for gateway communication (Default: https)   [http|https]
                 --pretty-print   Whether state result should be in JSON prettified form   (Default: false)   [boolean]
                 --show-validity   Whether validity table should be included in output   (Default: false)   [boolean]
                 --file   Path to configuration file to be used   (Required)   [string]
@@ -22,9 +22,9 @@ pub fn print_help(sub_command: Option<&str>) {
 
             Options:
                 --contract-id  ID of contract to be evaluated   (Required)   [string]
-                --arweave-host   Gateway url to be used by Executor & SmartWeave APIs   (Default: arweave.net)   [string]
-                --arweave-port   Gateway port to be used   (Default: 443)   [string]
-                --arweave-protocol   Protocol to be used for gateway communication (Default: https)   [http|https]
+                --host   Gateway url to be used by Executor & SmartWeave APIs   (Default: arweave.net)   [string]
+                --port   Gateway port to be used   (Default: 443)   [string]
+                --protocol   Protocol to be used for gateway communication (Default: https)   [http|https]
                 --pretty-print   Whether state result should be in JSON prettified form   (Default: false)   [boolean]
                 --show-validity   Whether validity table should be included in output   (Default: false)   [boolean]
                 --no-print   Whether no output should be displayed   (Default: false)   [boolean]
