@@ -131,13 +131,13 @@ more about it in our technical guide.
 
 The following flags are available for `three_em run`:
 
-- `--arweave-host` | `string`
+- `--host` | `string`
   - URL of gateway to be used during execution
   - Default: arweave.net
-- `--arweave-port` | `number`
+- `--port` | `number`
   - Port of gateway to be used during execution
   - Default: 443
-- `--arweave-protocol` | `string`
+- `--protocol` | `string`
   - Network protocol to be used during execution
   - Default: https
 - `--contract-id` | `string`
@@ -179,13 +179,13 @@ The following flags are available for `three_em dry-run`:
   - File path for dry run JSON input.
   - Please refer to our dry run documentation
     [here](https://github.com/three-em/3em/tree/main/docs/dry_run.md)
-- `--arweave-host` | `string`
+- `--host` | `string`
   - URL of gateway to be used during execution
   - Default: arweave.net
-- `--arweave-port` | `number`
+- `--port` | `number`
   - Port of gateway to be used during execution
   - Default: 443
-- `--arweave-protocol` | `string`
+- `--protocol` | `string`
   - Network protocol to be used during execution
   - Default: https
 - `--pretty-print` | `boolean`
