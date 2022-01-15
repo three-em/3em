@@ -302,6 +302,8 @@ mod tests {
   use indexmap::map::IndexMap;
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
+  use three_em_arweave::cache::ArweaveCache;
+  use three_em_arweave::cache::CacheExt;
   use three_em_arweave::gql_result::{
     GQLAmountInterface, GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface,
     GQLOwnerInterface, GQLTagInterface,
@@ -353,7 +355,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(
+      &Arweave::new(
         443,
         "arweave.net".to_string(),
         String::from("https"),
@@ -442,7 +444,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(
+      &Arweave::new(
         443,
         "arweave.net".to_string(),
         String::from("https"),
@@ -542,7 +544,7 @@ mod tests {
       |_, _| {
         panic!("not implemented");
       },
-      Arweave::new(
+      &Arweave::new(
         443,
         "arweave.net".to_string(),
         String::from("https"),

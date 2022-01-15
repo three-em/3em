@@ -178,6 +178,8 @@ mod test {
   use serde::Serialize;
   use std::collections::HashMap;
   use three_em_arweave::arweave::Arweave;
+  use three_em_arweave::cache::ArweaveCache;
+  use three_em_arweave::cache::CacheExt;
   use three_em_arweave::gql_result::GQLEdgeInterface;
 
   #[derive(Deserialize, Serialize)]
@@ -350,10 +352,14 @@ mod test {
 
     let smartweave_validity: IndexMap<String, bool> =
       serde_json::from_str(smartweave).unwrap();
-    let arweave =
-      Arweave::new(80, String::from("arweave.net"), String::from("https"));
+    let arweave = Arweave::new(
+      80,
+      String::from("arweave.net"),
+      String::from("https"),
+      ArweaveCache::new(),
+    );
     let result = execute_contract(
-      arweave,
+      &arweave,
       String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE"),
       None,
       None,
@@ -391,10 +397,14 @@ mod test {
 
   #[tokio::test]
   async fn test_execute_wasm() {
-    let arweave =
-      Arweave::new(80, String::from("arweave.net"), String::from("https"));
+    let arweave = Arweave::new(
+      80,
+      String::from("arweave.net"),
+      String::from("https"),
+      ArweaveCache::new(),
+    );
     let result = execute_contract(
-      arweave,
+      &arweave,
       String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ"),
       None,
       None,
@@ -422,10 +432,14 @@ mod test {
 
   #[tokio::test]
   async fn test_execute_javascript() {
-    let arweave =
-      Arweave::new(80, String::from("arweave.net"), String::from("https"));
+    let arweave = Arweave::new(
+      80,
+      String::from("arweave.net"),
+      String::from("https"),
+      ArweaveCache::new(),
+    );
     let result = execute_contract(
-      arweave,
+      &arweave,
       String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE"),
       None,
       None,

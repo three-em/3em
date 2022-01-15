@@ -152,7 +152,7 @@ impl Arweave {
   where
     T: CacheExt + Send + Sync + Debug + 'static,
   {
-    ARWEAVE_CACHE.set(Arc::new(Mutex::new(cache))).unwrap();
+    ARWEAVE_CACHE.set(Arc::new(Mutex::new(cache)));
 
     Arweave {
       port,
@@ -599,17 +599,31 @@ impl Arweave {
 #[cfg(test)]
 mod tests {
   use crate::arweave::Arweave;
+  use crate::arweave::ArweaveCache;
+  use crate::cache::CacheExt;
 
   #[tokio::test]
   pub async fn test_build_host() {
-    let arweave =
-      Arweave::new(80, String::from("arweave.net"), String::from("http"));
+    let arweave = Arweave::new(
+      80,
+      String::from("arweave.net"),
+      String::from("http"),
+      ArweaveCache::new(),
+    );
     assert_eq!(arweave.get_host(), "http://arweave.net");
-    let arweave =
-      Arweave::new(443, String::from("arweave.net"), String::from("https"));
+    let arweave = Arweave::new(
+      443,
+      String::from("arweave.net"),
+      String::from("https"),
+      ArweaveCache::new(),
+    );
     assert_eq!(arweave.get_host(), "https://arweave.net:443");
-    let arweave =
-      Arweave::new(500, String::from("arweave.net"), String::from("adksad"));
+    let arweave = Arweave::new(
+      500,
+      String::from("arweave.net"),
+      String::from("adksad"),
+      ArweaveCache::new(),
+    );
     assert_eq!(arweave.get_host(), "https://arweave.net:500");
   }
 }
