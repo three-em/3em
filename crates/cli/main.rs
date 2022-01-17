@@ -1,6 +1,7 @@
 mod cli;
 mod core_nodes;
 mod dry_run;
+mod local_server;
 mod messages;
 mod node;
 mod node_crypto;
@@ -13,8 +14,11 @@ use crate::cli::parse;
 use crate::cli::parse::{Flags, ParseResult};
 use deno_core::error::AnyError;
 
+use crate::local_server::{start_local_server, ServerConfiguration};
 use std::env;
+use std::net::IpAddr;
 use std::ops::Deref;
+use std::str::FromStr;
 
 static BANNER: &str = r#"
 ██████╗     ███████╗    ███╗   ███╗
@@ -107,6 +111,22 @@ async fn main() -> Result<(), AnyError> {
               file.unwrap(),
             )
             .await?;
+          }
+        }
+        Flags::Serve {
+          server_port,
+          server_host,
+        } => {
+          let ip_addr = IpAddr::from_str(server_host.as_str());
+          if let Err(_) = ip_addr {
+            print_help::print_help(Some("serve"));
+            println!("{}", "Invalid IP Address provided in '--server-host'");
+          } else {
+            start_local_server(ServerConfiguration {
+              host: ip_addr.unwrap(),
+              port: server_port,
+            })
+            .await;
           }
         }
       };

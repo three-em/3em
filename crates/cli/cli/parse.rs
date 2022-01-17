@@ -32,6 +32,10 @@ pub enum Flags {
     show_validity: bool,
     file: Option<String>,
   },
+  Serve {
+    server_host: String,
+    server_port: u16,
+  },
 }
 
 #[derive(Debug)]
@@ -111,6 +115,14 @@ pub fn parse() -> Result<ParseResult, pico_args::Error> {
           height: { pargs.opt_value_from_str("--height").unwrap() },
           no_cache: pargs.contains("--no-cache"),
           show_errors: pargs.contains("--show-errors"),
+        },
+      },
+      "serve" => ParseResult::Known {
+        flag: Flags::Serve {
+          server_host: pargs
+            .opt_value_from_str("--host")?
+            .unwrap_or_else(|| String::from("127.0.0.1")),
+          server_port: pargs.opt_value_from_str("--port")?.unwrap_or(5400),
         },
       },
       "Unknown" | _ => ParseResult::Help {

@@ -34,6 +34,15 @@ pub fn print_help(sub_command: Option<&str>) {
                 --save   Path to file where output will be saved   [string]
                 --height   Maximum height to be evaluated   [number]
     "},
+    "serve" => indoc! {"
+            three_em run [options]
+
+            Creates a server with an API to evaluate contracts.
+
+            Options:
+                --host   Host to be used by the server   (Default: 127.0.0.1)   [string]
+                --port   Port to be used by the server   (Default: 5400)   [number]
+    "},
     "none" | _ => indoc! {"
             three_em <command> [options]
 
