@@ -35,7 +35,7 @@ pub fn print_help(sub_command: Option<&str>) {
                 --height   Maximum height to be evaluated   [number]
     "},
     "serve" => indoc! {"
-            three_em run [options]
+            three_em serve [options]
 
             Creates a server with an API to evaluate contracts.
 

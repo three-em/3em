@@ -32,13 +32,14 @@ The Web3 Execution Machine
 Languages supported: Javascript, Solidity, Rust, C++, C, AssemblyScript, Zig, Vyper.
 "#;
 
-#[tokio::main]
-async fn main() -> Result<(), AnyError> {
+fn main() -> Result<(), AnyError> {
   println!("{}", BANNER);
   println!("Version: {}", env!("CARGO_PKG_VERSION"));
   println!();
 
   let parse_result = parse::parse()?;
+
+  let rt = tokio::runtime::Runtime::new()?;
 
   match parse_result {
     ParseResult::Help { cmd } => {
@@ -51,7 +52,7 @@ async fn main() -> Result<(), AnyError> {
           port,
           node_capacity,
         } => {
-          crate::start::start(host, port, node_capacity).await?;
+          rt.block_on(crate::start::start(host, port, node_capacity))?;
         }
         Flags::Run {
           port,
@@ -72,7 +73,7 @@ async fn main() -> Result<(), AnyError> {
             print_help::print_help(Some("run"));
             println!("{}", "Option '--contract-id' is required");
           } else {
-            run::run(
+            rt.block_on(run::run(
               port,
               host,
               protocol,
@@ -86,8 +87,7 @@ async fn main() -> Result<(), AnyError> {
               height,
               no_cache,
               show_errors,
-            )
-            .await?;
+            ))?;
           }
         }
         Flags::DryRun {
@@ -102,15 +102,14 @@ async fn main() -> Result<(), AnyError> {
             print_help::print_help(Some("dry-run"));
             println!("{}", "Option '--file' is required");
           } else {
-            dry_run::dry_run(
+            rt.block_on(dry_run::dry_run(
               port,
               host,
               protocol,
               pretty_print,
               show_validity,
               file.unwrap(),
-            )
-            .await?;
+            ))?;
           }
         }
         Flags::Serve {
@@ -122,11 +121,16 @@ async fn main() -> Result<(), AnyError> {
             print_help::print_help(Some("serve"));
             println!("{}", "Invalid IP Address provided in '--server-host'");
           } else {
-            start_local_server(ServerConfiguration {
-              host: ip_addr.unwrap(),
-              port: server_port,
-            })
-            .await;
+            // Spawn the !Send future in the currently running
+            // local task set.
+            let local = tokio::task::LocalSet::new();
+            local.block_on(
+              &rt,
+              start_local_server(ServerConfiguration {
+                host: ip_addr.unwrap(),
+                port: server_port,
+              }),
+            );
           }
         }
       };
