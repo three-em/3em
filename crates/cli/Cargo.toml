@@ -28,3 +28,6 @@ serde_json = "1"
 hex = "0.4.3"
 indexmap = { version = "1.6.2", features = ["serde-1"] }
 indoc = "1.0"
+routerify = "3"
+hyper = "0.14"
+url = "2.2.2"

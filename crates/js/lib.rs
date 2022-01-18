@@ -52,6 +52,12 @@ pub enum CallResult {
   Result(v8::Global<v8::Value>),
 }
 
+unsafe impl Send for Runtime {}
+unsafe impl Sync for Runtime {}
+
+unsafe impl Send for EmbeddedModuleLoader {}
+unsafe impl Sync for EmbeddedModuleLoader {}
+
 pub struct Runtime {
   rt: JsRuntime,
   module: v8::Global<v8::Value>,
