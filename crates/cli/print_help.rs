@@ -49,6 +49,7 @@ pub fn print_help(sub_command: Option<&str>) {
             Commands:
                 three_em run [options]   Evaluates the latest state of a deployed contract.
                 three_em dry-run [options]   Evaluates the latest state of a local contract.
+                three_em serve [options]   Spawns a local server with an endpoint to evaluate contracts.
     "},
   };
 
