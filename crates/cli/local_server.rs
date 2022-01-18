@@ -45,109 +45,55 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
                 })
                 .unwrap_or_else(HashMap::new);
 
-            let contract_id = params.get("contractId").map(|i| i.to_owned());
-            let height = params.get("height").map(|i| i.to_owned());
-            let gateway_host = params.get("gatewayHost").map(|i| i.to_owned()).unwrap_or(String::from("arweave.net"));
-            let gateway_port = params.get("gatewayPort").map(|i| i.to_owned()).unwrap_or(String::from("443"));
-            let gateway_protocol = params.get("gatewayProtocol").map(|i| i.to_owned()).unwrap_or(String::from("https"));
-            let show_validity = params.get("showValidity").map(|i| i.to_owned()).unwrap_or(String::from("false"));
-            let cache = params.get("cache").map(|i| i.to_owned()).unwrap_or(String::from("false"));
-            let show_errors = params.get("showErrors").map(|i| i.to_owned()).unwrap_or(String::from("false"));
+           let contract_id = params.get("contractId").map(|i| i.to_owned());
+           let height = params.get("height").map(|i| i.to_owned());
+           let gateway_host = params.get("gatewayHost").map(|i| i.to_owned()).unwrap_or(String::from("arweave.net"));
+           let gateway_port = params.get("gatewayPort").map(|i| i.to_owned()).unwrap_or(String::from("443"));
+           let gateway_protocol = params.get("gatewayProtocol").map(|i| i.to_owned()).unwrap_or(String::from("https"));
+           let show_validity = params.get("showValidity").map(|i| i.to_owned()).unwrap_or(String::from("false"));
+           let cache = params.get("cache").map(|i| i.to_owned()).unwrap_or(String::from("false"));
+           let show_errors = params.get("showErrors").map(|i| i.to_owned()).unwrap_or(String::from("false"));
 
-            let (height_invalid, height) = {
-                if let Some(h) = height {
-                    let height_maybe: Result<usize, ParseIntError> = usize::from_str(h.as_str());
-                    if let Ok(provided_height) = height_maybe {
-                        (false, Some(provided_height))
-                    } else {
-                        (true, None)
-                    }
-                } else {
-                    (false, None)
-                }
-            };
+           let height = height.map(|h| h.parse::<usize>().unwrap_or(usize::MAX));
+           let show_validity = show_validity.parse::<bool>().unwrap_or(false);
+           let cache = cache.parse::<bool>().unwrap_or(false);
+           let show_errors = show_errors.parse::<bool>().unwrap_or(false);
+           let port = gateway_port.parse::<i32>().unwrap_or(443);
+           let mut response_result: Option<Response<Body>> = None;
 
-            let show_validity = {
-                let show_validity_maybe: Result<bool, ParseBoolError> = bool::from_str(show_validity.as_str());
-                if let Ok(provided_validity) = show_validity_maybe {
-                    Some(provided_validity)
-                } else {
-                    None
-                }
-            };
-
-            let port = {
-                let port_maybe: Result<i32, ParseIntError> = i32::from_str(gateway_port.as_str());
-                if let Ok(provided_port) = port_maybe {
-                    Some(provided_port)
-                } else {
-                    None
-                }
-            };
-
-            let cache = {
-                let maybe_cache: Result<bool, ParseBoolError> = bool::from_str(cache.as_str());
-                if let Ok(provided_cache) = maybe_cache {
-                    Some(provided_cache)
-                } else {
-                    None
-                }
-            };
-
-            let show_errors = {
-                let maybe_show_errors: Result<bool, ParseBoolError> = bool::from_str(show_errors.as_str());
-                if let Ok(provided_show_errors) = maybe_show_errors {
-                    Some(provided_show_errors)
-                } else {
-                    None
-                }
-            };
-
-            let mut response_result: Option<Response<Body>> = None;
-
-            if contract_id.is_none() {
-                response_result = Some(build_error("contractId was not provided in query parameters. A contract id must be provided."));
-            } else if height_invalid {
-                response_result = Some(build_error("The height provided is incorrect. Please provide a valid numeric value."));
-            } else if port.is_none() {
-                response_result = Some(build_error("The gateway port provided is invalid. Please provided a valid numeric value."));
-            } else if show_validity.is_none() {
-                response_result = Some(build_error("The 'showValidity' parameter contains wrong data. Please provided a valid boolean value."));
-            } else if cache.is_none() {
-                response_result = Some(build_error("The 'cache' parameter contains wrong data. Please provided a valid boolean value."));
-            } else if show_errors.is_none() {
-                response_result = Some(build_error("The 'showErrors' parameter contains wrong data. Please provided a valid boolean value."));
+           if contract_id.is_none() {
+              response_result = Some(build_error("contractId was not provided in query parameters. A contract id must be provided."));
             } else {
-                 let arweave = Arweave::new(port.unwrap(), gateway_host.to_owned(), gateway_protocol.to_owned(), ArweaveCache::new());
-                 let execute_result = execute_contract(&arweave, contract_id.unwrap().to_owned(), None, None, height, cache.unwrap(), show_errors.unwrap()).await;
-                // match execute_result {
-                //     Ok(result) => {
-                //         match result {
-                //             ExecuteResult::V8(val, validity) => {
-                //                 if show_validity.unwrap() {
-                //                     response_result = Some(Response::new(Body::from(
-                //                         serde_json::json!({
-                //                             "state": val,
-                //                             "validity": validity
-                //                         }).to_string()
-                //                     )));
-                //                 } else {
-                //                     response_result = Some(Response::new(Body::from(
-                //                         serde_json::json!({
-                //                             "state": val
-                //                         }).to_string()
-                //                     )));
-                //                 }
-                //             },
-                //             ExecuteResult::Evm(_, _, _) => {
-                //                 response_result = Some(build_error("EVM evaluation is disabled"));
-                //             }
-                //         }
-                //     },
-                //     Err(e) => {
-                //         response_result = Some(build_error(e.to_string().as_str()));
-                //     }
-                // }
+                 let arweave = Arweave::new(port, gateway_host.to_owned(), gateway_protocol.to_owned(), ArweaveCache::new());
+                 let execute_result = execute_contract(&arweave, contract_id.unwrap().to_owned(), None, None, height, cache, show_errors).await;
+                match execute_result {
+                     Ok(result) => {
+                         match result {
+                             ExecuteResult::V8(val, validity) => {
+                                 if show_validity {
+                                     response_result = Some(Response::new(Body::from(
+                                         serde_json::json!({
+                                             "state": val,
+                                             "validity": validity
+                                         }).to_string()
+                                     )));
+                                 } else {
+                                     response_result = Some(Response::new(Body::from(
+                                         serde_json::json!({
+                                             "state": val
+                                         }).to_string()
+                                     )));
+                                 }
+                             },
+                             ExecuteResult::Evm(_, _, _) => {
+                                 response_result = Some(build_error("EVM evaluation is disabled"));
+                             }
+                         }
+                     },
+                     Err(e) => {
+                         response_result = Some(build_error(e.to_string().as_str()));
+                     }
+                 }
             }
 
             Ok(response_result.unwrap())

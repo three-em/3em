@@ -152,7 +152,7 @@ impl Arweave {
   where
     T: CacheExt + Send + Sync + Debug + 'static,
   {
-    ARWEAVE_CACHE.set(Arc::new(Mutex::new(cache))).unwrap();
+    ARWEAVE_CACHE.set(Arc::new(Mutex::new(cache)));
 
     Arweave {
       port,
