@@ -2,6 +2,7 @@ use deno_core::error::AnyError;
 use hyper::http::response::Parts;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
+use indoc::indoc;
 use routerify::prelude::RequestExt;
 use routerify::{RequestInfo, Router, RouterService};
 use std::collections::HashMap;
@@ -14,7 +15,6 @@ use three_em_arweave::cache::{ArweaveCache, CacheExt};
 use three_em_executor::execute_contract;
 use three_em_executor::executor::ExecuteResult;
 use url::Url;
-use indoc::indoc;
 
 pub struct ServerConfiguration {
   pub port: u16,
