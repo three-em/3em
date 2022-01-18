@@ -14,6 +14,7 @@ use three_em_arweave::cache::{ArweaveCache, CacheExt};
 use three_em_executor::execute_contract;
 use three_em_executor::executor::ExecuteResult;
 use url::Url;
+use indoc::indoc;
 
 pub struct ServerConfiguration {
   pub port: u16,
@@ -110,6 +111,24 @@ pub async fn start_local_server(config: ServerConfiguration) {
   let addr = SocketAddr::from((config.host, config.port));
   let service =
     make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(echo)) });
+
+  println!("Serving {}", addr.to_string());
+  println!(
+    "{}",
+    indoc! {
+    "
+       Endpoints:
+         GET   /evaluate   Evaluates a contract state given a contract id
+               ?contractId   Id of contract to be evaluated   (Required)   [string]
+               ?height   Height to be used during evaluation   [number]
+               ?gatewayHost   Gateway to be used for and during evaluation   (Default: arweave.net)   [string]
+               ?gatewayPort   Port to be used for gateway communication   (Default: 443)   [number]
+               ?gatewayProtocol   Protocol to be used for gateway communication   (Default: https)   [string]
+               ?showValidity   Whether validity table should be included in the JSON response   (Default: false)   [boolean]
+               ?cache   Whether built-in cache system should be used during execution   (Default: true)   [boolean]
+               ?showErrors   Whether server console should print out execution exceptions   (Default: false)   [boolean]
+      "}
+  );
 
   let server = Server::bind(&addr).executor(LocalExec).serve(service);
   server.await.unwrap();

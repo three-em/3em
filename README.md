@@ -124,6 +124,8 @@ more about it in our technical guide.
 - `three_em dry-run`
   - Runs a local contract which has not yet been deployed to Arweave.
   - Only JS and WASM contracts are accepted during `dry-run`.
+- `three_em serve`
+  - Spawns a local server with an endpoint to evaluate contracts.
 
 ---
 
@@ -197,3 +199,23 @@ The following flags are available for `three_em dry-run`:
 `dry-run` requires a JSON file containing the _dry-run_ structure, for more
 information about it please refer to
 [our dry run guide](https://github.com/three-em/3em/tree/main/docs/dry_run.md).
+
+
+--------
+
+### serve
+
+The following flags are available for `three_em serve`:
+
+- `--host` | `string`
+  - Host to be used by the server
+  - Default: 127.0.0.1
+- `--port` | `number`
+  - Port to be used by the server
+  - Default: 5400
+
+**Example**
+
+```shell
+three_em serve
+```
