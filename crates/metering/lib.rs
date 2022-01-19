@@ -988,14 +988,19 @@ mod tests {
       let action = json!({});
       let mut action_bytes = serde_json::to_vec(&action).unwrap();
 
-      let mut rt =
-        WasmRuntime::new(&module.finish()).unwrap();
+      let mut rt = WasmRuntime::new(&module.finish()).unwrap();
 
       let prev_state = json!({
         "counter": 0,
       });
       let mut prev_state_bytes = serde_json::to_vec(&prev_state).unwrap();
-      let state = rt.call(&mut prev_state_bytes, &mut action_bytes, serde_json::Value::Null).unwrap();
+      let state = rt
+        .call(
+          &mut prev_state_bytes,
+          &mut action_bytes,
+          serde_json::Value::Null,
+        )
+        .unwrap();
       let state: Value = serde_json::from_slice(&state).unwrap();
       assert_eq!(state.get("counter").unwrap(), 1);
 

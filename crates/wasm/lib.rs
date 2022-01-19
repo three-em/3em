@@ -439,10 +439,9 @@ mod tests {
 
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
-    let mut rt = WasmRuntime::new(
-      include_bytes!("../../testdata/01_wasm/01_wasm.wasm")
-    )
-    .unwrap();
+    let mut rt =
+      WasmRuntime::new(include_bytes!("../../testdata/01_wasm/01_wasm.wasm"))
+        .unwrap();
 
     let action = json!({});
     let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
@@ -452,21 +451,27 @@ mod tests {
 
     let mut prev_state_bytes =
       deno_core::serde_json::to_vec(&prev_state).unwrap();
-    let state = rt.call(&mut prev_state_bytes, &mut action_bytes, json!({
-      "transaction": {
-        "id": "",
-        "owner": "",
-        "tags": [],
-        "target": "",
-        "quantity": "",
-        "reward": ""
-      },
-      "block": {
-        "height": 0,
-        "indep_hash": "",
-        "timestamp": ""
-      }
-    })).unwrap();
+    let state = rt
+      .call(
+        &mut prev_state_bytes,
+        &mut action_bytes,
+        json!({
+          "transaction": {
+            "id": "",
+            "owner": "",
+            "tags": [],
+            "target": "",
+            "quantity": "",
+            "reward": ""
+          },
+          "block": {
+            "height": 0,
+            "indep_hash": "",
+            "timestamp": ""
+          }
+        }),
+      )
+      .unwrap();
 
     let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
@@ -478,10 +483,9 @@ mod tests {
 
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
-    let mut rt = WasmRuntime::new(
-      include_bytes!("../../testdata/02_wasm/02_wasm.wasm")
-    )
-    .unwrap();
+    let mut rt =
+      WasmRuntime::new(include_bytes!("../../testdata/02_wasm/02_wasm.wasm"))
+        .unwrap();
 
     let mut prev_state = json!({
       "counter": 0,
@@ -492,7 +496,9 @@ mod tests {
     for i in 1..100 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
-      let state = rt.call(&mut prev_state_bytes, &mut action_bytes, Value::Null).unwrap();
+      let state = rt
+        .call(&mut prev_state_bytes, &mut action_bytes, Value::Null)
+        .unwrap();
 
       let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
