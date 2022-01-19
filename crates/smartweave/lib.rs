@@ -19,19 +19,6 @@ pub struct ArweaveInfo {
   protocol: String,
 }
 
-#[derive(Serialize, Default, Clone)]
-pub struct ContractBlock {
-  pub height: usize,
-  pub indep_hash: String,
-  pub timestamp: String,
-}
-
-#[derive(Serialize, Default, Clone)]
-pub struct ContractInfo {
-  pub transaction: TransactionData,
-  pub block: ContractBlock,
-}
-
 pub fn init(arweave: (i32, String, String)) -> Extension {
   Extension::builder()
     .js(include_js_files!(

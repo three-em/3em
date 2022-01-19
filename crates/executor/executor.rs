@@ -15,7 +15,6 @@ use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_js::CallResult;
 use three_em_js::Runtime;
-use three_em_smartweave::{ContractBlock, ContractInfo};
 use three_em_wasm::WasmRuntime;
 
 pub type ValidityTable = IndexMap<String, bool>;
@@ -28,6 +27,32 @@ pub enum ExecuteResult {
 }
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
+
+pub fn generate_interaction_context(tx: &GQLNodeInterface) -> Value {
+  let interaction_context = serde_json::json!({
+            "transaction": {
+              "id": tx.id,
+              "owner": tx.owner.address,
+              "target": tx.recipient.to_owned().unwrap_or_else(|| String::from("null")),
+              "quantity": tx.quantity.to_owned().unwrap_or_else(|| GQLAmountInterface {
+    winston: Some(String::new()),
+    ar: Some(String::new())
+  }).winston.unwrap(),
+              "reward": tx.fee.to_owned().unwrap_or_else(|| GQLAmountInterface {
+    winston: Some(String::new()),
+    ar: Some(String::new())
+  }).winston.unwrap(),
+              "tags": tx.tags
+            },
+            "block": {
+              "indep_hash":  tx.block.id,
+              "height": tx.block.height,
+              "timestamp": tx.block.timestamp
+            }
+          });
+
+  interaction_context
+}
 
 #[allow(clippy::too_many_arguments)]
 pub async fn raw_execute_contract<
@@ -83,27 +108,7 @@ pub async fn raw_execute_contract<
             "caller": tx.owner.address
           });
 
-          let interaction_context = serde_json::json!({
-                    "transaction": {
-                      "id": &tx.id,
-                      "owner": &tx.owner.address,
-                      "target": &tx.recipient.to_owned().unwrap_or_else(|| String::from("null")),
-                      "quantity": &tx.quantity.to_owned().unwrap_or_else(|| GQLAmountInterface {
-            winston: Some(String::new()),
-            ar: Some(String::new())
-          }).winston.unwrap(),
-                      "reward": &tx.fee.to_owned().unwrap_or_else(|| GQLAmountInterface {
-            winston: Some(String::new()),
-            ar: Some(String::new())
-          }).winston.unwrap(),
-                      "tags": &tx.tags
-                    },
-                    "block": {
-                      "indep_hash":  &tx.block.id,
-                      "height": &tx.block.height,
-                      "timestamp": &tx.block.timestamp
-                    }
-                  });
+          let interaction_context = generate_interaction_context(&tx);
 
           let valid = match rt.call(call_input, Some(interaction_context)).await
           {
@@ -155,15 +160,6 @@ pub async fn raw_execute_contract<
       }
     }
     ContractType::WASM => {
-      let contract_info = ContractInfo {
-        transaction,
-        block: ContractBlock {
-          height: 0,
-          indep_hash: String::from(""),
-          timestamp: String::from(""),
-        },
-      };
-
       if needs_processing {
         let wasm = loaded_contract.contract_src.as_slice();
 
@@ -176,7 +172,7 @@ pub async fn raw_execute_contract<
         };
 
         let mut state = init_state_wasm;
-        let mut rt = WasmRuntime::new(wasm, contract_info).unwrap();
+        let mut rt = WasmRuntime::new(wasm).unwrap();
 
         for interaction in interactions {
           let tx = interaction.node;
@@ -188,9 +184,10 @@ pub async fn raw_execute_contract<
             "input": wasm_input,
             "caller": tx.owner.address,
           });
+          let interaction_context = generate_interaction_context(&tx);
 
           let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
-          let exec = rt.call(&mut state, &mut input);
+          let exec = rt.call(&mut state, &mut input, interaction_context);
           let valid_with_result = match exec {
             Ok(result) => (true, Some(result)),
             Err(err) => {

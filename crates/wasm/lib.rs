@@ -1,10 +1,10 @@
 use deno_core::error::AnyError;
+use deno_core::serde_json::Value;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
 use std::cell::Cell;
 use three_em_js::snapshot;
 use three_em_smartweave::read_contract_state;
-use three_em_smartweave::ContractInfo;
 
 macro_rules! wasm_alloc {
   ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {
@@ -26,29 +26,17 @@ pub struct WasmRuntime {
   allocator: v8::Global<v8::Function>,
   /// `WebAssembly.Instance.exports` object.
   exports: v8::Global<v8::Object>,
-  /// Allocated Smartweave ContractInfo
-  sw_contract: (
-    Vec<u8>,
-    // Pointer to the allocated contract info
-    u32,
-    // Length of the allocated contract info
-    usize,
-  ),
 }
 
 impl WasmRuntime {
-  pub fn new(
-    wasm: &[u8],
-    contract: ContractInfo,
-  ) -> Result<WasmRuntime, AnyError> {
+  pub fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(RuntimeOptions {
       startup_snapshot: Some(snapshot::snapshot()),
       ..Default::default()
     });
-    let contract = deno_core::serde_json::to_vec(&contract)?;
     // Get hold of the WebAssembly object.
     let wasm_obj = rt.execute_script("<anon>", "WebAssembly").unwrap();
-    let (exports, handle, allocator, result_len, contract_ptr) = {
+    let (exports, handle, allocator, result_len) = {
       let scope = &mut rt.handle_scope();
       let buf =
         v8::ArrayBuffer::new_backing_store_from_boxed_slice(wasm.into());
@@ -290,21 +278,15 @@ impl WasmRuntime {
       let alloc_obj = allocator.open(scope).to_object(scope).unwrap();
       let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
 
-      let contact_info_len = v8::Number::new(scope, contract.len() as f64);
-      let contract_ptr = wasm_alloc!(scope, alloc, undefined, contact_info_len);
-      let contract_ptr_u32 = contract_ptr.uint32_value(scope).unwrap();
-
-      (exports, handle, allocator, result_len, contract_ptr_u32)
+      (exports, handle, allocator, result_len)
     };
 
-    let len = contract.len();
     Ok(Self {
       rt,
       handle,
       allocator,
       result_len,
       exports,
-      sw_contract: (contract, contract_ptr, len),
     })
   }
 
@@ -323,7 +305,22 @@ impl WasmRuntime {
     &mut self,
     state: &mut [u8],
     action: &mut [u8],
+    interaction_context: Value,
   ) -> Result<Vec<u8>, AnyError> {
+    let contract = deno_core::serde_json::to_vec(&interaction_context)?;
+
+    let (mut contract, contract_ptr_high, contract_len) = {
+      let scope = &mut self.rt.handle_scope();
+      let undefined = v8::undefined(scope);
+      let alloc_obj = self.allocator.open(scope).to_object(scope).unwrap();
+      let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
+      let contract_len = contract.len();
+      let contact_info_len = v8::Number::new(scope, contract_len as f64);
+      let contract_ptr = wasm_alloc!(scope, alloc, undefined, contact_info_len);
+      let contract_ptr_u32: u32 = contract_ptr.uint32_value(scope).unwrap();
+      (contract, contract_ptr_u32, contract_len)
+    };
+
     let result = {
       let scope = &mut self.rt.handle_scope();
       let undefined = v8::undefined(scope);
@@ -334,8 +331,8 @@ impl WasmRuntime {
       let state_len = v8::Number::new(scope, state.len() as f64);
       let action_len = v8::Number::new(scope, action.len() as f64);
 
-      let contract_ptr = v8::Number::new(scope, self.sw_contract.1 as f64);
-      let contract_info_len = v8::Number::new(scope, self.sw_contract.2 as f64);
+      let contract_ptr = v8::Number::new(scope, contract_ptr_high as f64);
+      let contract_info_len = v8::Number::new(scope, contract_len as f64);
 
       // Offset in memory for start of the block.
       let local_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
@@ -376,12 +373,12 @@ impl WasmRuntime {
       let contract_mem_region = unsafe {
         get_backing_store_slice_mut(
           &store,
-          self.sw_contract.1 as usize,
-          self.sw_contract.2,
+          contract_ptr_high as usize,
+          contract_len,
         )
       };
 
-      contract_mem_region.swap_with_slice(&mut self.sw_contract.0);
+      contract_mem_region.swap_with_slice(&mut contract);
 
       let handler_obj = self.handle.open(scope).to_object(scope).unwrap();
       let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
@@ -443,8 +440,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
     let mut rt = WasmRuntime::new(
-      include_bytes!("../../testdata/01_wasm/01_wasm.wasm"),
-      Default::default(),
+      include_bytes!("../../testdata/01_wasm/01_wasm.wasm")
     )
     .unwrap();
 
@@ -456,7 +452,21 @@ mod tests {
 
     let mut prev_state_bytes =
       deno_core::serde_json::to_vec(&prev_state).unwrap();
-    let state = rt.call(&mut prev_state_bytes, &mut action_bytes).unwrap();
+    let state = rt.call(&mut prev_state_bytes, &mut action_bytes, json!({
+      "transaction": {
+        "id": "",
+        "owner": "",
+        "tags": [],
+        "target": "",
+        "quantity": "",
+        "reward": ""
+      },
+      "block": {
+        "height": 0,
+        "indep_hash": "",
+        "timestamp": ""
+      }
+    })).unwrap();
 
     let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
@@ -469,8 +479,7 @@ mod tests {
   #[tokio::test]
   async fn test_wasm_runtime_asc() {
     let mut rt = WasmRuntime::new(
-      include_bytes!("../../testdata/02_wasm/02_wasm.wasm"),
-      Default::default(),
+      include_bytes!("../../testdata/02_wasm/02_wasm.wasm")
     )
     .unwrap();
 
@@ -483,7 +492,7 @@ mod tests {
     for i in 1..100 {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
-      let state = rt.call(&mut prev_state_bytes, &mut action_bytes).unwrap();
+      let state = rt.call(&mut prev_state_bytes, &mut action_bytes, Value::Null).unwrap();
 
       let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
 
