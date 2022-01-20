@@ -393,7 +393,8 @@ impl WasmRuntime {
             interaction_ptr.into(),
             interaction_len.into(),
           ],
-        ).ok_or(Error::Terminated)?;
+        )
+        .ok_or(Error::Terminated)?;
       let result_ptr_u32 = result_ptr.uint32_value(scope).unwrap();
       let get_len_obj = self.result_len.open(scope).to_object(scope).unwrap();
       let get_len = v8::Local::<v8::Function>::try_from(get_len_obj)?;
