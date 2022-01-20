@@ -457,19 +457,8 @@ mod tests {
         &mut prev_state_bytes,
         &mut action_bytes,
         InteractionContext {
-          transaction: InteractionTx {
-            id: String::new(),
-            owner: String::new(),
-            tags: vec![],
-            target: String::new(),
-            quantity: String::new(),
-            reward: String::new(),
-          },
-          block: InteractionBlock {
-            height: 0,
-            indep_hash: String::new(),
-            timestamp: 0,
-          },
+          transaction: InteractionTx::default(),
+          block: InteractionBlock::default(),
         },
       )
       .unwrap();
