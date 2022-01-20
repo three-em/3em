@@ -3,7 +3,7 @@ use deno_core::serde_json::Value;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
 use std::cell::Cell;
-use three_em_js::snapshot;
+use three_em_js::{snapshot, Error};
 use three_em_smartweave::{read_contract_state, InteractionContext};
 
 macro_rules! wasm_alloc {
@@ -393,8 +393,7 @@ impl WasmRuntime {
             interaction_ptr.into(),
             interaction_len.into(),
           ],
-        )
-        .unwrap();
+        ).ok_or(Error::Terminated)?;
       let result_ptr_u32 = result_ptr.uint32_value(scope).unwrap();
       let get_len_obj = self.result_len.open(scope).to_object(scope).unwrap();
       let get_len = v8::Local::<v8::Function>::try_from(get_len_obj)?;
