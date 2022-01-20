@@ -43,6 +43,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: three_em-&{{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-${{ runner.os }}-${{ github.sha }}
-          path: target/release/three_em{.exe,}
+          path: |
+            target/release/three_em
+            target/release/three_em.exe
           if-no-files-found: error
           retention-days: 7
