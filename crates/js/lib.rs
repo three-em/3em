@@ -13,6 +13,7 @@ use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
+use three_em_smartweave::InteractionContext;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -169,7 +170,7 @@ impl Runtime {
   pub async fn call<R>(
     &mut self,
     action: R,
-    interaction_data: Option<Value>,
+    interaction_data: Option<InteractionContext>,
   ) -> Result<Option<CallResult>, AnyError>
   where
     R: Serialize + 'static,

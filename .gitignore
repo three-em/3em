@@ -20,3 +20,5 @@ redstone-js-benchmark.json
 
 **/node_modules
 */node_modules
+**/target/**
+*/target/*

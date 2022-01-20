@@ -4,7 +4,7 @@ use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
 use std::cell::Cell;
 use three_em_js::snapshot;
-use three_em_smartweave::read_contract_state;
+use three_em_smartweave::{read_contract_state, InteractionContext};
 
 macro_rules! wasm_alloc {
   ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {
@@ -305,21 +305,11 @@ impl WasmRuntime {
     &mut self,
     state: &mut [u8],
     action: &mut [u8],
-    interaction_context: Value,
+    interaction_context: InteractionContext,
   ) -> Result<Vec<u8>, AnyError> {
-    let contract = deno_core::serde_json::to_vec(&interaction_context)?;
+    let mut interaction = deno_core::serde_json::to_vec(&interaction_context)?;
 
-    let (mut contract, contract_ptr_high, contract_len) = {
-      let scope = &mut self.rt.handle_scope();
-      let undefined = v8::undefined(scope);
-      let alloc_obj = self.allocator.open(scope).to_object(scope).unwrap();
-      let alloc = v8::Local::<v8::Function>::try_from(alloc_obj)?;
-      let contract_len = contract.len();
-      let contact_info_len = v8::Number::new(scope, contract_len as f64);
-      let contract_ptr = wasm_alloc!(scope, alloc, undefined, contact_info_len);
-      let contract_ptr_u32: u32 = contract_ptr.uint32_value(scope).unwrap();
-      (contract, contract_ptr_u32, contract_len)
-    };
+    let interaction_len_high_level = interaction.len();
 
     let result = {
       let scope = &mut self.rt.handle_scope();
@@ -331,8 +321,16 @@ impl WasmRuntime {
       let state_len = v8::Number::new(scope, state.len() as f64);
       let action_len = v8::Number::new(scope, action.len() as f64);
 
-      let contract_ptr = v8::Number::new(scope, contract_ptr_high as f64);
-      let contract_info_len = v8::Number::new(scope, contract_len as f64);
+      let interaction_len =
+        v8::Number::new(scope, interaction_len_high_level as f64);
+      let interaction_ptr_high_level =
+        wasm_alloc!(scope, alloc, undefined, interaction_len);
+      let interaction_ptr_32: u32 =
+        interaction_ptr_high_level.uint32_value(scope).unwrap();
+
+      let interaction_ptr = v8::Number::new(scope, interaction_ptr_32 as f64);
+      let interaction_len =
+        v8::Number::new(scope, interaction_len_high_level as f64);
 
       // Offset in memory for start of the block.
       let local_ptr = wasm_alloc!(scope, alloc, undefined, state_len);
@@ -373,12 +371,12 @@ impl WasmRuntime {
       let contract_mem_region = unsafe {
         get_backing_store_slice_mut(
           &store,
-          contract_ptr_high as usize,
-          contract_len,
+          interaction_ptr_32 as usize,
+          interaction_len_high_level,
         )
       };
 
-      contract_mem_region.swap_with_slice(&mut contract);
+      contract_mem_region.swap_with_slice(&mut interaction);
 
       let handler_obj = self.handle.open(scope).to_object(scope).unwrap();
       let handle = v8::Local::<v8::Function>::try_from(handler_obj)?;
@@ -392,8 +390,8 @@ impl WasmRuntime {
             state_len.into(),
             action_ptr,
             action_len.into(),
-            contract_ptr.into(),
-            contract_info_len.into(),
+            interaction_ptr.into(),
+            interaction_len.into(),
           ],
         )
         .unwrap();
@@ -436,6 +434,9 @@ mod tests {
   use crate::WasmRuntime;
   use deno_core::serde_json::json;
   use deno_core::serde_json::Value;
+  use three_em_smartweave::{
+    InteractionBlock, InteractionContext, InteractionTx,
+  };
 
   #[tokio::test]
   async fn test_wasm_runtime_contract() {
@@ -455,21 +456,21 @@ mod tests {
       .call(
         &mut prev_state_bytes,
         &mut action_bytes,
-        json!({
-          "transaction": {
-            "id": "",
-            "owner": "",
-            "tags": [],
-            "target": "",
-            "quantity": "",
-            "reward": ""
+        InteractionContext {
+          transaction: InteractionTx {
+            id: String::new(),
+            owner: String::new(),
+            tags: vec![],
+            target: String::new(),
+            quantity: String::new(),
+            reward: String::new(),
           },
-          "block": {
-            "height": 0,
-            "indep_hash": "",
-            "timestamp": ""
-          }
-        }),
+          block: InteractionBlock {
+            height: 0,
+            indep_hash: String::new(),
+            timestamp: 0,
+          },
+        },
       )
       .unwrap();
 
@@ -497,7 +498,7 @@ mod tests {
       let mut prev_state_bytes =
         deno_core::serde_json::to_vec(&prev_state).unwrap();
       let state = rt
-        .call(&mut prev_state_bytes, &mut action_bytes, Value::Null)
+        .call(&mut prev_state_bytes, &mut action_bytes, Default::default())
         .unwrap();
 
       let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
@@ -505,6 +506,54 @@ mod tests {
       assert_eq!(state.get("counter").unwrap(), i);
       prev_state = state;
     }
+
+    // No cost without metering.
+    assert_eq!(rt.get_cost(), 0);
+  }
+
+  #[tokio::test]
+  async fn test_wasm_runtime_contract_interaction_context() {
+    let mut rt =
+      WasmRuntime::new(include_bytes!("../../testdata/03_wasm/03_wasm.wasm"))
+        .unwrap();
+
+    let action = json!({});
+    let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
+    let prev_state = json!({
+      "txId": "",
+      "owner": "",
+      "height": 0
+    });
+
+    let mut prev_state_bytes =
+      deno_core::serde_json::to_vec(&prev_state).unwrap();
+    let state = rt
+      .call(
+        &mut prev_state_bytes,
+        &mut action_bytes,
+        InteractionContext {
+          transaction: InteractionTx {
+            id: String::from("POCAHONTAS"),
+            owner: String::from("ANDRES1234"),
+            tags: vec![],
+            target: String::new(),
+            quantity: String::new(),
+            reward: String::new(),
+          },
+          block: InteractionBlock {
+            height: 100,
+            indep_hash: String::new(),
+            timestamp: 0,
+          },
+        },
+      )
+      .unwrap();
+
+    let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
+
+    assert_eq!(state.get("txId").unwrap(), "POCAHONTAS");
+    assert_eq!(state.get("owner").unwrap(), "ANDRES1234");
+    assert_eq!(state.get("height").unwrap(), 100);
 
     // No cost without metering.
     assert_eq!(rt.get_cost(), 0);
