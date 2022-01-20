@@ -1,0 +1,50 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Awarnings
+
+jobs:
+  build:
+    name: release / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+
+      - name: Use Cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - name: Upload Canary Builds
+        uses: actions/upload-artifact@v2
+        with:
+          name: three_em-${{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-${{ runner.os }}-${{ github.sha }}
+          path: |
+            target/release/three_em
+            target/release/three_em.exe
+          if-no-files-found: error
+          retention-days: 7

@@ -1,9 +1,7 @@
-name: release
+name: ship
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -40,7 +38,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          override: true
           default: true
 
       - name: Build
@@ -50,27 +47,27 @@ jobs:
           args: --release --locked --all-targets
 
       - name: Zip linux release
-        if: startsWith(matrix.os, 'ubuntu')
+        if: runner.os == 'linux'
         working-directory: target/release
         run: zip -r three_em-x86_64-unknown-linux-gnu.zip three_em
 
       - name: Zip mac release
-        if: startsWith(matrix.os, 'macos')
+        if: runner.os == 'macos'
         working-directory: target/release
         run: zip -r three_em-x86_64-apple-darwin.zip three_em
 
       - name: Zip windows release
-        if: startsWith(matrix.os, 'windows')
+        if: runner.os == 'windows'
         working-directory: target/release
         run: Compress-Archive -CompressionLevel Optimal -Force -Path three_em.exe -DestinationPath three_em-x86_64-pc-windows-msvc.zip
 
-      - name: Upload Builds
+      - name: Upload Release Builds
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}
+          name: release
           path: target/release/*.zip
           if-no-files-found: error
-          # retention-days: 7
+          retention-days: 1
 
   publish:
     if: github.event.inputs.release == 'true' && github.event.inputs.tag != ''
@@ -90,10 +87,10 @@ jobs:
           tag: ${{ github.event.inputs.tag }}
           name: v${{ github.event.inputs.tag }}
           prerelease: contains(github.event.inputs.tag, '-')
-          discussionCategory: announcements
+          discussionCategory: 'announcements'
           draft: true
           allowUpdates: true
           replacesArtifacts: true
-          artifacts: 'artifacts/**/*.zip'
+          artifacts: 'artifacts/release/*.zip'
           generateReleaseNotes: true
           token: ${{ github.token }}
