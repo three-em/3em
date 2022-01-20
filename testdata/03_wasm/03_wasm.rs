@@ -61,7 +61,9 @@ pub unsafe fn _dealloc(ptr: *mut u8, size: usize) {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-  counter: i32,
+  txId: String,
+  owner: String,
+  height: usize,
 }
 
 #[derive(Deserialize)]
@@ -84,21 +86,10 @@ fn neat_handle(
   _action: Action,
   contract_info: ContractInfo,
 ) -> State {
-  assert_eq!(contract_info.transaction.id, "");
-  assert_eq!(contract_info.transaction.owner, "");
-  assert_eq!(contract_info.transaction.tags.len(), 0);
-  assert_eq!(contract_info.transaction.target, "");
-  assert_eq!(contract_info.transaction.quantity, "");
-  assert_eq!(contract_info.transaction.reward, "");
-  assert_eq!(contract_info.block.height, 0);
-  assert_eq!(contract_info.block.indep_hash, "");
-  assert_eq!(contract_info.block.timestamp, 0);
-
-  let tx_id = b"t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE";
-  let other_state = neat_read_state(tx_id);
-
   State {
-    counter: state.counter + 1,
+    txId: contract_info.transaction.id,
+    owner: contract_info.transaction.owner,
+    height: contract_info.block.height,
   }
 }
 

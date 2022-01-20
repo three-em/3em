@@ -11,7 +11,7 @@ use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::{env, thread};
-use three_em_arweave::arweave::TransactionData;
+use three_em_arweave::gql_result::GQLTagInterface;
 
 pub struct ArweaveInfo {
   port: i32,
@@ -20,16 +20,26 @@ pub struct ArweaveInfo {
 }
 
 #[derive(Serialize, Default, Clone)]
-pub struct ContractBlock {
-  pub height: usize,
-  pub indep_hash: String,
-  pub timestamp: String,
+pub struct InteractionTx {
+  pub id: String,
+  pub owner: String,
+  pub tags: Vec<GQLTagInterface>,
+  pub target: String,
+  pub quantity: String,
+  pub reward: String,
 }
 
 #[derive(Serialize, Default, Clone)]
-pub struct ContractInfo {
-  pub transaction: TransactionData,
-  pub block: ContractBlock,
+pub struct InteractionBlock {
+  pub height: usize,
+  pub indep_hash: String,
+  pub timestamp: usize,
+}
+
+#[derive(Serialize, Default, Clone)]
+pub struct InteractionContext {
+  pub transaction: InteractionTx,
+  pub block: InteractionBlock,
 }
 
 pub fn init(arweave: (i32, String, String)) -> Extension {

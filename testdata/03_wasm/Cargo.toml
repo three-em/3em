@@ -1,13 +1,13 @@
 [package]
-name = "wasm_test1"
+name = "wasm_test3"
 version = "0.1.0"
-authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
+authors = ["Divy Srivastava <dj.srivastava23@gmail.com>", "Andres Pirela <andreespirela@outlook.com>"]
 description = "A simple WASM contract"
 edition = "2018"
 
 [lib]
-name = "01_wasm"
-path = "01_wasm.rs"
+name = "03_wasm"
+path = "03_wasm.rs"
 crate-type = ["cdylib"]
 
 [profile.release]

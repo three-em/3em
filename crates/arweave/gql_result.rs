@@ -36,7 +36,7 @@ pub struct GQLMetaDataInterface {
   pub ty: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct GQLTagInterface {
   pub name: String,
   pub value: String,
