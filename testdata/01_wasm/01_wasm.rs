@@ -36,7 +36,7 @@ pub struct ContractTx {
 pub struct ContractBlock {
   pub height: usize,
   pub indep_hash: String,
-  pub timestamp: String,
+  pub timestamp: usize,
 }
 
 #[derive(Deserialize)]
@@ -92,7 +92,7 @@ fn neat_handle(
   assert_eq!(contract_info.transaction.reward, "");
   assert_eq!(contract_info.block.height, 0);
   assert_eq!(contract_info.block.indep_hash, "");
-  assert_eq!(contract_info.block.timestamp, "");
+  assert_eq!(contract_info.block.timestamp, 0);
 
   let tx_id = b"t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE";
   let other_state = neat_read_state(tx_id);
