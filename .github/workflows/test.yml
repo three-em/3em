@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 60
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
