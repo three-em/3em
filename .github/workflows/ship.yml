@@ -59,7 +59,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --locked --target ${{ matrix.target }}
+          args: --color always --release --locked --target ${{ matrix.target }}
           use-cross: ${{ contains(matrix.target, 'aarch64') }}
 
       - name: Zip unix release

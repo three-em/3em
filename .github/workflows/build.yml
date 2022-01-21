@@ -52,7 +52,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --target ${{ matrix.target }}
+          args: --color always --release --target ${{ matrix.target }}
           use-cross: ${{ contains(matrix.target, 'aarch64') }}
 
       - name: Get Build Name
