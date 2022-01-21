@@ -53,7 +53,7 @@ jobs:
         with:
           command: build
           args: --release --target ${{ matrix.target }}
-          use-cross: contains(matrix.target, 'aarch64')
+          use-cross: ${{ contains(matrix.target, 'aarch64') }}
 
       - name: Get Build Name
         id: zip

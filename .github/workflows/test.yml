@@ -53,4 +53,4 @@ jobs:
         with:
           command: test
           args: --target ${{ matrix.target }}
-          use-cross: contains(matrix.target, 'aarch64')
+          use-cross: ${{ contains(matrix.target, 'aarch64') }}

@@ -60,6 +60,7 @@ jobs:
         with:
           command: build
           args: --release --locked --target ${{ matrix.target }}
+          use-cross: ${{ contains(matrix.target, 'aarch64') }}
 
       - name: Zip unix release
         if: runner.os == 'linux'
