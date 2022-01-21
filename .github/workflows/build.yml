@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 60
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -33,6 +33,12 @@ jobs:
 
           - os: macos-latest
             target: x86_64-apple-darwin
+
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+          - os: macos-latest
+            target: aarch64-apple-ios
 
     steps:
       - name: Checkout repo
