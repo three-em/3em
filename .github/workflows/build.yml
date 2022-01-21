@@ -64,7 +64,7 @@ jobs:
         with:
           name: ${{ steps.zip.outputs.name }}
           path: |
-            target/${{ matrix.target }}/three_em
-            target/${{ matrix.target }}/three_em.exe
+            target/${{ matrix.target }}/release/three_em
+            target/${{ matrix.target }}/release/three_em.exe
           if-no-files-found: error
           retention-days: 7

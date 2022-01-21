@@ -64,19 +64,19 @@ jobs:
 
       - name: Zip unix release
         if: runner.os == 'linux'
-        working-directory: target/release
+        working-directory: target/${{ matrix.target }}/release
         run: zip -r three_em-${{ matrix.target }}.zip three_em
 
       - name: Zip windows release
         if: runner.os == 'windows'
-        working-directory: target/release
+        working-directory: target/${{ matrix.target }}/release
         run: Compress-Archive -CompressionLevel Optimal -Force -Path three_em.exe -DestinationPath three_em-${{ matrix.target }}.zip
 
       - name: Upload Release Builds
         uses: actions/upload-artifact@v2
         with:
           name: release
-          path: target/${{ matrix.target }}/*.zip
+          path: target/${{ matrix.target }}/release/*.zip
           if-no-files-found: error
           retention-days: 1
 
