@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "aead"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b613b8e1e3cf911a086f53f03bf286f52fd7a7258e4fa606f0ef220d39d8877"
+dependencies = [
+ "generic-array",
+]
+
+[[package]]
 name = "aes"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12,6 +21,30 @@ dependencies = [
  "cipher",
  "cpufeatures",
  "opaque-debug",
+]
+
+[[package]]
+name = "aes-gcm"
+version = "0.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df5f85a83a7d8b0442b6aa7b504b8212c1733da07b98aae43d4bc21b2cb3cdf6"
+dependencies = [
+ "aead",
+ "aes",
+ "cipher",
+ "ctr",
+ "ghash",
+ "subtle",
+]
+
+[[package]]
+name = "aes-kw"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da2cfe3156f99bc2978b812bcc9c98c6850810e2c0cd48366abb7163a1beeed0"
+dependencies = [
+ "aes",
+ "generic-array",
 ]
 
 [[package]]
@@ -242,45 +275,59 @@ dependencies = [
 ]
 
 [[package]]
-name = "deno_core"
-version = "0.107.0"
+name = "ctr"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc0ec633bafdcb727bf24f28dc4aa4fc5449ffb650d8624c9abea926bbf46e29"
+checksum = "049bb91fb4aaf0e3c7efa6cd5ef877dbbbd15b39dad06d9948de4ec8a75761ea"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
+name = "deno_core"
+version = "0.116.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb1c37269ffbbf5c92e883ad3decb5167aafe2295e026122588b9664e334f62c"
 dependencies = [
  "anyhow",
  "futures",
  "indexmap",
- "lazy_static",
  "libc",
  "log",
+ "once_cell",
  "parking_lot",
  "pin-project",
  "serde",
  "serde_json",
  "serde_v8",
  "url",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
 name = "deno_crypto"
-version = "0.39.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92a4de476121a169d4d2b3f33bb86603764f06f8756602ea7eb763f75bf9dc41"
+checksum = "c218ccebda761b776c19135f5fea895e61fa71182fad953b7d09ba29a276e622"
 dependencies = [
  "aes",
+ "aes-gcm",
+ "aes-kw",
+ "base64",
  "block-modes",
+ "ctr",
  "deno_core",
  "deno_web",
  "elliptic-curve",
- "lazy_static",
  "num-traits",
+ "once_cell",
  "p256",
  "p384",
  "rand",
  "ring",
  "rsa",
  "serde",
+ "serde_bytes",
  "sha-1",
  "sha2",
  "spki",
@@ -290,9 +337,9 @@ dependencies = [
 
 [[package]]
 name = "deno_url"
-version = "0.25.0"
+version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f92a07198662be599b16cb626e65f1f445194e042f463fdb12f64f0f20a7e59"
+checksum = "e1191635d07c94b7405d57ed9829c0a719bef275894081654ce4b635f5a1fcc8"
 dependencies = [
  "deno_core",
  "serde",
@@ -302,9 +349,9 @@ dependencies = [
 
 [[package]]
 name = "deno_web"
-version = "0.56.0"
+version = "0.65.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6c24cd8d11f9f2f0871e872a60dfb0044763631da2d4e584e99aa85ab5cb960"
+checksum = "d1196f316256d1b79d29f6ee04fa6305bf6be60ce561c51d2cb7c6184f4668e1"
 dependencies = [
  "async-trait",
  "base64",
@@ -317,9 +364,9 @@ dependencies = [
 
 [[package]]
 name = "deno_webidl"
-version = "0.25.0"
+version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "108b76ca746b28c99eca00d675aa78087486a6e851f949937fb363a09d0005be"
+checksum = "cab60598e00ab051eacae9a88e9c59a134c003b09e432bf8269cb176a9ad9fff"
 dependencies = [
  "deno_core",
 ]
@@ -595,6 +642,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ghash"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1583cc1656d7839fd3732b80cf4f38850336cdb9b8ded1cd399ca62958de3c99"
+dependencies = [
+ "opaque-debug",
+ "polyval",
+]
+
+[[package]]
 name = "group"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -623,12 +680,6 @@ dependencies = [
  "tokio-util",
  "tracing",
 ]
-
-[[package]]
-name = "hashbrown"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 
 [[package]]
 name = "hashbrown"
@@ -754,12 +805,12 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.6.2"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "824845a0bf897a9042383849b02c1bc219c2383772efcd5c6f9766fa4b81aef3"
+checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg 1.0.1",
- "hashbrown 0.9.1",
+ "hashbrown",
  "serde",
 ]
 
@@ -859,7 +910,7 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "274353858935c992b13c0ca408752e2121da852d07dec7ce5f108c77dfa14d1f"
 dependencies = [
- "hashbrown 0.11.2",
+ "hashbrown",
 ]
 
 [[package]]
@@ -1169,6 +1220,18 @@ name = "pkg-config"
 version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12295df4f294471248581bc09bef3c38a5e46f1e36d6a37353621a0c6c357e1f"
+
+[[package]]
+name = "polyval"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8419d2b623c7c0896ff2d5d96e2cb4ede590fed28fcc34934f4c33c036e620a1"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "opaque-debug",
+ "universal-hash",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -1522,13 +1585,13 @@ dependencies = [
 
 [[package]]
 name = "serde_v8"
-version = "0.18.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cc3e270d6d3caf1c311458ca26cae66d36b912bfa9ebf268a5ebcdba3be1f97"
+checksum = "c4652c035fe8467ec48d084a2119c63995cabfbeffa8e07fb85c87d078566e9b"
 dependencies = [
  "serde",
  "serde_bytes",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
@@ -1687,7 +1750,7 @@ dependencies = [
  "three_em_executor",
  "tokio",
  "url",
- "v8",
+ "v8 0.34.0",
 ]
 
 [[package]]
@@ -1753,7 +1816,7 @@ dependencies = [
  "serde",
  "three_em_smartweave",
  "tokio",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
@@ -1781,7 +1844,7 @@ dependencies = [
  "serde",
  "three_em_arweave",
  "tokio",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
@@ -1793,7 +1856,7 @@ dependencies = [
  "three_em_js",
  "three_em_smartweave",
  "tokio",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
@@ -2000,6 +2063,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f14ee04d9415b52b3aeab06258a3f07093182b88ba0f9b8d203f211a7a7d41c7"
 
 [[package]]
+name = "universal-hash"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f214e8f697e925001e66ec2c6e37a4ef93f0f78c2eed7814394e10c62025b05"
+dependencies = [
+ "generic-array",
+ "subtle",
+]
+
+[[package]]
 name = "untrusted"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2020,9 +2093,9 @@ dependencies = [
 
 [[package]]
 name = "urlpattern"
-version = "0.1.2"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbe1da4e25c8758a07ac5b97fe72dec49416ea0783bfa9d6c24793c3a34f1e4e"
+checksum = "889a1e93b9812fe97a3aa69efdb2146740d70e67916e37911c3bd837762c4902"
 dependencies = [
  "derive_more",
  "regex",
@@ -2046,6 +2119,19 @@ name = "v8"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "102e1d6d3654edf9624ad2b05458bb2e91c05c9275ec92b2a282b18cc840620b"
+dependencies = [
+ "bitflags",
+ "fslock",
+ "lazy_static",
+ "libc",
+ "which",
+]
+
+[[package]]
+name = "v8"
+version = "0.38.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "684e95fe02e0acfeaf630df3a1623f6ad02145f9a92c54ceae8a1923319d3273"
 dependencies = [
  "bitflags",
  "fslock",

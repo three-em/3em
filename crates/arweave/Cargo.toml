@@ -10,7 +10,7 @@ path = "lib.rs"
 
 [dependencies]
 reqwest = { version = "0.11", features = ["blocking", "json"] }
-deno_core = "0.107.0"
+deno_core = "0.116.0"
 sha2 = "0.9.5"
 serde = { version = "1", features = ["derive"] }
 base64 = "0.13.0"

@@ -2,6 +2,7 @@ use deno_core::error::type_error;
 use deno_core::error::AnyError;
 use deno_core::futures::FutureExt;
 use deno_core::ModuleLoader;
+use deno_core::ModuleType;
 use deno_core::ModuleSpecifier;
 
 use std::pin::Pin;
@@ -40,6 +41,7 @@ impl ModuleLoader for EmbeddedModuleLoader {
         code,
         module_url_specified: specifier.clone(),
         module_url_found: specifier,
+        module_type: ModuleType::JavaScript,
       })
     }
     .boxed_local()
