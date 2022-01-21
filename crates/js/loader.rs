@@ -2,8 +2,8 @@ use deno_core::error::type_error;
 use deno_core::error::AnyError;
 use deno_core::futures::FutureExt;
 use deno_core::ModuleLoader;
-use deno_core::ModuleType;
 use deno_core::ModuleSpecifier;
+use deno_core::ModuleType;
 
 use std::pin::Pin;
 
