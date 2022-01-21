@@ -1,6 +1,0 @@
-{
-  "yaml.schemas": {
-    "file:///toc.schema.json": "/toc\\.yml/i",
-    "https://json.schemastore.org/github-workflow.json": "file:///workspaces/3em/.github/workflows/build.yml"
-  }
-}
