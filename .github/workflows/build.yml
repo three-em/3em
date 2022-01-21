@@ -43,10 +43,6 @@ jobs:
             target: aarch64-apple-darwin
             cross: true
 
-          - os: macos-latest
-            target: aarch64-apple-ios
-            cross: false
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
