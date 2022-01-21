@@ -63,7 +63,7 @@ jobs:
           use-cross: ${{ contains(matrix.target, 'aarch64') }}
 
       - name: Zip unix release
-        if: runner.os == 'linux'
+        if: runner.os != 'windows'
         working-directory: target/${{ matrix.target }}/release
         run: zip -r three_em-${{ matrix.target }}.zip three_em
 
