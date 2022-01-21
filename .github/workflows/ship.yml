@@ -31,18 +31,23 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            cross: false
 
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
+            cross: true
 
           - os: ubuntu-latest
             target: aarch64-linux-android
+            cross: true
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            cross: false
 
           - os: macos-latest
             target: x86_64-apple-darwin
+            cross: false
 
     steps:
       - name: Checkout repo
@@ -60,7 +65,7 @@ jobs:
         with:
           command: build
           args: --color always --release --locked --target ${{ matrix.target }}
-          use-cross: ${{ contains(matrix.target, 'aarch64') }}
+          use-cross: ${{ matrix.cross }}
 
       - name: Zip unix release
         if: runner.os != 'windows'
