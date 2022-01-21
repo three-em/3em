@@ -11,14 +11,28 @@ env:
 
 jobs:
   build:
-    name: release / ${{ matrix.os }}
+    name: ${{ matrix.os }} / ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
 
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+
+          - os: ubuntu-latest
+            target: aarch64-linux-android
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
 
     steps:
       - name: Checkout repo
@@ -28,6 +42,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.target }}
           default: true
 
       - name: Use Cache
@@ -37,14 +52,19 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --target ${{ matrix.target }}
+          use-cross: contains(matrix.target, 'aarch64')
+
+      - name: Get Build Name
+        id: zip
+        run: echo "::set-output name=name::three_em-${{ matrix.target }}-${{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-$(git rev-parse --short HEAD)"
 
       - name: Upload Canary Builds
         uses: actions/upload-artifact@v2
         with:
-          name: three_em-${{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-${{ runner.os }}-${{ github.sha }}
+          name: ${{ steps.zip.outputs.name }}
           path: |
-            target/release/three_em
-            target/release/three_em.exe
+            target/${{ matrix.target }}/three_em
+            target/${{ matrix.target }}/three_em.exe
           if-no-files-found: error
           retention-days: 7
