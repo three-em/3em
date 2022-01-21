@@ -1,3 +1,6 @@
 [submodule "helpers/cpp/cJSON"]
 	path = helpers/cpp/cJSON
 	url = https://github.com/DaveGamble/cJSON
+[submodule "third_party/android_ndk"]
+	path = third_party/android_ndk
+	url = https://github.com/denoland/android_ndk.git
