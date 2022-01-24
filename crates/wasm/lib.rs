@@ -6,6 +6,8 @@ use std::cell::Cell;
 use three_em_js::{snapshot, Error};
 use three_em_smartweave::{read_contract_state, InteractionContext};
 
+mod errors;
+
 macro_rules! wasm_alloc {
   ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {
     $alloc.call($scope, $this.into(), &[$len.into()]).unwrap()
@@ -32,6 +34,7 @@ impl WasmRuntime {
   pub fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(RuntimeOptions {
       startup_snapshot: Some(snapshot::snapshot()),
+      extensions: vec![errors::init()],
       ..Default::default()
     });
     // Get hold of the WebAssembly object.
