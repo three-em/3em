@@ -4,6 +4,8 @@ use serde_json::Value;
 use std::alloc::alloc;
 use std::alloc::dealloc;
 use std::alloc::Layout;
+use std::panic;
+use std::sync::Once;
 
 #[link(wasm_import_module = "3em")]
 extern "C" {
@@ -14,6 +16,7 @@ extern "C" {
     // Pointer to the 4 byte array to store the length of the state.
     result_len_ptr: *mut u8,
   ) -> *mut u8;
+  fn throw_error(ptr: *const u8, len: usize);
 }
 
 #[derive(Deserialize)]
@@ -57,6 +60,25 @@ pub unsafe fn _dealloc(ptr: *mut u8, size: usize) {
   let align = std::mem::align_of::<usize>();
   let layout = Layout::from_size_align_unchecked(size, align);
   dealloc(ptr, layout);
+}
+
+#[no_mangle]
+pub fn panic_hook(info: &panic::PanicInfo) {
+  let payload = info.payload();
+  let payload_str = match payload.downcast_ref::<&str>() {
+    Some(s) => s,
+    None => match payload.downcast_ref::<String>() {
+      Some(s) => s,
+      None => "Box<Any>",
+    },
+  };
+  let msg = format!("{}", payload_str);
+  let msg_ptr = msg.as_ptr();
+  let msg_len = msg.len();
+  unsafe {
+    throw_error(msg_ptr, msg_len);
+  }
+  std::mem::forget(msg);
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -118,6 +140,11 @@ pub extern "C" fn handle(
   contract_info_ptr: *mut u8,
   contract_info_size: usize,
 ) -> *const u8 {
+  static SET_HOOK: Once = Once::new();
+  SET_HOOK.call_once(|| {
+    panic::set_hook(Box::new(panic_hook));
+  });
+  
   let state_buf = unsafe { Vec::from_raw_parts(state, state_size, state_size) };
   let state: State = serde_json::from_slice(&state_buf).unwrap();
 
