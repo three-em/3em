@@ -193,7 +193,7 @@ impl WasmRuntime {
 
       let consume_gas_callback = v8::Function::new(scope, consume_gas).unwrap();
       ns.set(scope, consume_gas_str.into(), consume_gas_callback.into());
-      
+
       let ctx = scope.get_current_context();
       let global = ctx.global(scope);
 
@@ -209,9 +209,7 @@ impl WasmRuntime {
         let exports = v8::Local::<v8::Object>::try_from(exports).unwrap();
 
         let mem_str = v8::String::new(scope, "memory").unwrap();
-        let mem_obj = exports
-            .get(scope, mem_str.into())
-            .unwrap();
+        let mem_obj = exports.get(scope, mem_str.into()).unwrap();
         let mem_obj = v8::Local::<v8::Object>::try_from(mem_obj).unwrap();
         let buffer_str = v8::String::new(scope, "buffer").unwrap();
         let buffer_obj = mem_obj.get(scope, buffer_str.into()).unwrap();
@@ -241,13 +239,13 @@ impl WasmRuntime {
             error_len as usize,
           )
         };
-        
+
         // throw error
         let error_str = String::from_utf8_lossy(error_bytes).to_string();
         let error_str = v8::String::new(scope, &error_str).unwrap();
         let error = v8::Exception::error(scope, error_str);
         scope.throw_exception(error.into());
-     };
+      };
 
       let throw_error_callback = v8::Function::new(scope, throw_error).unwrap();
       ns.set(scope, throw_error_str.into(), throw_error_callback.into());
@@ -294,7 +292,7 @@ impl WasmRuntime {
       wasi_ns.set(scope, wasi_fd_write.into(), wasi_fd_write_callback.into());
 
       imports.set(scope, wasi_snapshot_preview1_str.into(), wasi_ns.into());
-      
+
       // << End wasi_snapshot_preview1
 
       let instance = instance_constructor
@@ -528,7 +526,7 @@ mod tests {
     // No cost without metering.
     assert_eq!(rt.get_cost(), 0);
   }
-  
+
   #[tokio::test]
   async fn test_wasm_panic() {
     let mut rt =
