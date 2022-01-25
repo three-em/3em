@@ -6,8 +6,6 @@ use std::cell::Cell;
 use three_em_js::{snapshot, Error};
 use three_em_smartweave::{read_contract_state, InteractionContext};
 
-mod errors;
-
 macro_rules! wasm_alloc {
   ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {
     $alloc.call($scope, $this.into(), &[$len.into()]).unwrap()
@@ -34,7 +32,6 @@ impl WasmRuntime {
   pub fn new(wasm: &[u8]) -> Result<WasmRuntime, AnyError> {
     let mut rt = JsRuntime::new(RuntimeOptions {
       startup_snapshot: Some(snapshot::snapshot()),
-      extensions: vec![errors::init()],
       ..Default::default()
     });
     // Get hold of the WebAssembly object.
@@ -196,6 +193,64 @@ impl WasmRuntime {
 
       let consume_gas_callback = v8::Function::new(scope, consume_gas).unwrap();
       ns.set(scope, consume_gas_str.into(), consume_gas_callback.into());
+      
+      let ctx = scope.get_current_context();
+      let global = ctx.global(scope);
+
+      // >> throw_error
+      let throw_error_str = v8::String::new(scope, "throw_error").unwrap();
+      let throw_error = |scope: &mut v8::HandleScope,
+                         args: v8::FunctionCallbackArguments,
+                         _: v8::ReturnValue| {
+        let ctx = scope.get_current_context();
+        let global = ctx.global(scope);
+        let exports_str = v8::String::new(scope, "exports").unwrap();
+        let exports = global.get(scope, exports_str.into()).unwrap();
+        let exports = v8::Local::<v8::Object>::try_from(exports).unwrap();
+
+        let mem_str = v8::String::new(scope, "memory").unwrap();
+        let mem_obj = exports
+            .get(scope, mem_str.into())
+            .unwrap();
+        let mem_obj = v8::Local::<v8::Object>::try_from(mem_obj).unwrap();
+        let buffer_str = v8::String::new(scope, "buffer").unwrap();
+        let buffer_obj = mem_obj.get(scope, buffer_str.into()).unwrap();
+
+        let mem_buf =
+          v8::Local::<v8::ArrayBuffer>::try_from(buffer_obj).unwrap();
+
+        let store = mem_buf.get_backing_store();
+        let error_ptr = args
+          .get(0)
+          .to_number(scope)
+          .unwrap()
+          .int32_value(scope)
+          .unwrap();
+
+        let error_len = args
+          .get(1)
+          .to_number(scope)
+          .unwrap()
+          .int32_value(scope)
+          .unwrap();
+
+        let error_bytes = unsafe {
+          get_backing_store_slice_mut(
+            &store,
+            error_ptr as usize,
+            error_len as usize,
+          )
+        };
+        
+        // throw error
+        let error_str = String::from_utf8_lossy(error_bytes).to_string();
+        let error_str = v8::String::new(scope, &error_str).unwrap();
+        let error = v8::Exception::error(scope, error_str);
+        scope.throw_exception(error.into());
+     };
+
+      let throw_error_callback = v8::Function::new(scope, throw_error).unwrap();
+      ns.set(scope, throw_error_str.into(), throw_error_callback.into());
 
       let ns_str = v8::String::new(scope, "3em").unwrap();
       imports.set(scope, ns_str.into(), ns.into());
@@ -239,6 +294,8 @@ impl WasmRuntime {
       wasi_ns.set(scope, wasi_fd_write.into(), wasi_fd_write_callback.into());
 
       imports.set(scope, wasi_snapshot_preview1_str.into(), wasi_ns.into());
+      
+      // << End wasi_snapshot_preview1
 
       let instance = instance_constructor
         .new_instance(scope, &[module.into(), imports.into()])
@@ -248,8 +305,6 @@ impl WasmRuntime {
       let exports = instance.get(scope, exports_str.into()).unwrap();
       let exports = v8::Local::<v8::Object>::try_from(exports)?;
 
-      let ctx = scope.get_current_context();
-      let global = ctx.global(scope);
       global
         .set(scope, exports_str.into(), exports.into())
         .unwrap();
@@ -472,6 +527,27 @@ mod tests {
 
     // No cost without metering.
     assert_eq!(rt.get_cost(), 0);
+  }
+  
+  #[tokio::test]
+  async fn test_wasm_panic() {
+    let mut rt =
+      WasmRuntime::new(include_bytes!("../../testdata/01_wasm/01_wasm.wasm"))
+        .unwrap();
+
+    let action = json!({});
+    let mut action_bytes = deno_core::serde_json::to_vec(&action).unwrap();
+    let mut prev_state_bytes = vec![];
+    let state = rt
+      .call(
+        &mut prev_state_bytes,
+        &mut action_bytes,
+        InteractionContext {
+          transaction: InteractionTx::default(),
+          block: InteractionBlock::default(),
+        },
+      )
+      .expect_err("should panic");
   }
 
   #[tokio::test]
