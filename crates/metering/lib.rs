@@ -974,7 +974,7 @@ mod tests {
     // (expected gas consumption, module bytes)
     let sources: [(usize, &[u8]); 4] = [
       (
-        3263,
+        3375,
         include_bytes!("../../helpers/rust/example/contract.wasm"),
       ),
       (11545, include_bytes!("../../testdata/02_wasm/02_wasm.wasm")),
