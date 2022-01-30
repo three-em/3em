@@ -1,6 +1,6 @@
-import { Runtime } from "../../js/web/index.js";
-import { hex, Machine } from "../../evm/wasm/index.js";
-import { WasmRuntime } from "../../wasm/lib/index.js";
+import { Runtime } from "./sw.js";
+import { hex, Machine } from "./evm/index.js";
+import { WasmRuntime } from "./wasm.js";
 
 const getTagSource = `
 function getTag(tx, field) {
@@ -293,6 +293,7 @@ export async function executeContract(
 
       return currState;
     case "application/octet-stream":
+      // TODO: evm
       break;
     default:
       throw new Error(`Unsupported contract type: ${type}`);

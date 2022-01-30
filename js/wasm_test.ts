@@ -1,4 +1,4 @@
-import { WasmRuntime } from "./index.js";
+import { WasmRuntime } from "./wasm.js";
 
 const encode = (s: any): Uint8Array =>
   new TextEncoder().encode(JSON.stringify(s));

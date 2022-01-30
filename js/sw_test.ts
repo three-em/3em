@@ -1,5 +1,5 @@
-import { Runtime } from "./index.js";
-import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { Runtime } from "./sw.js";
+import { assertEquals } from "https://deno.land/std@0.123.0/testing/asserts.ts";
 
 Deno.test("test_runtime_1", async () => {
   const runtime = new Runtime(
