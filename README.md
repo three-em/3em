@@ -61,18 +61,9 @@ Measures:
 $ hyperfine 'target/release/bench' 'target/release/bench_evm' 'target/release/bench_wasm' 'node tools/benchmarks/smartweave/index.js' 'target/release/bench_fh' -r 20 --export-json bench.json
 ```
 
-![](bench.png)
+![](tools/benchmarks/bench_mean.png)
 
-![](bench2.png)
-
-```
-Summary
-  'target/release/bench_fh' ran
-   15.57 ± 6.84 times faster than 'target/release/bench_wasm'
-   16.37 ± 7.72 times faster than 'target/release/bench'
-   19.47 ± 9.36 times faster than 'target/release/bench_evm'
-   67.79 ± 29.33 times faster than 'node tools/benchmarks/smartweave/index.js'
-```
+![](tools/benchmarks/bench_runs.png)
 
 - The JavaScript contract used in `3em JS` and `SmartWeave JS` is
   `t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE`.
@@ -84,8 +75,6 @@ Summary
   of interactions (except the JavaScript contract).
 - `fh` = Fixed height of `749180`
 - The gateway used is `arweave.net`
-- Host information can be found
-  [here](https://github.com/littledivy/3em_redstone_benchmarks/blob/main/system_info.txt)
 
 ## Multi-language support
 

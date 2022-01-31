@@ -73,3 +73,20 @@ jobs:
             target/${{ matrix.target }}/release/three_em.exe
           if-no-files-found: error
           retention-days: 7
+
+      # Benchmarks
+
+      - name: Benchmark
+        if: matrix.cross == "true"
+        working-directory: tools/benchmark
+        run: |
+          ./benchmark.sh
+          ./mean.py
+          ./times.py
+
+      - name: Upload Benchmark
+        if: matrix.target == "x86_64-unknown-linux-gnu"
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: benchmark
+          path: tools/benchmarks/results.md
