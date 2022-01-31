@@ -87,9 +87,17 @@ jobs:
           ./mean.py results.json
           ./times.py results.json
 
-      - name: Upload Benchmark
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
+      - name: Post Benchmark
+        if: matrix.target == 'x86_64-unknown-linux-gnu' && github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: benchmark
           path: tools/benchmarks/results.md
+
+      - name: Commit Report
+        if: matrix.target == 'x86_64-unknown-linux-gnu' && github.repository == 'three-em/3em' && github.ref == 'refs/heads/main'
+        uses: EndBug/add-and-commit@v8
+        with:
+          add: '["tools/benchmarks/bench_mean.png", "tools/benchmarks/bench_runs.png"]'
+          message: "chore:(benchmark): update benchmark results"
+          default_author: github_actions
