@@ -63,7 +63,7 @@ $ hyperfine 'target/release/bench' 'target/release/bench_evm' 'target/release/be
 
 ![](tools/benchmarks/bench_mean.png)
 
-![](tools/benchmarks/bench_runs.png)
+![](tools/benchmarks/bench_times.png)
 
 - The JavaScript contract used in `3em JS` and `SmartWeave JS` is
   `t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE`.

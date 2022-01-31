@@ -37,19 +37,17 @@ labels = {
     },
 }
 
-performance = [b["times"] for b in results]
-
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(8, 4))
 
 for result in results:
-    ypoints_0 = np.array([round(t * 1000) for t in result["times"]])
-    ax.plot(ypoints_0,
+    ax.plot(np.array([round(t * 1000) for t in result["times"]]),
             color=labels[result["command"]]["color"],
             label=labels[result["command"]]["name"])
-    ax.legend()
 
-ax.set_xlim(right=20)  # adjust xlim to fit labels
-ax.set_xlabel('iterations')
-ax.set_ylabel('time taken per iteration (s)')
+ax.legend()
+plt.xticks(range(0, 20, 1), labels=range(1, 21, 1))
+ax.set_xlim(left=-1, right=20)
+ax.set_xlabel('runs')
+ax.set_ylabel('time taken per run (ms)')
 
-plt.savefig(os.path.realpath(os.path.dirname(__file__)) + '/bench_runs.png')
+plt.savefig(os.path.realpath(os.path.dirname(__file__)) + '/bench_times.png')
