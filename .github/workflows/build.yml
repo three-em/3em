@@ -83,6 +83,8 @@ jobs:
           wget https://github.com/sharkdp/hyperfine/releases/download/v1.12.0/hyperfine_1.12.0_amd64.deb
           sudo dpkg -i hyperfine_1.12.0_amd64.deb
           pip install matplotlib numpy six --upgrade
+          yarn install
+
           ./benchmark.sh
           ./mean.py results.json
           ./times.py results.json
@@ -99,5 +101,5 @@ jobs:
         uses: EndBug/add-and-commit@v8
         with:
           add: '["tools/benchmarks/bench_mean.png", "tools/benchmarks/bench_runs.png"]'
-          message: "chore:(benchmark): update benchmark results"
+          message: 'chore:(benchmark): update benchmark results'
           default_author: github_actions
