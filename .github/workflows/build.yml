@@ -77,7 +77,7 @@ jobs:
       # Benchmarks
 
       - name: Benchmark
-        if: ${{ matrix.cross == 'false' }}
+        if: ${{ matrix.cross == false }}
         working-directory: tools/benchmark
         run: |
           ./benchmark.sh
