@@ -78,11 +78,11 @@ jobs:
 
       - name: Benchmark
         if: ${{ matrix.cross == false }}
-        working-directory: tools/benchmark
+        working-directory: tools/benchmarks
         run: |
           ./benchmark.sh
-          ./mean.py
-          ./times.py
+          ./mean.py results.json
+          ./times.py results.json
 
       - name: Upload Benchmark
         if: matrix.target == 'x86_64-unknown-linux-gnu'
