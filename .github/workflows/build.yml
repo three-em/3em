@@ -85,7 +85,7 @@ jobs:
           ./times.py
 
       - name: Upload Benchmark
-        if: matrix.target == "x86_64-unknown-linux-gnu"
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: benchmark
