@@ -37,7 +37,7 @@ labels = {
     },
 }
 
-fig, ax = plt.subplots(figsize=(8, 4))
+fig, ax = plt.subplots(figsize=(10, 5))
 
 for result in results:
     ax.plot(np.array([round(t * 1000) for t in result["times"]]),
