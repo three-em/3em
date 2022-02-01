@@ -122,9 +122,20 @@ const WORKER = `{
   selfCloned.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
       let currentState = e.data.state;
-      const interactions = e.data.interactions || [];
+      const interactions = e.data.interactions ?? [];
+      if (interactions.length == 0) {
+        const input = e.data.action;
+        try {
+          const state = await handle(
+            currentState,
+            { input },
+          );
+  
+          currentState = state.state;
+        } catch(e) {}
+      }
 
-      for (let i = 0; i < interactions; i++) {
+      for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
         const input = tx.tags.find(data => data.name === "Input");
         try {

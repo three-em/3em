@@ -12,13 +12,11 @@ pub fn handler(_attr: TokenStream, input: TokenStream) -> TokenStream {
   let fn_block = &func.block;
 
   TokenStream::from(quote! {
-    use ::std::alloc::alloc;
-    use ::std::alloc::dealloc;
-    use ::std::alloc::Layout;
-    use ::std::mem::align_of;
     use ::std::panic;
     use ::std::sync::Once;  
-    
+    use ::three_em::alloc::*;
+    use ::three_em::*;
+
     #[link(wasm_import_module = "3em")]
     extern "C" {
       fn smartweave_read_state(
@@ -28,43 +26,19 @@ pub fn handler(_attr: TokenStream, input: TokenStream) -> TokenStream {
         // Pointer to the 4 byte array to store the length of the state.
         result_len_ptr: *mut u8,
       ) -> *mut u8;
-      fn throw_error(ptr: *const u8, len: usize);
     }
     
+    static mut LEN: usize = 0;
+   
     #[no_mangle]
     pub unsafe fn _alloc(len: usize) -> *mut u8 {
-      let align = align_of::<usize>();
-      let layout = Layout::from_size_align_unchecked(len, align);
-      alloc(layout)
+      contract_alloc(len)
     }
 
     #[no_mangle]
     pub unsafe fn _dealloc(ptr: *mut u8, size: usize) {
-      let align = align_of::<usize>();
-      let layout = Layout::from_size_align_unchecked(size, align);
-      dealloc(ptr, layout);
+      contract_dealloc(ptr, size)
     }
-
-    #[no_mangle]
-    pub fn panic_hook(info: &panic::PanicInfo) {
-      let payload = info.payload();
-      let payload_str = match payload.downcast_ref::<&str>() {
-        Some(s) => s,
-        None => match payload.downcast_ref::<String>() {
-          Some(s) => s,
-          None => "Box<Any>",
-        },
-      };
-      let msg = format!("{}", payload_str);
-      let msg_ptr = msg.as_ptr();
-      let msg_len = msg.len();
-      unsafe {
-        throw_error(msg_ptr, msg_len);
-      }
-      std::mem::forget(msg);
-    }
-
-    static mut LEN: usize = 0;
 
     #[no_mangle]
     pub extern "C" fn get_len() -> usize {
