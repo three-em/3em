@@ -1,0 +1,49 @@
+{
+  "state": {
+    "name": "Pixels and Grain",
+    "ticker": "ISO",
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 1223200
+    },
+    "vault": {},
+    "votes": [],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.6
+      ],
+      [
+        "support",
+        0.62
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        720
+      ],
+      [
+        "communityLogo",
+        "svWgpBBhbcx6Id6mRZ15hGkCNiuP7bqZQfbSzWrkPMw"
+      ],
+      [
+        "communityDescription",
+        "Learnings for make benefit glorious artform of photography."
+      ],
+      [
+        "communityAppUrl",
+        "https://pixelsandgrain.photo.blog/"
+      ]
+    ]
+  },
+  "validity": {
+    "UEtB_qXCBrDlg0hS0GRtTACxkP90lbUvyxxVauPyPJ8": false
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "state": {
+    "name": "test",
+    "ticker": "VRTNFT",
+    "title": "test",
+    "description": "test",
+    "owner": "aIUmY9Iy4qoW3HOikTy6aJww-mM4Y-CUJ7mXoPdzdog",
+    "allowMinting": true,
+    "balances": {
+      "aIUmY9Iy4qoW3HOikTy6aJww-mM4Y-CUJ7mXoPdzdog": 1,
+      "AOvWwnkMZTItUjTEy4MNB5RJatrMf52f2RNEX8zwq5w": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1629245367"
+  },
+  "validity": {
+    "obJT78jhsPT_aYB-zLSgp0SjRCrEtDfiHF7EBfj21uo": true
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "state": {
+    "name": "A thousand words #2: Always with us",
+    "ticker": "VRTNFT",
+    "title": "A thousand words #2: Always with us",
+    "description": "Verto Genesis Mint.\n\nFour generations of my family have celebrated Easter here. \n\nOnly three generations are still able to visit.",
+    "owner": "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA",
+    "allowMinting": true,
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 1,
+      "WNeEQzI24ZKWslZkQT573JZ8bhatwDVx6XVDrrGbUyk": 0
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1629245212"
+  },
+  "validity": {
+    "2Yd2cu6UDHIp18n5jjgp51w3kTGok-tx4jegdGFKpS8": true,
+    "A4eNHFWXMhy6WPMZpO__VsREcB7GA3JaGZaNMNnoQUU": false,
+    "hFucyKwFdmT7H9G6HnJUGjwrT9ODmVDPgSWRiv-wDJE": false,
+    "vP_dQyh-v5uKeldeaEvgCA2eutwr-MXoC9l8443PYVg": true
+  }
+}

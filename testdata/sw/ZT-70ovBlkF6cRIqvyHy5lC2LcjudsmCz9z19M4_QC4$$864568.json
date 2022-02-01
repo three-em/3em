@@ -1,0 +1,691 @@
+{
+  "state": {
+    "name": "ArGo App",
+    "ticker": "ARGO",
+    "balances": {
+      "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY": 0,
+      "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA": 0,
+      "BPr7vrFduuQqqVMu_tftxsScTKUq9ke0rx4q5C9ieQU": 0,
+      "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k": 0,
+      "jTA8_iBEM8wkjWRdPIneXa2tJW9mDAV59-ZHIb5KXsU": 10,
+      "pvPWBZ8A5HLpGSEfhEmK1A3PfMgB_an8vVS6L14Hsls": 1680,
+      "vxUdiv2fGHMiIoek5E4l3M5qSuKCZtSaOBYjMRc94JU": 10303,
+      "D6FrWGDzFMdt0P9sXnMu6dYsQY-YL_THFA0jBpHD4LU": 298,
+      "_r-2mK0YP-yNoXbbmALn36v2F6hyqx4Gjo3ZP_FyMBg": 300,
+      "XacJBWnPmWEHUixZepCPGc-DJD7jDn1CiZ99UAKpkIk": 500,
+      "WNeEQzI24ZKWslZkQT573JZ8bhatwDVx6XVDrrGbUyk": 10013,
+      "aLemOhg9OGovn-0o4cOCbueiHT9VgdYnpJpq7NgMA1A": 56,
+      "VC4NJ3nlVJJPgyJ4DScpeXx3-UnXmiasfrxiIFpJwb0": 300,
+      "x6B0nQQkqMjxb9SUITSopxTjCT0UuG6vViDFWUOellk": 3000,
+      "l-x7026roC1dkAmJ5iWhz4vGOxVnKmotGbceFAA-NwE": 0,
+      "-zkZpuG7DiIsdFzRVgWdLQ3zxU2bDY-0r90Ri8lxL-A": 0,
+      "ZXTB2tX2ZH4F1PPaI6ArPIw9jWMeVe7eTiWnLoiHFCg": 900,
+      "YFKmM5FvN2bkmPjWLgamWTXHyYNwgLDr0VVaxHHCVn4": 300,
+      "pYToJUf_LphAfcPfZaexyiB0xWp2_mlk9c6mtX6lzzY": 9997,
+      "_F4zLhIvyvRJ6JMPDPKBDVjIQEyfDcxueshnXgEJtpE": 300,
+      "C3GgUFC-DpcVWY2Fb_46Q5moD6JWbenyuRLf83gx1Uk": 10000,
+      "3CbmnFJnY3uwrT6EYh3GoJ0bo-fWfUh9hS6XNQAEavY": 1,
+      "1gBiM3n-vG7TQ9qP0E_ouq6-zOyQvtQ_CgOUbvGO4dc": 1009,
+      "dxGmt44SZenqmHa-_IEl8AmuejgITs4pB3oe-xUR36A": 10,
+      "T_kwtK6EIrmeljyknG_3AF3ubDk9pCz5YBzuI0Zc2Ng": 50,
+      "Nipmsoh9zoti7Wlo8W-gu98HYGd7fYncdf0f6rN9dcw": 40,
+      "2UV_USFFJxFWUygX8vFiPMaZP4y1IP30Wqc4LI-ceAs": 1,
+      "91zzeHI7qmNThI1yO5T12WujAPDqVi3zml-bCAack98": 375,
+      "SMft-XozLyxl0ztM-gPSYKvlZVCBiiftNIb4kGFI7wg": 2
+    },
+    "vault": {
+      "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA": [
+        {
+          "balance": 2250000,
+          "end": 815166,
+          "start": 552366
+        },
+        {
+          "balance": 1875000,
+          "end": 1089953,
+          "start": 629153
+        },
+        {
+          "balance": 1875000,
+          "end": 1352754,
+          "start": 629154
+        },
+        {
+          "balance": 1500000,
+          "end": 1615557,
+          "start": 629157
+        }
+      ],
+      "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY": [
+        {
+          "balance": 6000000,
+          "end": 815169,
+          "start": 552369
+        },
+        {
+          "balance": 2099745,
+          "start": 622564,
+          "end": 821507
+        },
+        {
+          "balance": 1500255,
+          "end": 821510,
+          "start": 622568
+        }
+      ],
+      "9Oyncaa4eROwxPZtPp7k19T3C8Y5LXHy2SOsEYMcb2s": [
+        {
+          "balance": 15000,
+          "start": 556212,
+          "end": 685812
+        }
+      ],
+      "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k": [
+        {
+          "balance": 2250000,
+          "end": 821121,
+          "start": 558321
+        },
+        {
+          "balance": 1875000,
+          "end": 1097571,
+          "start": 616611
+        },
+        {
+          "balance": 1875000,
+          "end": 1360372,
+          "start": 616612
+        },
+        {
+          "balance": 1500000,
+          "end": 1623199,
+          "start": 616639
+        }
+      ],
+      "h1plQVB0mmGkmQ1APpp_GtVhXyrBhAgGeHhMJBalHAg": [
+        {
+          "balance": 1000,
+          "start": 559566,
+          "end": 689166
+        }
+      ],
+      "jTA8_iBEM8wkjWRdPIneXa2tJW9mDAV59-ZHIb5KXsU": [
+        {
+          "balance": 250000,
+          "start": 563919,
+          "end": 1352319
+        },
+        {
+          "balance": 300000,
+          "start": 563919,
+          "end": 826719
+        },
+        {
+          "balance": 250000,
+          "start": 563919,
+          "end": 1089519
+        },
+        {
+          "balance": 200000,
+          "start": 563919,
+          "end": 1615119
+        }
+      ],
+      "pYToJUf_LphAfcPfZaexyiB0xWp2_mlk9c6mtX6lzzY": [
+        {
+          "balance": 300,
+          "end": 1913024,
+          "start": 599024
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Increasing max lock length",
+        "yays": 720,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY"
+        ],
+        "start": 527571,
+        "totalWeight": 720,
+        "key": "lockMaxLength",
+        "value": 1314000
+      },
+      {
+        "status": "quorumFailed",
+        "type": "mint",
+        "note": "Minting 50M for Prashant",
+        "yays": 0,
+        "nays": 0,
+        "voted": [],
+        "start": 542969,
+        "totalWeight": 720,
+        "recipient": "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+        "qty": 50000000
+      },
+      {
+        "status": "quorumFailed",
+        "type": "mint",
+        "note": "Minting 50M for Mitrasish",
+        "yays": 0,
+        "nays": 0,
+        "voted": [],
+        "start": 542971,
+        "totalWeight": 720,
+        "recipient": "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+        "qty": 50000000
+      },
+      {
+        "status": "passed",
+        "type": "burnVault",
+        "note": "Burning for fresh minting",
+        "yays": 129600000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY"
+        ],
+        "start": 549734,
+        "totalWeight": 129600000000,
+        "target": "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY"
+      },
+      {
+        "status": "passed",
+        "type": "burnVault",
+        "note": "burning for fresh mint",
+        "yays": 5637855000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 549738,
+        "totalWeight": 160200000000,
+        "target": "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+      },
+      {
+        "status": "quorumFailed",
+        "type": "mint",
+        "note": "Minting for mitrasish - Founder of ArGo",
+        "yays": 5508000000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY"
+        ],
+        "start": 550136,
+        "totalWeight": 11016255000000,
+        "recipient": "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k",
+        "qty": 7500000
+      },
+      {
+        "status": "quorumFailed",
+        "type": "set",
+        "note": "Adding logo for ArGo Community",
+        "yays": 5508000000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY"
+        ],
+        "start": 550957,
+        "totalWeight": 11016255000000,
+        "key": "communityLogo",
+        "value": "KXlk7ZovVgvBGjywhFZrOglWmTegvPXt793nCdct7eA"
+      },
+      {
+        "status": "quorumFailed",
+        "type": "mint",
+        "note": "Minting fresh token for Mitrasish Mukherjee - Founder ARGO",
+        "yays": 591300000000,
+        "nays": 0,
+        "voted": [
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 552369,
+        "totalWeight": 2168100000000,
+        "recipient": "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k",
+        "qty": 7500000
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "The payout for Islander - Landing page design",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 554157,
+        "totalWeight": 2168100000000,
+        "recipient": "9Oyncaa4eROwxPZtPp7k19T3C8Y5LXHy2SOsEYMcb2s",
+        "qty": 15000,
+        "lockLength": 129600
+      },
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Adding app url",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY"
+        ],
+        "start": 554159,
+        "totalWeight": 2168100000000,
+        "key": "communityAppUrl",
+        "value": "https://argoapp.live/"
+      },
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Adding app logo",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 554162,
+        "totalWeight": 2168100000000,
+        "key": "communityLogo",
+        "value": "UxvvMwZ7G_QBSGAjn65Yv1Fh9AJfCeVcvVJB3PV0a8w"
+      },
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Adding app logo",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 554171,
+        "totalWeight": 2168100000000,
+        "key": "communityDescription",
+        "value": "ArGo is a one-click deployment service platform on top of Arweave Permaweb. Deploy web projects with the best front-end developer experience on Arweave Permaweb."
+      },
+      {
+        "status": "passed",
+        "type": "mint",
+        "note": "Minting fresh token for Mitrasish Mukherjee - Founder ARGO",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 555001,
+        "totalWeight": 2168100000000,
+        "recipient": "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k",
+        "qty": 7500000
+      },
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Changing ArGo Logo for better visibility in communityXYZ",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 556697,
+        "totalWeight": 2170044000000,
+        "key": "communityLogo",
+        "value": "FRoA5qWdgfDRkyF3FIChYUjfkJgVQz_6l2Mx6hjG4Xs"
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Minting for Sarthak for his work on a feature to invite members to the organization.",
+        "yays": 2168100000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 557423,
+        "totalWeight": 2170044000000,
+        "recipient": "h1plQVB0mmGkmQ1APpp_GtVhXyrBhAgGeHhMJBalHAg",
+        "qty": 1000,
+        "lockLength": 129600
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Minting 25% of the total for 1kx - vested for two years - Locked for 2 years",
+        "yays": 2759400000000,
+        "nays": 0,
+        "voted": [
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k"
+        ],
+        "start": 561535,
+        "totalWeight": 2761473600000,
+        "recipient": "jTA8_iBEM8wkjWRdPIneXa2tJW9mDAV59-ZHIb5KXsU",
+        "qty": 250000,
+        "lockLength": 525600
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Minting 30% of the total for 1kx - vested for one year",
+        "yays": 2759400000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+          "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k"
+        ],
+        "start": 561535,
+        "totalWeight": 2761473600000,
+        "recipient": "jTA8_iBEM8wkjWRdPIneXa2tJW9mDAV59-ZHIb5KXsU",
+        "qty": 300000,
+        "lockLength": 262800
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Minting 25% of the total for 1kx - vested for three years - Locked for 3 years",
+        "yays": 2759400000000,
+        "nays": 0,
+        "voted": [
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k"
+        ],
+        "start": 561535,
+        "totalWeight": 2761473600000,
+        "recipient": "jTA8_iBEM8wkjWRdPIneXa2tJW9mDAV59-ZHIb5KXsU",
+        "qty": 250000,
+        "lockLength": 788400
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Minting 20% of the total for 1kx - vested for four years - Locked for 4 years",
+        "yays": 2759400000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+          "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k"
+        ],
+        "start": 561537,
+        "totalWeight": 2761473600000,
+        "recipient": "jTA8_iBEM8wkjWRdPIneXa2tJW9mDAV59-ZHIb5KXsU",
+        "qty": 200000,
+        "lockLength": 1051200
+      },
+      {
+        "status": "passed",
+        "type": "mint",
+        "note": "Minting for Community Distribution",
+        "yays": 2759400000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA",
+          "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k"
+        ],
+        "start": 563884,
+        "totalWeight": 2761473600000,
+        "recipient": "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+        "qty": 50000
+      },
+      {
+        "status": "quorumFailed",
+        "type": "mint",
+        "note": "Minting token for community distribution. The entire token will be minted and sent to an ArGo app wallet address. Which will be used for token distribution as token rewards.",
+        "yays": 591300000000,
+        "nays": 0,
+        "voted": [
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 613537,
+        "totalWeight": 3379447800000,
+        "recipient": "WCx054sIZjvbkZpCdaRYVLD5Z2fXmg7fH_C-8bRztKA",
+        "qty": 50000
+      },
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Minting for remaining of 30% company token to be vested for 1 year",
+        "yays": 2759400000000,
+        "nays": 0,
+        "voted": [
+          "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+          "jeNnvxnU0qguF-xj3k1hMYlSHgEOMAxtpeYBwKy1r9k",
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 616232,
+        "totalWeight": 3379447800000,
+        "recipient": "NO6e9qZuAiXWhjJvGl7DYEMt90MMl1kdLwhhocQRAuY",
+        "qty": 2099745,
+        "lockLength": 198943
+      },
+      {
+        "status": "quorumFailed",
+        "type": "set",
+        "note": "This vote is to provide our official social links to enable communication.",
+        "yays": 4291650000000,
+        "nays": 0,
+        "voted": [
+          "mglUufXx6iyx4xRmzXyXJlgr_B6oBWCPhpTqXymDrvA"
+        ],
+        "start": 629899,
+        "totalWeight": 11602181099745,
+        "key": "communityDiscussionLinks",
+        "value": [
+          "https://discord.gg/28bkntHu9g",
+          "https://twitter.com/argoapplive",
+          "https://www.linkedin.com/company/argoapp",
+          "https://community.xyz/#ZT-70ovBlkF6cRIqvyHy5lC2LcjudsmCz9z19M4_QC4/tokens"
+        ]
+      }
+    ],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        1314000
+      ],
+      [
+        "communityDescription",
+        "ArGo is a one-click deployment service platform on top of Arweave Permaweb. Deploy web projects with the best front-end developer experience on Arweave Permaweb."
+      ],
+      [
+        "communityLogo",
+        "FRoA5qWdgfDRkyF3FIChYUjfkJgVQz_6l2Mx6hjG4Xs"
+      ],
+      [
+        "communityAppUrl",
+        "https://argoapp.live/"
+      ]
+    ]
+  },
+  "validity": {
+    "y_IqrgX_btZ0yXNPWzST6kazsIEAopsjAcmpiLvaPX8": true,
+    "ZjepR2HlhKH_Jl4soNRUueR6AKNgOMX2C8tGSfLCMuU": true,
+    "jKb4mvj_Lm_h6xFIQWVJtK48sZgQ8q0sMLIjftawbCw": true,
+    "KrsLpiCX4pflC7EtbaC7DhR3bTCZ104Wi5UPQBmy9Ks": true,
+    "rUu_5uqpgRKFCkktIyjogg1InRawotNXVWxW0QeGc3g": true,
+    "vSmz6wUyQFMWz9M06MXRyyLoUr-RMJRLoCL85TZC03U": true,
+    "X1nh3BdG7wNBmU2PdUTPLZylO-XHUWqvlKnG9fiZ_bs": true,
+    "47Wf5NoRGYycwlvb6niYerjR2mbo47cWMsiMSnK5_sI": true,
+    "n2aNbsRUCP0KOjgSEc3TfO0hFQMk7d-_kQibIm6YXWc": true,
+    "oUXS9q0XGmT0R61CW8Aturog23FQ9cABG2wqcYkUg4M": true,
+    "II3ljBDn3gMMOxV7j5FoGr9rLdKPggDNa9fCOhrKrMM": true,
+    "OzdIhVzxCJsJjrKQH65puF5XttRybYk37_b4eExSDQg": true,
+    "hqdM64Z7YFOFSrOTwz0Q8mJi24KjOK36kwMmFPsdSjI": true,
+    "SmFtkAFzZducVZHY_aZt4sfx8-kVaDyZ2jOoDHmyh6M": true,
+    "wfG_UvVquU6OB7k3qOxfI1MPRR0ygrIRs_PmaVfw1cs": true,
+    "rq8UnfTNR-Dc-3Y59fdZ-RqYaqfn32Mb5gdFZue_Qu4": true,
+    "NyLEmaeoa39gytIg2CXxz2R2_PVODFvmPCMuq-f6_iA": true,
+    "0CKIxul4bhBEo5dLYmQQJRMV8lsY1dgQtT3tRAQEuU0": true,
+    "ViyVinmm8WqTHHMIcJonxu7XMgbujQGO_pY9le9hWT0": true,
+    "4hZvW1X0idekU8kmNjk1qCwYlrU7y0WNB0SPE9KunGc": true,
+    "LvQaXBNVHZHc3p2XWqeixNJb5RTq8j4sDqCksBpx16o": true,
+    "LMSt28BQ5ok7aHjKSs8ISxoe4oamh1a6euLAO8BmNLU": true,
+    "JmFEHG3tPY76xUaR_L1GvseouzhGhwoimypCBElRqi8": true,
+    "cK4HQ7BskjiJuoz3qSOfpgjONg8eYlhChVRSLXt-NB0": true,
+    "gu2CsPIfHvklwLcvixNQWmlad9hV3eI_yztMnJsi_G0": true,
+    "_G-TDEHRowFCel95ApwuxrDEMpfeRYHa9EImASZsPF8": false,
+    "cevnmHQphXTnyyCj28Cz4irOXxKqVDPUojASarX2da4": true,
+    "CP9jzSX3Bz1Tz2KGKb-UVJql5f8WKKAF9e6uF2YdMf8": false,
+    "dAD_wnmNIbYu7pyWiikoizo0qZFfiQLe9Gr9uMkJ7ns": false,
+    "1bV9Fyl6vn4JquwlGd6yQKtiXquj9veTd6-lLPPsp38": false,
+    "hCQoOU_4oxVEqZ0YLhcX3fK-49K_4_35-rM7YxGLWlg": true,
+    "L4DvpiyFOvLnfFzfpkY8rr5jUyd2fkf7cuvh07BDM20": true,
+    "9wo8FJI4RHd384byHJcfW8G2pFj9NK5x2q4A6BNTE5w": true,
+    "JMpsOjADo5e3a4yYN_0EkuZaJeQmoWhawTzLvgBFiHo": true,
+    "3xIuG04i7hTcFlZYOjZuCM0vM5tGfJ6X-4YRO0UEl3E": true,
+    "ZGp2MEHsyli7TRw6Z34P5BSOBFiUw_gYrGDPdYNaknw": true,
+    "02xdtNb-HKHmozT-CTSI9osunblmr2IFJpOTM6RTqdY": true,
+    "cCANXAYlfYA8e09RdixcnGoDc7Y5XO3rqMFo0-23Lk4": true,
+    "SaOxRyFGwJb7heubCt0Am6beJGW2IR1nCklBVhOV_J4": true,
+    "D5f6uHSSDWTj-uzvqfcwPdJUKJeFLanuHV2UtKC3z70": true,
+    "8UKKcxO8EK5yZR3omBx8DiVRuqOyVR6hMEPzfspgZ6A": true,
+    "8GskBMymnrDSB3M93H5qI1ATAxCYPNMu6jFq-DlsXFE": true,
+    "rQD_M_dSLjgy5shV_plHii4BYprOCBFVoNrORA4cStA": true,
+    "IeWqnJZXh15e6MnPjD9HBxURQZtXaLEf7F-VRX-hm7U": true,
+    "6asWkV3bMYjcbGMaEvcVLe0mEvdGLlbVPicYFOMehKA": true,
+    "od35CMRrCzj_fZlehppV2MnAdxfs8GO2ByTfMVkCbC4": true,
+    "kc4nb0Be3-P-Oscx6kyQpHKFQToHOH0YFrOwtzrfIS4": true,
+    "L8YxV7brm0vlONOiSDVkSdqs0jSch_m0nxfzR4qzQHo": true,
+    "ij5MCGSO7skFDkwSuwdMP7u_B_4VPDluyUcY4w01SRc": true,
+    "_fFZ1PZ2iN85C8R5ZrEV-ML8upkXVDm2VyKdwSIpC6g": true,
+    "jYUqooAYUhj9SE4KX9dOr0PW9255QH1a9IXLPyIxfBg": true,
+    "DzrO0N3FX4eGBUkibzfe-oEtUMiF-vgNl_MmuMbMa3A": true,
+    "Zewgt-gUVjtzmQySjoftyc-HXDE42FWEMoeliHyex5c": true,
+    "oIr_SZwPtTWwIf82LeJc6KBTADXh1cqyvMxsZvFcBq0": true,
+    "M2bDoLZ1EJw_wHI31cB6YYMUXKMetXa8woHKdGmqzeg": true,
+    "vbqoooRhqabO4Paji_ZHzOxSgXb25BF-Gp_jzKu5SoI": true,
+    "uutDV2S1ar7zMuqK1gXXVflUMaYv6_o9r2pWP-LYlj8": true,
+    "pr8EkwjNlNz0BmiVd2SV3_gE1ScxkjtxqflA8Gs-rnI": true,
+    "g5QN46A6WERojYkFP2OazJrqSND62gMNhBWniPxIroo": true,
+    "rxINAaV7HVTgu42xKEkFmtDeV7NoH90ZxDM1ZguNcvQ": true,
+    "kww43tmOl_jqISZTVchxD5EYeaGGyHNhtXZNg5vJr3I": true,
+    "vXQv8t8TwtaO5bCjc670XPR0Qp0-hT22HQaiwJ-d5-s": true,
+    "RlwR4OgFqJxCgCMeISjlvUGXnjkjRYKHyGFgDTC5QXw": true,
+    "rmpL1XZ5zJdoyHIpSHRaVEin6c7gYj76R4bqD-1QHEM": true,
+    "otI8Hh4LTet7cJsGkI8x0kXoOxeDTL2lG6TQupGrKQE": true,
+    "Y88dD1kSgtMGxi_NDdbsk5ZyqpXAJBo_oTTYIXb_TgI": true,
+    "RzNK0Gpp-b1Bnu20Dn2UatCQ8adCmXRhcKtTvpX0SS4": true,
+    "uFYFDpSFNWsuGn7BRF30E9bSVYe7M6hJJHJxG-QpPZg": true,
+    "JFek3GwWJednl93237a4HMV6vRP7EbWYc4S1RasXtq8": true,
+    "rhnGZM5m0K-SakWE7FjLIxl325gO3dskPanxswktP3c": true,
+    "ESYYzTb8PQkbding0gZyVK5fOWdXTLTUsxhw2KKlu-Y": true,
+    "GGS-ZgF3mcNb6ijWCxQVqn9H0pV53vC6fbEM-XDLaOg": true,
+    "L1WUB-gCHwe0HDPxOOpZu9SUozLaFgmWY5UGA_FDxGs": true,
+    "jMqE1PijAFnfyQ-PCSQrHv6782ZsfO3psGuf929nnpc": true,
+    "ohqpbs9DU5XLhw-Uyk1t5OAuKgUcJx2sV4npZbEaUk4": true,
+    "WDXuEpxvuwqL72yPT_TVMN2bXdkhYkBJWpP-48dpN4g": true,
+    "g8UtiCjFCl-pkeJSCqqxemTrIlaBD3KS8r9YvYNcZQI": true,
+    "IZ2vn2opKCH3yK5NZ0B75pta0oLIegRF4Qi1jB54j7k": true,
+    "kVWl6B6yWjBvG3PvF7LW4t5kLoCzOR40u5mW4Uu41vQ": true,
+    "Yj9NXlaYNNwkzNHBXlNqYCDgYA_LB7kOkaXKf3NlCdM": true,
+    "loOtIjPQeaL5dvTa6KeWRxw5-STA9kDxjI8kvhsKLoc": true,
+    "EvlWJkBpyrDHYNPwcaMDLVrFKlwjZdJEOad43RtrT8E": true,
+    "wiPgplFR15AWurns6Hdn6oGAzc_xNIElo7aD4jHGo8U": true,
+    "tt21NBx6gSS3AbNbR42dofPK3XNFrr4U8icCl1UWoXQ": true,
+    "Ctn8zkelNJM5qTsdNCqV6ys-4cMoq5RWS8VyXdYRxI4": true,
+    "zCe5zp-3ZXvFazmMl_Du_pMoIlenHD1MTWWcSEhfI6U": true,
+    "Gbae0qIG9e6gqAYUg5YjHXQCw_NJuCAYIBWnD8mGPGg": true,
+    "CViKF4VAKC-ddzVzqQX4J3tJWs44Ey3ya7IMDWZd4r4": true,
+    "4LbJ60rbiv7Ne82ZmjfyVLSv3yGy7nkMdDI2Bf5qEh8": true,
+    "hDpLIF76HlLYptE7D-BYo3ywtbyfBfLOgmIjIue4WsE": true,
+    "kifCEU7VtBDQZTwMzoDDZstb9NexI-PvyX1SvQUiToI": true,
+    "siRVF3Vo8_TdHQ37qU9nRqADE777lkp-CDXMJI1SD0s": true,
+    "G0CRS7vqmYwqwoqvR-DWKyMQ4TmWKa1uuMXCsOX2Omc": true,
+    "gBicvhsBtNRNvXajUXzS00UqA3uUIA7HNNjGM4yQCbg": true,
+    "VJppo2_hstiVFj_p0XpVjmk4-hoNvrPkMzfaOcQBigk": true,
+    "uH9pyHtQUWMTmOY04bgqeMw3DKgUAsqsXnX5JxtUrvk": true,
+    "Kea9R3FekBY_LnptJN9LemlHdRDmgQytomGZ2VRuNn0": true,
+    "aqrdmvrCeuV9vKZ2M1vsnsiYVqGDszrvOhjW4ccAsro": true,
+    "026Px2tx_yyOKqETGren_RntBXnYi7mp5JuZU8b7t6s": true,
+    "7P5OJRqtkUSCW8978t1NhylwWoNC8J8-gMre0gONbB4": true,
+    "h2882xpGu53zwm7j7BycHXfM0-PTaQE1AJDv_KPjV4Q": true,
+    "TMkAqiePsjgB6uKZ0jeU-LOvlnrCQr96Mge1n8c8QPA": true,
+    "MmdGVx9EbpEaezwlkHCyegLL8FLULmWSYHaK9klKtY0": true,
+    "nMhEyvijztV74EdU0dzfFmEyrS5n8eXa5U6qNEnDvWQ": true,
+    "NaAbdnTDvpfbPLpea3La0yiBtFLx9pSmt28V7jqbqTs": true,
+    "eeVLiTagQxOca8gKOXDJZlUSpxkbEnKjkmXLAe-X3gE": true,
+    "hKVSPyqMHZj2LPR5Uwevob9nxyQFNq0A7VjTZ_o51ms": true,
+    "NUp0LAuxrlgtCNVJeijD7j32_GPQ2jEbwd_tc3MQq7M": true,
+    "-8434WrdBNexQrIRheRTyJ6A1xy6sEsZ9tr8A88UfmQ": true,
+    "-a4DOp7eG1NMLYMyWWxFJcYpYb7Q0mtmUBB5j7wFeFE": true,
+    "j0etFeDTgiAgCY-_V2acaF4oGRJls0xUANTgKJdQR_Y": true,
+    "IQykaEUJjInVRHkw-gjJGDTM5fangGg_wRGWnfF9kGY": true,
+    "c08WOH17t4JfPSWX4fL-Xjube70Q8wlJ-WK6G2MLJdE": true,
+    "mu0SHjsX-0IQXJPSOMRr-NP4o6zUNoVzDKDJrCYI6kY": true,
+    "iT-1bvFY-Yzpf-jWFCD5PFMxSILAMbV-4DmYmlgWUaY": true,
+    "-I3TXT5LmcOehtP71HPK7ycGHQnUW3x1QPJhk-_wJm4": true,
+    "Zdy4KfT-YBPgV6Cjr2b_pWyfXtQ_NxFbyy7Ev8o-OoM": true,
+    "JEKGCXUxOGXi_AuXWyVim9DgxisZ2wlFL-bG0o8Bh5Q": true,
+    "Kgk0eebf5jsS9_owCGwL6HykeoHerytLiQ9ZF7Gew-U": true,
+    "weXhZGYA-1XIHHrum6S13uS2O_m-6HtqgUsN_vNPrP0": true,
+    "ib878dCT96IMxWATMOQNahpPvKwzmLWYj8l2v-nqZO8": true,
+    "NIBzoA4J-u3KHP4-aNm2Wf_tArqUgVRbMGQ7GPTmqeo": true,
+    "fDnOLjW7Xu_Wu2HiDsFYMzsRda6q_WKp-xOjmyDyqMc": true,
+    "ZG4h1qMP1BGJicyHHrcloyTe4iZMesJJdO7Pjs1Tix4": true,
+    "kBBAMiZIg96YXLD9v6dGO9WqqnpOo7aIGV0Hf8F1NoU": true,
+    "GjrAOECzpguj9kUatK9m55_YTrSWhOyduInme0alxWc": true,
+    "fwQ2wsRyZC8jsEQUjNT9NIQnDvRToZ2htYMIxSqQgWs": true,
+    "Tfb2Z-TAkSvIko4Ss5JXnr8b1GLE0jpBR_6SiSWzYa0": true,
+    "A6O_m9pzud_bZuN8Ngr5BtTnVGpP8OZvdSy-xHsv74U": true,
+    "3ouIXWIQUbZhsifbxTkD0Y6hhlXMZAesBkx6kctgxtE": true,
+    "pMaXxXPjx8Rw5i1RmZk9sCHMKr-3SJkQwaP4pkPgYGo": true,
+    "7w4Nzct-4fMGSVFpQpi4lH33WcosrF3q8GUeSHXNe_c": true,
+    "L4o3BUqKpO6dHqL9kdswAwpN1LtIT-y7pDxzud2HUn0": true,
+    "OUK6_NdOi6sMFXCI7Sn5bhG71F-cKVSI21nl7mpIy5A": true,
+    "ccvAxwTo9aRfpNrrPiy5cvjwfWaZ2APApk32qMw_cwY": true,
+    "lbnbuEWzf_vr1ifHBPFBJbY1a9Okm9bmFszBlKfAbmY": true,
+    "lxCATiwX_w3xtYgqIPFWoS_8b3RpN-87dvKYKdJHHbw": true,
+    "y4vcuIVyaGA89UqPY7N2auysekHePnLajCGoe6z3q10": true,
+    "6plrEtBt7yC1LXQ8dXCIZ1G2zqYlWj-o_5O7qB-tDNI": true,
+    "Za-Xl1R3gA7k6cWZ9oQ-d3zqKJCXclz2pjL-huJv7ZU": true,
+    "2wZgNMArQ3yyeOMqOyV87FOpBQSc2I7f4QosvXGxdzI": true,
+    "77M1ZuvAm2fV3hNyUG3i_OMicXbiQ9vg4MaBcPlRsPM": true,
+    "C9lye3p_4CgP9Z0PwEjYrgi9SNtftCAOuuyxGPy7jNU": true,
+    "41-JrYVj6XVpMGc0_dW3aeXu9926Sh2oGv6SX73PmwU": true,
+    "YMRTb4J5UptIB4ziHl4bxPU1_kBOxj1PF-wV4H4Jfos": true,
+    "T-fqF3dvyQFT0O5XKCH1SYAVRCBr2SHE-pcKZgDJzf4": true,
+    "S3QzQ234_tbgjHLOWXlDHgwrTo36p3aRliLF8O-IRzk": true,
+    "mjCxmfm7hg5XB7rzClD90RDBhvafq_jPi43EiQFr90U": true,
+    "CoTvbHc_J7oMV0mdSEsoSy0D83DC4HP6Cf9BDNUoyi4": true,
+    "GyGu6fXEOQWN-qHHyIvdB8HZL_SO78muosz7VKGR8Xg": true,
+    "THxXqiQ1tqkc3A3CD2_WPTIFVH6Aq3xBj1uEdUf0WQQ": true,
+    "QUgEXXOJjMAyTMKLGaYdtyAFH_zZJk4QsDC-j0uMplk": true,
+    "UbEFdVXEla--5rdaqZztQeOTuGebCbzQvumjI-U2-v0": true,
+    "H4TNYnQp5p05pxntAdzszvlhszTr1CqQTzZR1iaZWVs": true,
+    "s1uHUQPxXS2kvaNBLI1NxgYe3gOMjb8LKMXpeTtHywY": true,
+    "tGKDddgMBfgcXhiXe96KHorrFxlhogXNGiw1NpySgnY": true,
+    "TtF0KGPIOHZHnXFQw3BHUNHjrLSb5Y7qD481gEKyQa0": true,
+    "Ez-jhtWzxKlgv0YmBdsbl3UZxTKUzYvnfUZTkRwsNXM": true,
+    "ggzmkw2UV5VgyFG_ZlIk9qkT7QyrZYAPQUuQBSPKHiE": false,
+    "ZcEBfTRtkYBFeXLYLhXOhmbzh8zkkgSjWdNKp6miFOo": false,
+    "kSzSgkUQXUcVbDPY2BSnNIsoTR1OwNMCExLt3oO_haE": true
+  }
+}

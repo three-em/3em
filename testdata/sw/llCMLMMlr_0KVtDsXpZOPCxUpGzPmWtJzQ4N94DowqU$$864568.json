@@ -1,0 +1,15 @@
+{
+  "state": {
+    "owner": "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA",
+    "title": "Immersive",
+    "name": "Christopher James",
+    "description": "This is one of the inaugrual NFTs for the Pixels and Grain photography collective.  It comes from our C-scapes zine, created during the first 2020 COVID-19 lockdown in Australia.\n\nC-scapes documents our attempts to safely find the beautiful moments amidst the worst global crisis in a century.",
+    "ticker": "KOINFT",
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1628843325"
+  },
+  "validity": {}
+}

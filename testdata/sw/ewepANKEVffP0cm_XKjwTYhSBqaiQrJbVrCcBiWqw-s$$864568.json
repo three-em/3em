@@ -1,0 +1,1550 @@
+{
+  "state": {
+    "name": "ArWiki",
+    "ticker": "$WIKI",
+    "balances": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": 9667121,
+      "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw": 0,
+      "IaXzDFbnmmHoHbZYa2DLdsA_8qFimuLZ81I_eu5SNwc": 9900000,
+      "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA": 9877659,
+      "TId0Wix2KFl1gArtAT6Do1CbWU_0wneGvS5X9BfW5PE": 1649990,
+      "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg": 1628329,
+      "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA": 3200000,
+      "SpLXLYSs9Or3379AwIaqIBdrNnSSqwHFPAtfJAUxDLk": 23,
+      "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0": 1000
+    },
+    "vault": {
+      "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw": [
+        {
+          "balance": 9900000,
+          "end": 764963,
+          "start": 743363
+        },
+        {
+          "balance": 10000,
+          "end": 785586,
+          "start": 763986
+        },
+        {
+          "balance": 199,
+          "end": 769009,
+          "start": 764809,
+          "slug": "bundles",
+          "lang": "en",
+          "action": "new"
+        },
+        {
+          "balance": 30000,
+          "end": 830669,
+          "start": 809069
+        }
+      ],
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": [
+        {
+          "balance": 10000000,
+          "end": 853674,
+          "start": 832074
+        },
+        {
+          "balance": 10000000,
+          "end": 853674,
+          "start": 832074
+        }
+      ],
+      "SpLXLYSs9Or3379AwIaqIBdrNnSSqwHFPAtfJAUxDLk": [],
+      "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA": [
+        {
+          "balance": 1,
+          "end": 741876,
+          "start": 738676,
+          "slug": "content-policies",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 100000,
+          "end": 763242,
+          "start": 741642,
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744880,
+          "start": 741680,
+          "slug": "smartweave",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744882,
+          "start": 741682,
+          "slug": "gateways",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744883,
+          "start": 741683,
+          "slug": "arweave-mining",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744884,
+          "start": 741684,
+          "slug": "profit-sharing-tokens",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744884,
+          "start": 741684,
+          "slug": "profit-sharing-communities",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744884,
+          "start": 741684,
+          "slug": "karma",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744886,
+          "start": 741686,
+          "slug": "the-permaweb",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744887,
+          "start": 741687,
+          "slug": "Arweave",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744953,
+          "start": 741753,
+          "slug": "smartweave",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 744953,
+          "start": 741753,
+          "slug": "arweave-mining",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 746500,
+          "start": 743300,
+          "slug": "open-web-foundry",
+          "lang": "en",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 749298,
+          "start": 746098,
+          "slug": "storage-endowment",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 759259,
+          "start": 755059,
+          "slug": "ArWiki",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 759333,
+          "start": 755133,
+          "slug": "Arweave",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 768958,
+          "start": 764758,
+          "slug": "Exchanges",
+          "lang": "en",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 768959,
+          "start": 764759,
+          "slug": "Testing-Tools",
+          "lang": "en",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 772755,
+          "start": 768555,
+          "slug": "open-web-foundry",
+          "lang": "en",
+          "action": "update"
+        },
+        {
+          "balance": 1,
+          "end": 772756,
+          "start": 768556,
+          "slug": "Arweave",
+          "lang": "en",
+          "action": "update"
+        }
+      ],
+      "A8KxDLGVz2iyImKr275DSgnFOFPI3IcSkc1pxU5qHzs": [
+        {
+          "balance": 1,
+          "end": 749296,
+          "start": 746096,
+          "slug": "profit-sharing-tokens",
+          "lang": "en",
+          "action": "update"
+        }
+      ],
+      "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg": [
+        {
+          "balance": 1500,
+          "end": 773177,
+          "start": 768177
+        },
+        {
+          "balance": 1000,
+          "end": 774662,
+          "start": 769662
+        },
+        {
+          "balance": 1300,
+          "end": 779154,
+          "start": 773154
+        },
+        {
+          "balance": 1000,
+          "end": 778154,
+          "start": 773154
+        },
+        {
+          "balance": 1100,
+          "end": 781581,
+          "start": 776581
+        },
+        {
+          "balance": 1200,
+          "end": 786088,
+          "start": 781088
+        },
+        {
+          "balance": 1500,
+          "end": 790120,
+          "start": 785120
+        },
+        {
+          "balance": 2000,
+          "end": 790131,
+          "start": 785131
+        },
+        {
+          "balance": 1200,
+          "end": 792774,
+          "start": 787774
+        },
+        {
+          "balance": 300,
+          "end": 825415,
+          "start": 824015
+        },
+        {
+          "balance": 3000,
+          "end": 825520,
+          "start": 824020
+        },
+        {
+          "balance": 2000,
+          "end": 827424,
+          "start": 825924
+        },
+        {
+          "balance": 1500,
+          "end": 831031,
+          "start": 825931
+        },
+        {
+          "balance": 1500,
+          "end": 835645,
+          "start": 830645
+        },
+        {
+          "balance": 1300,
+          "end": 836957,
+          "start": 831957
+        },
+        {
+          "balance": 1,
+          "end": 836370,
+          "start": 832170,
+          "slug": "ArDrive:-Permanent-Data-Storage-for-Everyone",
+          "lang": "en",
+          "action": "update"
+        }
+      ],
+      "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0": [
+        {
+          "balance": 10,
+          "end": 769843,
+          "start": 765643,
+          "slug": "영구웹이란-무엇인가요?-",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 772388,
+          "start": 768188,
+          "slug": "open-web-foundry",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 772391,
+          "start": 768191,
+          "slug": "Exchanges",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 772404,
+          "start": 768204,
+          "slug": "ArWiki",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 3,
+          "end": 772416,
+          "start": 768216,
+          "slug": "Testing-Tools",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 772448,
+          "start": 768248,
+          "slug": "gateways",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 777376,
+          "start": 773176,
+          "slug": "Arweave",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 777376,
+          "start": 773176,
+          "slug": "bundles",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 777382,
+          "start": 773182,
+          "slug": "content-policies",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 791983,
+          "start": 787783,
+          "slug": "profit-sharing-tokens",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 791989,
+          "start": 787789,
+          "slug": "profit-sharing-communities",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 3,
+          "end": 791995,
+          "start": 787795,
+          "slug": "smartweave",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 830186,
+          "start": 825986,
+          "slug": "arweave-mining",
+          "lang": "ko",
+          "action": "new"
+        },
+        {
+          "balance": 1,
+          "end": 830190,
+          "start": 825990,
+          "slug": "storage-endowment",
+          "lang": "ko",
+          "action": "new"
+        }
+      ],
+      "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA": [],
+      "Ii5wAMlLNz13n26nYY45mcZErwZLjICmYd46GZvn4ck": [
+        {
+          "balance": 1,
+          "end": 778710,
+          "start": 774510,
+          "slug": "What-is-everFinance?",
+          "lang": "en",
+          "action": "new"
+        }
+      ],
+      "B--9bTlWMNXFV6AM_5IiS8_cEnLPNm9c_rj3OqkGOC8": [
+        {
+          "balance": 202,
+          "end": 785314,
+          "start": 781114,
+          "slug": "Community-Resources",
+          "lang": "en",
+          "action": "new"
+        }
+      ],
+      "kaYP9bJtpqON8Kyy3RbqnqdtDBDUsPTQTNUCvZtKiFI": [
+        {
+          "balance": 1,
+          "end": 834858,
+          "start": 830658,
+          "slug": "bundles",
+          "lang": "en",
+          "action": "update"
+        }
+      ],
+      "Th7VysYPJEzvWynOLVKzDovDkJ1SFF7oON4obKzEq7U": [
+        {
+          "balance": 50,
+          "end": 836160,
+          "start": 831960,
+          "slug": "ArDrive:-Permanent-Data-Storage-for-Everyone",
+          "lang": "en",
+          "action": "new"
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "New Moderator",
+        "yays": 220320032000,
+        "nays": 0,
+        "voted": [
+          "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA"
+        ],
+        "start": 742142,
+        "totalWeight": 434160044800,
+        "key": "role",
+        "value": "Moderator",
+        "recipient": "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA"
+      },
+      {
+        "status": "quorumFailed",
+        "type": "set",
+        "note": "New Moderator",
+        "yays": 2160000000,
+        "nays": 0,
+        "voted": [
+          "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg"
+        ],
+        "start": 741121,
+        "totalWeight": 216032931200,
+        "key": "role",
+        "value": "Moderator",
+        "recipient": "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA"
+      }
+    ],
+    "roles": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": "Moderator",
+      "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw": "Moderator",
+      "IaXzDFbnmmHoHbZYa2DLdsA_8qFimuLZ81I_eu5SNwc": "Moderator",
+      "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA": "Moderator",
+      "TId0Wix2KFl1gArtAT6Do1CbWU_0wneGvS5X9BfW5PE": "Moderator",
+      "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg": "Moderator",
+      "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA": "Moderator"
+    },
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        1000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        21600
+      ],
+      [
+        "pageApprovalLength",
+        4200
+      ],
+      [
+        "communityLogo",
+        "5wYwaQP8eFQn_YK6rSB3zdH5Fu8c6J2LJK7nwfT7LeA"
+      ],
+      [
+        "communityDescription",
+        "A decentralized hypertext publication platform"
+      ],
+      [
+        "communityAppUrl",
+        "https://arwiki.wiki"
+      ]
+    ],
+    "pages": {
+      "en": {
+        "profit-sharing-tokens": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "TgiSCkMChyHjIr8-D14i9rzdfYVhSBrdLPldTqUYtuc",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1906,
+          "start": 725302,
+          "pageRewardAt": 728502,
+          "category": "profit_sharing",
+          "updates": [
+            {
+              "tx": "zvS4E0-HsZZ2ussUH8iUV3qoB2APqG1xkBvocPJ6JEU",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741684,
+              "value": 1
+            },
+            {
+              "tx": "E8soH5RmWQCC4IT_NaTrhGucAqg-f2F6g1elP_Gykyw",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 746096,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "smartweave": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "OgUyZBG42ZDbt2ceaOsZDc7rlcNfJmnvjSSoGNjBPRs",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1794,
+          "start": 725302,
+          "pageRewardAt": 728502,
+          "category": "building_on_arweave",
+          "updates": [
+            {
+              "tx": "zk5NHZfKWZpOC1BFUmJmXMddKgkmnCH26sAk812VX20",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 725308,
+              "value": 1
+            },
+            {
+              "tx": "9eAzuUafKkHrSv_QGz1wQMicZWvgfQMwoJyXnWqCJJA",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741680,
+              "value": 1
+            },
+            {
+              "tx": "9eAzuUafKkHrSv_QGz1wQMicZWvgfQMwoJyXnWqCJJA",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741753,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "the-permaweb": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "DN9SebQy4uffXJSdEY3Sxl7LFi3stis5_NrKIV4o4l8",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1885,
+          "start": 725302,
+          "pageRewardAt": 728502,
+          "category": "the_arweave_project",
+          "updates": [
+            {
+              "tx": "24UR3q1LfgORZpB8MniVvPtXBUbqGt8yh36SYHKnj3E",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741686,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "Arweave": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "C8BZXgkBo0p0eX7AleavytzCtd7WR4XIR4sLDC2h8tc",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1911,
+          "start": 725302,
+          "pageRewardAt": 728502,
+          "category": "the_arweave_project",
+          "updates": [
+            {
+              "tx": "WOTsLEH7nHQ0o7jAeibU0jiyGKTMrrs04bn7GaCKen0",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741687,
+              "value": 1
+            },
+            {
+              "tx": "NBEWHpY20FFVVWA4gqiwa5DvdKGgVsnmgvomKKfkZpA",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 755133,
+              "value": 1
+            },
+            {
+              "tx": "KMd3p03HMkHPxNwkYp289MCsMftQHbs_dhITvZzXqHU",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 768556,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 1,
+          "downvotes": 0
+        },
+        "karma": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "jQ0Q010oaBXuLENd2P-VYe7lVx9xkxqwqSoJK6B3VHE",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1908,
+          "start": 725302,
+          "pageRewardAt": 728502,
+          "category": "the_arweave_protocol",
+          "updates": [
+            {
+              "tx": "0bgH9L19FA1W_AgYb1p_IBaoxvqMKmXEFf7nPufpM58",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741684,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "storage-endowment": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "tYG7sC0o5Uwn2IxAX1oOcBZ15APvF9jT-xMcGf27kxo",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1838,
+          "start": 725308,
+          "pageRewardAt": 728508,
+          "category": "the_arweave_protocol",
+          "updates": [
+            {
+              "tx": "_5_egvizY4aJp-DGK7zdPxAZ641L2RGguXrvocJYGdI",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 725313,
+              "value": 1
+            },
+            {
+              "tx": "gjlIVEfUfhHrGYv-8QwYFMJrAkEbwbdE8K9s3XFTYe8",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 746098,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "arweave-mining": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "80RMRCvubCCaftM1d8caamjHXUI8rhFpcal2LUL7oaU",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1892,
+          "start": 725309,
+          "pageRewardAt": 728509,
+          "category": "mining",
+          "updates": [
+            {
+              "tx": "3Gf1d4s8nGUBRw5Qqe3njBTNs6HYTbR4Yx710K1qhHM",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 725314,
+              "value": 1
+            },
+            {
+              "tx": "R0PuGk_g9z9TOCEY7VmURyiVSbLCEAhxSz2ks7OWef4",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741683,
+              "value": 1
+            },
+            {
+              "tx": "R0PuGk_g9z9TOCEY7VmURyiVSbLCEAhxSz2ks7OWef4",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741753,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "content-policies": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "2c2DJcpJVTF72OiWqmE95SuGRNG0bk4XkuVWXFICUAY",
+          "sponsor": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "value": 582,
+          "start": 725309,
+          "pageRewardAt": 728509,
+          "category": "the_arweave_protocol",
+          "updates": [
+            {
+              "tx": "T8nB92h9TfcU14Zeltd3EMu9rwJKU2ApdjVx0aDwpek",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 725319,
+              "value": 1
+            },
+            {
+              "tx": "KszwaCDSKWXqwYL6fwbZgGiiJNu-ZdcJfKK1KNuyeuk",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 738676,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "gateways": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "VV9VAftQ7IgIi5bqX3Qe-O_VjUO8U3IRfm90VYLWG3g",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1895,
+          "start": 725309,
+          "pageRewardAt": 728509,
+          "category": "the_arweave_protocol",
+          "updates": [
+            {
+              "tx": "m0_3wJ-CXD1JmftKZRN6_ownukPingD81z-c0Cc7e5s",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 725319,
+              "value": 1
+            },
+            {
+              "tx": "NQvCoBVZq7bWiUc8pqUeO8Dbm-iRl2AACUJU7vioDx8",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741682,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "profit-sharing-communities": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "vVppPNqpphNY6oLZKKarFcfRvL-yqIJeMboRJUIgc7U",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1714,
+          "start": 725316,
+          "pageRewardAt": 728516,
+          "category": "profit_sharing",
+          "updates": [
+            {
+              "tx": "8a1C7VtcsKG7Tcnch-bBC5GhJcxFaKmulx9nf2OWeM4",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 725319,
+              "value": 1
+            },
+            {
+              "tx": "anntEUSTxeWSm4tZhCXPgEodiN_h_d-WFCVv6v_ktdI",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 741684,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "ArWiki": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "XBHOQSJnxJkYcqazwwT00u5i2qZ7nGICWidS4_xfIQM",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1390,
+          "start": 731268,
+          "pageRewardAt": 734468,
+          "category": "resources",
+          "updates": [
+            {
+              "tx": "sb8qXmC46qoPYRtXQuqHFgW96rsqb7zI2EZus7orUQM",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 755059,
+              "value": 1
+            },
+            {
+              "tx": "fgFUK-Jo1IaU33XHy5xaaaWs7NRY78YdiV_ICnhGzmo",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 755747,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "open-web-foundry": {
+          "author": "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA",
+          "content": "VY-6gRVpT0aodnyfflT4D5WG6RKPBKGshjZ3d3FPNJY",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1004,
+          "start": 743300,
+          "pageRewardAt": 746500,
+          "category": "the_arweave_project",
+          "updates": [
+            {
+              "tx": "A34cM0jBT6CxKGxLDCrM7IaYws6XlDM34aHT5VNM9O0",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 768555,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 2,
+          "downvotes": 0
+        },
+        "Exchanges": {
+          "author": "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA",
+          "content": "xCTR5hE8SWA8m92BUoa8TgqdT77K1VfvxOSpeLK93iY",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1002,
+          "start": 764758,
+          "pageRewardAt": 768958,
+          "category": "resources",
+          "updates": [
+            {
+              "tx": "gv3YLtQacvxFl7vb7QBd64ZvsgU44axiKgsHd9Tan78",
+              "approvedBy": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+              "at": 830654,
+              "value": 1
+            }
+          ],
+          "upvotes": 2,
+          "downvotes": 0,
+          "active": true
+        },
+        "Testing-Tools": {
+          "author": "ziXDPgY5zRi9_IlTHS4ZNQ_RzIrC_xcSjMeaWJFk-BA",
+          "content": "lsg5DmFj8ZrFriVKOSG3VwTFzKJPUQXy9pkO8npuibw",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1002,
+          "start": 764759,
+          "pageRewardAt": 768959,
+          "category": "building_on_arweave",
+          "updates": [],
+          "upvotes": 1,
+          "downvotes": 0,
+          "active": true
+        },
+        "bundles": {
+          "author": "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw",
+          "content": "WUAtjfiDQEIqhsUcHXIFTn5ZmeDIE7If9hJREBLRgak",
+          "sponsor": "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA",
+          "value": 1200,
+          "start": 764809,
+          "pageRewardAt": 769009,
+          "category": "building_on_arweave",
+          "updates": [
+            {
+              "tx": "2Y2jgQwFR_nw5Kf2Mx0xEAjvQMlDnjdeLrMZRvdkcDk",
+              "approvedBy": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+              "at": 830658,
+              "value": 1
+            }
+          ],
+          "upvotes": 3,
+          "downvotes": 0,
+          "active": true
+        },
+        "What-is-everFinance?": {
+          "author": "Ii5wAMlLNz13n26nYY45mcZErwZLjICmYd46GZvn4ck",
+          "content": "u-N-x79eVx9Q118ectHadcSypM3xW3msCSQ50ggnqtA",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 774510,
+          "pageRewardAt": 778710,
+          "category": "building_on_arweave",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "Community-Resources": {
+          "author": "B--9bTlWMNXFV6AM_5IiS8_cEnLPNm9c_rj3OqkGOC8",
+          "content": "mK9HpwQY3XluzohsHJpikIMMFfrMGXwsGhIdmomDxik",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 202,
+          "start": 781114,
+          "pageRewardAt": 785314,
+          "category": "resources",
+          "updates": [
+            {
+              "tx": "6zm9i9c4wMaBDjye1aTS4dXRP4t_vG6rmrPA-Al9aQA",
+              "approvedBy": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+              "at": 830654,
+              "value": 1
+            }
+          ],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "ArDrive:-Permanent-Data-Storage-for-Everyone": {
+          "author": "Th7VysYPJEzvWynOLVKzDovDkJ1SFF7oON4obKzEq7U",
+          "content": "p4ybfd2p-4GHHHDgTwm3m9iTIhS6KqLJO_aIjNlbRHg",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 50,
+          "start": 831960,
+          "pageRewardAt": 836160,
+          "category": "building_on_arweave",
+          "updates": [
+            {
+              "tx": "5KG5kCObpe7DrnI6I9dhrIOsDyoy51i2CbrS1YbSMFs",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 832170,
+              "value": 1
+            }
+          ],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        }
+      },
+      "es": {
+        "Arweave": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "BDlS4Vv2rgls9q8oJi8Z2yAcdmP9ooMydOyIAzkaB8Y",
+          "sponsor": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "value": 894,
+          "start": 725314,
+          "pageRewardAt": 728514,
+          "category": "the_arweave_project",
+          "updates": [
+            {
+              "tx": "WO_8or4d-n77w0N1Ho19f5Dhe4GTDMJhW1OnX4oqDQo",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 755133,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 1,
+          "downvotes": 0
+        },
+        "smartweave": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "E6YRa6kPlT0wWJb5SyaVIwsyac5QqTOjv58h5ZbKFq8",
+          "sponsor": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "value": 685,
+          "start": 725314,
+          "pageRewardAt": 728514,
+          "category": "building_on_arweave",
+          "updates": [
+            {
+              "tx": "ER4yxwsBmEbu5njrO-rkiCnsQueA-A5U-IqvKJIXgf4",
+              "approvedBy": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+              "at": 730997,
+              "value": 1
+            }
+          ],
+          "active": true,
+          "upvotes": 0,
+          "downvotes": 0
+        },
+        "open-web-foundry": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "OQDNGO_33UZffb9FN5kOKCnPytS2yznysRlkmy_CM6A",
+          "sponsor": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "value": 1,
+          "start": 755108,
+          "pageRewardAt": 759308,
+          "category": "the_arweave_project",
+          "updates": [],
+          "upvotes": 1,
+          "downvotes": 0,
+          "active": true
+        }
+      },
+      "de": {},
+      "hi": {},
+      "ar": {},
+      "he": {},
+      "hu": {},
+      "ga": {},
+      "zh": {},
+      "id": {},
+      "ko": {
+        "영구웹이란-무엇인가요?-": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "yjqtGA-TfUOhy_NTVPtfqPjolE2sedmb0hvBanSEFi8",
+          "sponsor": "",
+          "value": 1011,
+          "start": 765643,
+          "pageRewardAt": 769843,
+          "category": "the_arweave_project",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": false
+        },
+        "open-web-foundry": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "nqG_ohvS7cIuKQAlme-coQGBTLfT07zyK6flQQr4C-8",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 768188,
+          "pageRewardAt": 772388,
+          "category": "the_arweave_project",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "Exchanges": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "Bq-jmW3xXiTezRxOcE7MuD2an6NoLpJ6t0BNevzFFNA",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 768191,
+          "pageRewardAt": 772391,
+          "category": "resources",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "the-permaweb": {
+          "author": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+          "content": "UxQ_HaQBM6qVFXQ57yRNCFrMhS4udVPa22DtCVLRF2w",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 768191,
+          "pageRewardAt": 772391,
+          "category": "the_arweave_project",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "ArWiki": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "WxSW_tVARcPgQ9vNhwsx0xQTdM3LbSBXKpHkdbyad10",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 768204,
+          "pageRewardAt": 772404,
+          "category": "resources",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "Testing-Tools": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "zwXSAA36FigIpL00J_ijxPlwW6e6OdOJWMAenDWRhL8",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 3,
+          "start": 768216,
+          "pageRewardAt": 772416,
+          "category": "building_on_arweave",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "gateways": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "A_2mV-FuQ6iG7NCoWa4_UW8n2kvw4H297ALnqR20zkM",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 768248,
+          "pageRewardAt": 772448,
+          "category": "the_arweave_protocol",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "Arweave": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "iV3ZRxsLsmE4lo1I-7oN4E_jOt5c5KOx9rxruimTXs0",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 773176,
+          "pageRewardAt": 777376,
+          "category": "the_arweave_project",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "bundles": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "czBJGwpP_GpmPnLoavy6iJCGTxK3l27ebS_mdgh_x6o",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 773176,
+          "pageRewardAt": 777376,
+          "category": "building_on_arweave",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "content-policies": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "R3CzTOJ1zYkQ7-7vHNqqzF3OY6KZd84uMQhrcNbvLec",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 773182,
+          "pageRewardAt": 777382,
+          "category": "the_arweave_protocol",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "profit-sharing-tokens": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "Nud9Lw-Ad4oAvOAXoiZ2J5PXMBWsJqX8cHuAQv6SNCQ",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 787783,
+          "pageRewardAt": 791983,
+          "category": "profit_sharing",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "profit-sharing-communities": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "QySM-TtCp2-XAAu4DNb73fhhTzl2VBLAUiP2U4IvMxg",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 787789,
+          "pageRewardAt": 791989,
+          "category": "profit_sharing",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "smartweave": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "QpcSbEM7a0pUGsGOS0TqYcjTxESM4eTnzLMAy7o4jWw",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 3,
+          "start": 787795,
+          "pageRewardAt": 791995,
+          "category": "building_on_arweave",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "arweave-mining": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "tA7MHbASdc-Z-JJP9AyV_B9pXDFz0wVlw4ZG_6GWBCE",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 825986,
+          "pageRewardAt": 830186,
+          "category": "mining",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        },
+        "storage-endowment": {
+          "author": "vY_knC9dc5cwd7v8Qw68udRBgq62XvSHv-A9vD5m_o0",
+          "content": "mFrS2yJ7g7vV5j93Rf2PSE-lnuSP9DQWrhWg07wUpDA",
+          "sponsor": "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg",
+          "value": 1,
+          "start": 825990,
+          "pageRewardAt": 830190,
+          "category": "the_arweave_protocol",
+          "updates": [],
+          "upvotes": 0,
+          "downvotes": 0,
+          "active": true
+        }
+      }
+    },
+    "stakes": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": {
+        "en": {
+          "content-policies": 582
+        },
+        "es": {
+          "Arweave": 894,
+          "smartweave": 685,
+          "open-web-foundry": 1
+        },
+        "ko": {}
+      },
+      "SpLXLYSs9Or3379AwIaqIBdrNnSSqwHFPAtfJAUxDLk": {
+        "en": {}
+      },
+      "p4gA9HbILbAysN5pzHngXWwMAqDnww0N8VfU8Hx9LSg": {
+        "en": {
+          "What-is-everFinance?": 1,
+          "Community-Resources": 202,
+          "ArDrive:-Permanent-Data-Storage-for-Everyone": 50
+        },
+        "ko": {
+          "open-web-foundry": 1,
+          "Exchanges": 1,
+          "the-permaweb": 1,
+          "ArWiki": 1,
+          "Testing-Tools": 3,
+          "gateways": 1,
+          "Arweave": 1,
+          "bundles": 1,
+          "content-policies": 1,
+          "profit-sharing-tokens": 1,
+          "profit-sharing-communities": 1,
+          "smartweave": 3,
+          "arweave-mining": 1,
+          "storage-endowment": 1
+        }
+      },
+      "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw": {
+        "en": {}
+      },
+      "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA": {
+        "en": {
+          "bundles": 1200,
+          "open-web-foundry": 1004,
+          "Testing-Tools": 1002,
+          "Arweave": 1911,
+          "gateways": 1895,
+          "Exchanges": 1002,
+          "smartweave": 1794,
+          "the-permaweb": 1885,
+          "profit-sharing-tokens": 1906,
+          "ArWiki": 1390,
+          "profit-sharing-communities": 1714,
+          "arweave-mining": 1892,
+          "karma": 1908,
+          "storage-endowment": 1838
+        }
+      }
+    },
+    "categories": {
+      "the_arweave_project": {
+        "slug": "the_arweave_project",
+        "label": "The Arweave Project",
+        "order": 10,
+        "active": true
+      },
+      "the_arweave_protocol": {
+        "slug": "the_arweave_protocol",
+        "label": "The Arweave Protocol",
+        "order": 20,
+        "active": true
+      },
+      "profit_sharing": {
+        "slug": "profit_sharing",
+        "label": "Profit Sharing",
+        "order": 30,
+        "active": true
+      },
+      "mining": {
+        "slug": "mining",
+        "label": "Mining",
+        "order": 40,
+        "active": true
+      },
+      "building_on_arweave": {
+        "slug": "building_on_arweave",
+        "label": "Building on Arweave",
+        "order": 50,
+        "active": true
+      },
+      "resources": {
+        "slug": "resources",
+        "label": "Resources",
+        "order": 100,
+        "active": true
+      }
+    },
+    "languages": {
+      "en": {
+        "code": "en",
+        "iso_name": "English",
+        "native_name": "English",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "es": {
+        "code": "es",
+        "iso_name": "Spanish",
+        "native_name": "Español",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "de": {
+        "code": "de",
+        "iso_name": "German",
+        "native_name": "Deutsch",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "hi": {
+        "code": "hi",
+        "iso_name": "Hindi",
+        "native_name": "हिन्दी, हिंदी",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "ar": {
+        "code": "ar",
+        "iso_name": "Arabic",
+        "native_name": "العربية",
+        "writing_system": "RTL",
+        "active": true
+      },
+      "he": {
+        "code": "he",
+        "iso_name": "Hebrew",
+        "native_name": "עברית",
+        "writing_system": "RTL",
+        "active": true
+      },
+      "hu": {
+        "code": "hu",
+        "iso_name": "Hungarian",
+        "native_name": "magyar",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "ga": {
+        "code": "ga",
+        "iso_name": "Irish",
+        "native_name": "Gaeilge",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "zh": {
+        "code": "zh",
+        "iso_name": "Chinese",
+        "native_name": "中文",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "id": {
+        "code": "id",
+        "iso_name": "Indonesian",
+        "native_name": "Bahasa Indonesia",
+        "writing_system": "LTR",
+        "active": true
+      },
+      "ko": {
+        "code": "ko",
+        "iso_name": "Korean",
+        "native_name": "한국어",
+        "writing_system": "LTR",
+        "active": true
+      }
+    }
+  },
+  "validity": {
+    "X1_HP3ve4Ny4YjzQha47ocREbQYJNKHsxTfb5dP-CMY": true,
+    "bFw5wnzBEU9FT226w_QJtM_D0DWjhVTquB66QzSDICQ": true,
+    "tuA16UGaN9vI_X3DZ12PX5__Zl8G-WIweKX55LZoBX8": true,
+    "I7FbUTfuYcRLcRD_nW9N8mIW6twUgRBz1ShrXtSy4XA": true,
+    "Abhi-W-8j6uxsAuaiQ0fcUjiRXfOynCrWAJnKolckxg": true,
+    "DLAS__62ew_GRF4kM3VKDIFvKmiRrFaQICxd6To-gyQ": true,
+    "tGNkAe6UEmicHDDvVpQEu2KxnL4JZu1vpOrARZaP8DM": true,
+    "cBQ18MeKr-TeHyXtrn6yogY_F2QHznPzUf8V3vOpLVc": true,
+    "KUlnkwOT9JSVvM1M7lzYVf-AQ1ULTWEmzFPAcedUrmY": true,
+    "pqT7NqnbhEAB1FVDlbNbnaJc0IGdhMGqb9kODzVUBB0": true,
+    "2LTG2sDYCHFqGD_X3LJ5isP3SlwC93LxxctDzNXSPVk": true,
+    "hXe2kvSS8vVGMu0AjSX3k1ina3yx3CMKfI51g5RS9LA": true,
+    "n5UK3BvgeksDtH8rQsJiTnzoafqBz9n8I3gVePv4an8": true,
+    "xxD88h3q1f8Jws54FApVbpXMHa-2-piTL4DIQNsRyFM": true,
+    "HMZMAWtAD4UUaYd0rJlBdR7h4bO3G6JHVDv8tGdUXsI": true,
+    "XikmBII3RGm80eFWIIVOPkUgBmYY01awADkSvxYrE5U": true,
+    "KtF-tyJMN45hRBrtO0UfmEv2ue790LgnKQ2gZJiyQF8": true,
+    "LtEi5LdGkbWB_RcGsyO1qwWp78Fea4wYi4sKcLoil1k": true,
+    "6XFdd539xZ8A5zRzgFPLpi6i3fXAfoqhodsXJ1__f3g": true,
+    "00nITBweCJKY6ShIYdKsmDoy-OF_SCexmJYkjUufzGc": true,
+    "rEu56DMRn_Bh4TDlVAw8R0z0entI90FmQNIwByhFs_c": true,
+    "9-NC20YTU6fDp3J0S30Bz6iVNqDu5WLoRh6NnElCBFc": true,
+    "s0utpj2cEmpWCouoSPT9V9B8KYmZvgpsCjFoP7ke44s": true,
+    "XhT_zgfeDHIdY-DzPK3WIRiPnxRxItVygolVElY1Frw": true,
+    "NdA_4vNRv3aXMKLZ4AIXB1tYCmb079Ll-80T8K70tzU": true,
+    "1trsIzO8C0ZMmCbhfgS9HjzL1jt67s5sx3upTVMLJaY": true,
+    "oOqZBDwn205fw9cPybJk5Xljvlo7vwKpKU6V8BiSjSg": true,
+    "rd2zkXWS8eeAJln0lEUDOP_xjwLRa8yznfJARmARm-s": true,
+    "iHPnhZ10XgDlP-VhLFgC4hvUZygk6YDsuKNcz7LcDrA": true,
+    "p8dPe308iZNGvgGSZZLxeuEolETQx5-yJ6B5WDL3w-E": true,
+    "b_ynzeZCMExLdLLW5lb_RKTS_sSwGyuMjHWgAnRBRSs": true,
+    "hw7gecmCgWC5363r8e9vOsEUhQtTlebRMJhk3EFB7OA": true,
+    "nP7-IeZO0YIH-cA9e-4-bSa9lqRagfpWyKtJge2QNb4": true,
+    "ub3rqpgDVQ20T-HmR5VbyLWZkfWApQzNbGeQ10uvRbg": true,
+    "_tQ_OThz9WBKbFCanVFSVGa_o2HLn_4HzoseMpzrGFM": true,
+    "7OVhtPuuaBF9plWCE6xyInlfvJrJKkzDmTkU-hX7kJE": true,
+    "tePF2zJA7cY3a-8Sjg7RFcEoHKj2HUAo-rYawZcUAP8": true,
+    "yyUfCEu1EtA7feesp_SNiWbHNe5G6b4FkJl97m-mug4": true,
+    "Tfo9wuxBaIPKTMtmexIUZsatg38ugG2MEn0AXIP1OtQ": true,
+    "6BLcSBwGys0FvnlS25VUOhqtvhkVroaU-bAOMXB9vEk": true,
+    "6dFI-VOe1hniL7J10-MzBVrYfUBWnm7K5rnaeefwUjo": true,
+    "77MmSNJZiBVHmX6OLD2j7KxQsK-WX0SfpwKoPBshFK8": true,
+    "6HmOCJrocIvbIZiiCxjBv8en2nwIipFrSFyRghO5wRc": true,
+    "2oAz4QTZErU86v-wX9ftemaFNVVrHdx7f9zyT5wuVmE": true,
+    "4rAsuVlgLIYmtruRERdG_8XVTRx2PbjlnvdoKlmqapY": true,
+    "5ZM5onv-Lj8nbCLlNOJwEqwOowcqjUC_45VvenN2Qjk": true,
+    "tCX03ymeI1_jN5uN9c9aWks0o-GcqNLTEBJiOTmKgaw": true,
+    "rztvxcv-qPfzsDsbhYByVo2Hyl1FQCagc_BF-gh1kHI": true,
+    "nGq-Mqn-sa5XrSG6xsD_FKc-Oq2LTkj4lQaXCeGVxeE": true,
+    "XBkPayX49cQq1GXTiIRYybRuQJSqLjHQnV6uKq5zfII": true,
+    "N10MTx0xwYkMGluBoCqEFsLqKkvOKuVNY0slRunc3Ng": true,
+    "heoOomqEtjZIa-QOgp51dYHtgpLesU1_SIuraT9k-AU": true,
+    "FTzwFOQQr8Wtib8RP7BDhNeVjMHi2KyGM1h5UCpEJjM": false,
+    "feZektyBAfxf7yRd-C-fzSUumDDJv88KZPEulOIqcIE": false,
+    "guOzvE0bWhGaWpYxu3veTRo2HY1nAwPpiXFNSPQhKMs": true,
+    "Xo_2_jf7sxV4U4HAy5gjIr2rEI3hD0GjFGnOLmVl56M": false,
+    "8snEYMVbf0ZlQFy1WzQPRx0qLJvQPgBUJ39bis0WMVM": true,
+    "I27VABniAC5dIiHT5GEjuaPa1zv5JXA_yhZWVBfTHuo": true,
+    "vvihi4n-5ouvMI1kvAu5TUq8ywybwa9BwFDBG0JWbPs": true,
+    "K3oA84oRNfaeHEXiYBxxBWiB_F0cXE-rPBY_sgSD5zM": true,
+    "feuxPSvZiK-fdIlZv4gzTOTowsKEl1bwgA6kdgo05hM": true,
+    "_y9xdMYIuGd4VOqNf-JrBOKML8tknscpMp323l7FEf8": true,
+    "ejQFljLuuO7EBXUsyCI-02G-GTv_qY0t37uWbxj7RJ0": true,
+    "ry-L2dcM9iRS1aozz_Zdufn1M2YLwJxquuwG7yNrQEk": true,
+    "govcF4wdPsZWahnUO6FgdO28uJ_4YgMHPj66F3BS_8E": true,
+    "XjyTs9obr0fx68kwuI4SfKVL9qGpVPvzQRcugloyYTk": true,
+    "fdQd5jVp6nu3391e5jI2oJjTDrSOEktrTgCW708wzHk": true,
+    "P65ikpUqrPmeLGSKrTBZDPubkknCPxbLEVBQAF8Pfy8": true,
+    "7wRLeFE5I3lYLEWJDUztlb0TdlApT1NBX8moQMQA3Hk": true,
+    "WBLawVqbd1oBd4QN0ZheOIFsJcEqhjIkDTTL5ibTEug": true,
+    "D987orVreP7RP7RoS5znD5SBPeddfgFCSFGwLFsXx0M": true,
+    "TMYihjHnqJNM5Nm-TwBzO83vweSy3TUA7MWXZ6gElgI": true,
+    "gDO7N_zSQF9tsFYQLgklIXERmuOca3QtHN5SflIoEbU": true,
+    "iD1qksG0zAsfzd3_Y0Bq8O2i_SaTEqNPokPj30jmd5U": true,
+    "u_zFKwkBEIws2BxDgU8k3sfQM2GZ2w9fxBogYCOzX50": true,
+    "4R9Goi10PCWZ0weOQseQ4vwMZ6Isi7waWniBNT8zggg": true,
+    "7DBkY-wMbqaCq4CV8SKL4aZn9o0f0jm6qPBqikWz8G8": true,
+    "cuZF2JWRW574OMZAeVKVse2wTXxCRqci2hWrS456Ojk": true,
+    "cRdoInAz62_l2BHostnKKlYCEEBfleYVjKINU6fngdU": true,
+    "7TaRZ9dek4AcMQn7UGuM-RdjNcTCWqIY7TBw3teQtJ8": true,
+    "GXtrCJqt19i3PInVXVLzc66nN6UgJSwD3doJxcuDei0": true,
+    "wvkMC8QbjXKRdwP7BgAU5OC30PLEId0k9SwuoLh0tVQ": true,
+    "0MLDPpo0jYEvF93TYjRTU6FkbZjSOEbybNENJQ8RUAY": true,
+    "UBhrsMEJvEJpbhF0InYv_5yQleFpUPbL_lYl2HtEEeA": true,
+    "Ge7xKX1m88LiE0bhPbppQ2k4GaMfjSqKDxosNVVqEoQ": true,
+    "FHACe4KAeuMMbJHixSHWeIjzm7tRW8yq5BJ_YiDTBjM": true,
+    "gS_gfqXHd3U-cyGeylEKAm0Kw49BMoc8VPGiGqrZNm8": true,
+    "RRcYCgZqX26sA0V_JSjdx5yqBSxx9hh8ECuq72ygWSs": true,
+    "HAU8WY1-Cc26ExmORjdQUHKT_SSyJxMAK-8DhqL6-gs": true,
+    "IVwLZs10y0N0TZtFaJ8fa_wJCWnkJJ6pa1naqE7BnPg": true,
+    "_vTE-2Xj9f310tudNNEyN8mEm-bey3Mr7fnqcP2EaD4": true,
+    "1_tpOG3eahln5Rfx6t89hjp3WK3n6wO7K5BefHvejzo": true,
+    "LOJQQm9ZEgmXG2bXy4QG93RFz9XXGV38hNY3eOToUgM": true,
+    "FwtVdlz5cJh1W1-bW5hd3OSGulx8ZJupqsorFJwrM0E": false,
+    "chO8Fd1kSt5ZviPrEXntvRKlNydYLIMV4l--bw_7xKc": true,
+    "i0EnvbqZKLgtQ_DPaDFH3T2HQdDrmGseeP0kCACBGYw": false,
+    "YmZzyXj0lshmNa_bhWwDoChzOsVcZTctPXyqKWdvsRc": true,
+    "hOKnaIetMcQkJczTwYX9cGpnFqSqYRojGoYE6XKHoeg": false,
+    "ZLk7piGkyOdJM1uohg2BrrolFhLOYbeIz3IracTYWT8": false,
+    "CL69s9mpSMAymzGTVZuvhZrJYt4n0PPjSslQDWB5Ems": true,
+    "lj-u5uRnJUFZp6KJhJycsirBGf35YwNxfdRqV-5PiFQ": true,
+    "ptOxFCqVSpcrpn5yXAVDmhs5x0RHcP_diXFvMrRaso0": true,
+    "zGVUS51TuQys6FM9dXRsl7pfk5XSSzqO9SN4pN8FeNA": true,
+    "wzC1ZSyh-nnQxvDnteYqvBymzn23HvESkdZ3iTIqrc8": true,
+    "V3GCyDpjI0vqvdpIj6JM7jlqp6Qnx5WlnzWy1P01tGw": true,
+    "5AZOP9PX6wInU_Iei6zOyIrieJgr5HUk4ghRW4ZoVFk": true,
+    "VJavDkKuCU-vhrPo7sGNY5XDAuTX28fQ1kMWaYPu8sQ": true,
+    "wrLbI7NTonu6VcjF_M_irsoBIgf0qihlBJEYykUhCcU": true,
+    "OX39-VZ0Q1loWu4IXmYt36b2xTqe1Z30J7uwe2YaIew": true,
+    "3TvT_GjwWSJtZr3Fx2MJxMcfY-jvbXQKQ3IuvPo8yxE": true,
+    "RxckpDr2ID1BecE-zxtinZQJqXyyfPQOsUgqyDmpwFQ": true,
+    "adUf8cROG1V7zS5LauSIxHk9RHm712uC1cqWOqWOV54": true,
+    "6u_LfHWNmdJqyW_8bPFjZ1tjE9v4bClhcx0QzKWsZLA": true,
+    "kJjSWTkd4OZZ_X1nJ16ESh7EzVf173_j53k77lhDbvM": true,
+    "MYNCKwmwmMXCF7e_68zNzNaz75F6sjVAVwoMugqO9RA": true,
+    "QTU1V7aDNWLz8js23Z3HxH_VrnSYMKw8V8t5ogBHbS0": true,
+    "z0U-oJwGMfn0RLlpXNmKz1TnPwebwBNeFODklEbiDPA": true,
+    "nmyqmZLhLtJE-RZFuskjywB4ofaIgLM_aEpfsXJ5O9o": true,
+    "BvaxFQFO-tyz-q1-uhAHX8XVYysL7mNv_iRR9wJ0feM": true,
+    "Me_BnXYlnrrgR3D194FyLRr8QN81i7eelLPNZ6fcJAw": true,
+    "KylvZwhcA1YSlOwGOFqFaoKXWGFDaUGBSqrV6LD3-mw": true,
+    "-4sSmEdma9PB67rzpquzJuH9Gbr1Kyr6adIe4ot9VzU": true,
+    "3gZlHFa-QfWoxb5e0fLbgWNMEhvHKEC0jXY1MOoFuSE": true,
+    "UrP-KNmIcl4xUFmGjIDYGNPjg8sJ3u3liIyiTkPcH0I": true,
+    "TcK5Cfw4hJIizr_5w5gYj2JAOKFtcH-3IV_Y5Iecdms": true,
+    "prdcXLJvKUEbw32z5y5RnxM0JWdBT9wMC3pMPIbxHbY": true,
+    "dFx9CI49Wj6Ih-zyNTvFXFgUQhHcLih_YNxI4qD4Wqc": true,
+    "dPO1G8KD3WQKQTlGuO3LQ03qeTwYaD2z9fJZncaw07w": true,
+    "OH0lKlHUiLPjN3h64WD_RUMTQ7aH33Jb5Il-yCl9Im0": false,
+    "RgRebtXQ6TBXkeQIK-UUyW4EFbvw9BOkWtW-0SBD1dw": true,
+    "Lp-NJaagjlbLlGHbbFMVmV4FbaoA7Gi5d-J17X-OXk8": true,
+    "Jg7OMX0L_ppo8ZmzrWqMHHtArARIRqOgAgV-xXW3T8M": true,
+    "tB4kU2sJll6cx82C4CmFWTp1Cij2Xsui4VMm2qxvhWQ": true,
+    "FZs80c_0GUhLyAfk2V6AlEhU-V9dImMvs6NTK_PcjJA": true,
+    "dbR2ixqntx3edeVnzwzQ-b-EsXT_ciYTlXXHmMkygBA": true,
+    "Ww5pml5P5Nl3wBNCD5pRKrwcJq0IH6KAcMzYfpxXmwc": true,
+    "Ea7m8DhADB0sV0tgb0TCzUL5m1tnTOK2NofQO8Qc-9Q": true,
+    "5xg8xI_iywQTgkf42TxQkLDrDvF2o0peecb4r5EGgTE": true,
+    "yn87OB73qUSV_lxgdTiD6xZJLy3lqRqa6K9LYcg0yuI": true,
+    "FGRl81kyPqK81lvI0Sb7XWMg7Bue1munf6wCM1rOJas": true,
+    "38iDdjfqUYVigCNMBlJP3tEQFGuX_WkYvSrkgilK6KY": true,
+    "dDRntAq-_lxKk0kKD70ZPkYMLHv9lgFtIRRoIR--7Wk": true
+  }
+}

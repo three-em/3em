@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Wonderland",
+    "ticker": "VRTNFT",
+    "title": "Wonderland",
+    "description": "Alice's Adventures in Wonderland",
+    "owner": "gjTRZkij70F2zWd-pVMa9ASWCJbN-JYq6z-fwhvlskw",
+    "allowMinting": true,
+    "balances": {
+      "gjTRZkij70F2zWd-pVMa9ASWCJbN-JYq6z-fwhvlskw": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1633487441"
+  },
+  "validity": {}
+}

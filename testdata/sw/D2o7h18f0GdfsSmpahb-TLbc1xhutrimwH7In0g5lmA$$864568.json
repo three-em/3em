@@ -1,0 +1,22 @@
+{
+  "state": {
+    "name": "Paperbark #1-3",
+    "ticker": "VRTNFT",
+    "title": "Paperbark #1-3",
+    "description": "Bark Blocks is a fine-art project inspired by nature and blockchain technology.",
+    "owner": "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA",
+    "allowMinting": true,
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 0,
+      "aLemOhg9OGovn-0o4cOCbueiHT9VgdYnpJpq7NgMA1A": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1629374301"
+  },
+  "validity": {
+    "Yzmdt5buOVDvy-bqT-xnE6zNx-F-2QZFBQx54RsVqKc": true,
+    "u_FLCNNgP_lvtphPzqM3Uf3tZlJaIst6ojn-WjAvklc": false,
+    "vskt_2v-2J0hV2FKQBRFRDG_fN0bbYrk_CWnCyiHdPk": false,
+    "c2WCgovattAE9r--N3z6MvSRq6bngB5LVn8Wbk0NbQ4": false
+  }
+}

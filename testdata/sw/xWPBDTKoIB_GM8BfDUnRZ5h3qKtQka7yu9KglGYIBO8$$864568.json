@@ -1,0 +1,54 @@
+{
+  "state": {
+    "name": "Hackathons",
+    "ticker": "HAC",
+    "balances": {
+      "pYToJUf_LphAfcPfZaexyiB0xWp2_mlk9c6mtX6lzzY": 5000000000,
+      "2WsJq8LARujih5-psOTBzDMnC3VF8-ETiO-gjDqRwYk": 5000000000,
+      "sh0HhxHWRzc0PIT7lO-hHTtMx9rh1hbfHblR2kwuN7I": 5000000000,
+      "pvPWBZ8A5HLpGSEfhEmK1A3PfMgB_an8vVS6L14Hsls": 5000000000
+    },
+    "vault": {},
+    "votes": [],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        720
+      ],
+      [
+        "communityLogo",
+        "CCU7FFgvOUW9-y4hE0xzVZfV0zXGMR8ojb3T9WcyW2A"
+      ],
+      [
+        "communityDescription",
+        "Hackathons PSC\n\nThis PSC shall enable people vote on Hackathon related topics:\n1. Topic Proposals\n2. Reward Types\n3. Winning Teams \netc."
+      ],
+      [
+        "communityAppUrl",
+        "https://github.com/michael-spengler/hackathons"
+      ]
+    ]
+  },
+  "validity": {
+    "8dpj-h8pi5M-2DFEi6eM0XMkzV5ftA1H8SUqn_7AlDM": true,
+    "NLVYHJpWb9Z-1KUsdTMICLGqtB0LF6-jhPfZDusLN14": true,
+    "bRrM00ePXzjAE4bQ7nTNiTORFwbChlVyUcIyT-oD1Ps": true
+  }
+}

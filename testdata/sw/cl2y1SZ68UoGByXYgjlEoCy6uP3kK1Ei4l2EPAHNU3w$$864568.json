@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "OG Arweave Onboarders",
+    "ticker": "ON",
+    "title": "OG Arweave Onboarder coin",
+    "description": "This coin is part of a collection of 25 OG Arweave Onboarder 3D coins. \n\nThese are awarded to @onlyarweave community members for their assistance bringing new individuals to the ecosystem.  \n\nWhile there may be more in the future, these are OG onboarder 3D coins and the beginnings of something much bigger. \n\nThis is your coin to share your influence in the growth and breadth of the Arweave ecosystem.",
+    "owner": "B--9bTlWMNXFV6AM_5IiS8_cEnLPNm9c_rj3OqkGOC8",
+    "allowMinting": false,
+    "balances": {
+      "B--9bTlWMNXFV6AM_5IiS8_cEnLPNm9c_rj3OqkGOC8": 1
+    },
+    "contentType": "image/gif",
+    "createdAt": "1631310223"
+  },
+  "validity": {}
+}

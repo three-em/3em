@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "hyper-all",
+    "ticker": "VRTNFT",
+    "title": "hyper-all",
+    "description": "one api many services...",
+    "owner": "qdpklNc-gDIGsjjNME6XrGchibzOffw9UMrC4orV1ZQ",
+    "allowMinting": true,
+    "balances": {
+      "qdpklNc-gDIGsjjNME6XrGchibzOffw9UMrC4orV1ZQ": 1
+    },
+    "contentType": "image/svg+xml",
+    "createdAt": "1632933983"
+  },
+  "validity": {}
+}

@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "The Great Marton",
+    "ticker": "MRTN",
+    "title": "The Sam Edition #2",
+    "description": "Had to do it.",
+    "owner": "ljvCPN31XCLPkBo9FUeB7vAK0VC6-eY52-CS-6Iho8U",
+    "allowMinting": true,
+    "balances": {
+      "ljvCPN31XCLPkBo9FUeB7vAK0VC6-eY52-CS-6Iho8U": 2
+    },
+    "contentType": "image/gif",
+    "createdAt": 10
+  },
+  "validity": {}
+}

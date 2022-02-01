@@ -1,0 +1,21 @@
+{
+  "state": {
+    "owner": "FZT169LoGEqAu74iix97vHoRPWqXnqLL5RJZviqewTg",
+    "title": "Test Title for the NFT (redstone.finance)",
+    "name": "Test-Alex-Redstone",
+    "description": "Test nft created by alex@redstone.finance",
+    "ticker": "TSTRDSTN",
+    "balances": {
+      "FZT169LoGEqAu74iix97vHoRPWqXnqLL5RJZviqewTg": 0,
+      "zYqPZuALSPa_f5Agvf8g2JHv94cqMn9aBtnH7GFHbuA": 1
+    },
+    "locked": [],
+    "contentType": "image/jpeg",
+    "createdAt": 1636335132350,
+    "tags": "TSTRDSTN"
+  },
+  "validity": {
+    "Xw5nNCyAJQalMCgKlOc9idN2zTf3pk64dWGD8F5f4tI": true,
+    "L04xtsaGEhhFmYC-xpftqqpO3A-GM2GBleGkXrg8ucg": false
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "state": {
+    "name": "SUCCEED Child Health Alliance",
+    "ticker": "SUCCEED",
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 10000000
+    },
+    "vault": {},
+    "votes": [],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.6
+      ],
+      [
+        "support",
+        0.6
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        720
+      ],
+      [
+        "communityLogo",
+        "UvH1BOMBdOr2ucGu7rg-ZBQvkiqBdeQ_OtFTAIElxKI"
+      ],
+      [
+        "communityDescription",
+        "An Australian alliance of families, clinicians and researchers working to create a world where children with feeding difficulties thrive."
+      ],
+      [
+        "communityAppUrl",
+        "https://www.childfeeding.org"
+      ]
+    ]
+  },
+  "validity": {}
+}

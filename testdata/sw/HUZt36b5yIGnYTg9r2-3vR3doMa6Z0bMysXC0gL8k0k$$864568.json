@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "hyper",
+    "ticker": "VRTNFT",
+    "title": "hyper",
+    "description": "hyper.io",
+    "owner": "qdpklNc-gDIGsjjNME6XrGchibzOffw9UMrC4orV1ZQ",
+    "allowMinting": true,
+    "balances": {
+      "qdpklNc-gDIGsjjNME6XrGchibzOffw9UMrC4orV1ZQ": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1632932935"
+  },
+  "validity": {}
+}

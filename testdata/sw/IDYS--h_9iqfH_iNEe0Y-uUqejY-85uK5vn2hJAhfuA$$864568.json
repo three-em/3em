@@ -1,0 +1,36 @@
+{
+  "state": {
+    "name": "Polymer",
+    "ticker": "PLY",
+    "balances": {
+      "pFwvlpz1x_nebBPxkK35NZm522XPnvUSveGf4Pz8y4A": 100000000
+    },
+    "vault": {},
+    "votes": [],
+    "roles": {},
+    "bundlers": [],
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        5
+      ],
+      [
+        "lockMaxLength",
+        720
+      ]
+    ]
+  },
+  "validity": {}
+}

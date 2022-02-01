@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Edificio Niemeyer sobre Assyria e Babylonia.",
+    "ticker": "VRTNFT",
+    "title": "Edificio Niemeyer sobre Assyria e Babylonia.",
+    "description": "Oleo e caneta sobre \"Pequeno Atlas Histórico\" do século XIX (19x14 cm) por Pepperino Oligor -Quetepinto- BH2016",
+    "owner": "VaijnExv0zd1maYovF3TfnuBM9G3x7Nz7K0Gz8TAvkk",
+    "allowMinting": true,
+    "balances": {
+      "VaijnExv0zd1maYovF3TfnuBM9G3x7Nz7K0Gz8TAvkk": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1634076092"
+  },
+  "validity": {}
+}

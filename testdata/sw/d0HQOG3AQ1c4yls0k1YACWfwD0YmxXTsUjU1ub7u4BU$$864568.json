@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "1st Verto Mint",
+    "ticker": "MINFT",
+    "title": "1st Verto Mint",
+    "description": "The first NFT minted on Verto.",
+    "owner": "pvPWBZ8A5HLpGSEfhEmK1A3PfMgB_an8vVS6L14Hsls",
+    "allowMinting": true,
+    "balances": {
+      "pvPWBZ8A5HLpGSEfhEmK1A3PfMgB_an8vVS6L14Hsls": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1628877411"
+  },
+  "validity": {}
+}

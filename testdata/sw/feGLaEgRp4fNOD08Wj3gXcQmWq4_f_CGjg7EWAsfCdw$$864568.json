@@ -1,0 +1,59 @@
+{
+  "state": {
+    "name": "Veritree",
+    "ticker": "TREE",
+    "balances": {
+      "GIzJCzJ934dDQuBqxgYPfvC8bVbOZ8GoDjkO-45o5LQ": 999980000000
+    },
+    "vault": {
+      "GIzJCzJ934dDQuBqxgYPfvC8bVbOZ8GoDjkO-45o5LQ": [
+        {
+          "balance": 20000000,
+          "end": 713505,
+          "start": 712785
+        }
+      ]
+    },
+    "votes": [],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.1
+      ],
+      [
+        "support",
+        0.75
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        720
+      ],
+      [
+        "communityLogo",
+        "aMf5TStJvXXpR6uNoMHDv9ZFCBcomORXSM2zPFczua4"
+      ],
+      [
+        "communityDescription",
+        "Veritree verifies global restoration projects accelerating the adoption of nature-based climate solutions. Using technology to add transparency and accountability to the most important problem of our time."
+      ],
+      [
+        "communityAppUrl",
+        "https://veritree.com/"
+      ]
+    ]
+  },
+  "validity": {
+    "EPafx531rkGjFA8j7xGUiYCEwMHNxVLuSWmWmVn7hcc": true,
+    "K7ZlFBwt5md3GKr9GSqg1XD9njN14tIRvWYhBf4sOwo": true,
+    "WzBnYYAXH6XopZ-AH1mf5VQlbQr2ASGeTkTlYQNMKvc": true
+  }
+}

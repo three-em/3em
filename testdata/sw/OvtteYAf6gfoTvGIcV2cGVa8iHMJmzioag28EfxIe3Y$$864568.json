@@ -1,0 +1,24 @@
+{
+  "state": {
+    "name": "A Thousand Words #3: Jan 2021",
+    "ticker": "1K",
+    "title": "A Thousand Words #3: Jan 2021",
+    "description": "This is an uncommon angle from which to photograph the Sydney Harbour Bridge.\n\nIt was made possible by the lockdown of 2021, which decimated tourist numbers and let a few locals fish quietly off the harbourside walk.",
+    "owner": "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA",
+    "allowMinting": true,
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 8,
+      "dxGmt44SZenqmHa-_IEl8AmuejgITs4pB3oe-xUR36A": 1,
+      "3kN6ZCAWshR2RuSksjHavXJZqh7ZwRamFQlKYSP70ao": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1629604163"
+  },
+  "validity": {
+    "uY7xtK_U5o0IqWqioILr5mSSvCr8AziPufYwx0BK1Oc": true,
+    "Z6MGhsO7IAfrFpIo6xomIDT-Si3E1DaUV1wVVxyMdUA": true,
+    "cH8WIYyxzXginiTFOBJYCg1M1UBjlta8XsEZ3VEXTi8": true,
+    "nEkKoVms_6S82bT-faufDLvgDfgdWoktHNrwDDkU-cs": true,
+    "69fjgKPRvQVhzQmWzWJowCUSGEjcUsGejWu5htbLqek": false
+  }
+}

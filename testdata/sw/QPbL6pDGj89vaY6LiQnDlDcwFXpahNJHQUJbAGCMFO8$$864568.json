@@ -1,0 +1,21 @@
+{
+  "state": {
+    "owner": "oxOrjbm4or-B2WAKShM4bXzgmEv2jh50YHo2ZdvmJ-o",
+    "title": "Narcissus 0.0.1",
+    "name": "koii",
+    "description": "The Koii Narcissus Flower blooms only when given attention. Share with a friend to see it open.",
+    "ticker": "koii",
+    "balances": {
+      "oxOrjbm4or-B2WAKShM4bXzgmEv2jh50YHo2ZdvmJ-o": 0,
+      "nj7AwoC8YN6Qn2SUxFFQHMlePacvrqDlm4VXcs8qsX8": 1
+    },
+    "contentType": "text/html",
+    "createdAt": 1631592893,
+    "tags": []
+  },
+  "validity": {
+    "GziTEv9HzZe_sXMva8dy5zqFMF-zyrvtC76Hyttdwyo": true,
+    "_31VqXcoowbZsN9PoLOuhGrWNLHtLOxG70HAu4BHiD4": false,
+    "PHG6Eqw12JgpRZoWe1e7pO1xwpp1wxoCuirKLge--EA": false
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "state": {
+    "name": "Arweave Core Devs",
+    "ticker": "ACD",
+    "balances": {
+      "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw": 0,
+      "xnlOstjyb5Ix2-XFTgM5is08MIqjF7J70_1QY7PM42E": 0
+    },
+    "vault": {
+      "vLRHFqCw1uHu75xqB4fCDW-QxpkpJxBtFD9g4QYUbfw": [
+        {
+          "balance": 1000,
+          "end": 587759,
+          "start": 587039
+        }
+      ],
+      "xnlOstjyb5Ix2-XFTgM5is08MIqjF7J70_1QY7PM42E": [
+        {
+          "balance": 1000,
+          "end": 587389,
+          "start": 587029
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "active",
+        "type": "indicative",
+        "note": "Indicates Arweave Core Devs support for node release 2.3.\nCommit hash: 179c02052aac31b4c1a65a31ae91d9087a2cc70e",
+        "yays": 0,
+        "nays": 0,
+        "voted": [],
+        "start": 587024,
+        "totalWeight": 720000
+      },
+      {
+        "status": "active",
+        "type": "indicative",
+        "note": "Indicates support for binary version 2.3 client releases as follows:\n\n29d1f6419bd768600639f892115b45e39a46ab5a6ec66f7a7a591ead2466454b  arweave-2.3.0.0.darwin-x86_64.tar.gz\nb2e638593dffc28752f47025d5e414aa951faff4987135cd86c23068cce19a60  arweave-2.3.0.0.ubuntu18-x86_64.tar.gz\nef557c57f4c9f5e48d2e13e0e7395b8416e74ed44d321743853a328c9d3c0f2f  arweave-2.3.0.0.centos8-ubuntu20-x86_64.tar.gz",
+        "yays": 0,
+        "nays": 0,
+        "voted": [],
+        "start": 587029,
+        "totalWeight": 720000
+      }
+    ],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.66
+      ],
+      [
+        "support",
+        0.66
+      ],
+      [
+        "voteLength",
+        720
+      ],
+      [
+        "lockMinLength",
+        360
+      ],
+      [
+        "lockMaxLength",
+        720
+      ],
+      [
+        "communityLogo",
+        "doGMtdwrWjMrYwQi1_PKbiNipXqWNU-P72jnJK--8Z4"
+      ],
+      [
+        "communityDescription",
+        "The organisation of the core Arweave network developers making decisions about the new releases."
+      ],
+      [
+        "communityAppUrl",
+        "https://github.com/ArweaveTeam/arweave"
+      ]
+    ]
+  },
+  "validity": {
+    "JBksXvSaIQTj_nBpFk0YvaeFsCTd3CLr96Kzwg-IEvk": true,
+    "xSuB-1scWVK9DfI7jaEtkyuFCgccQHFaSQ51iaW84ik": true,
+    "F9RMxXJV2_GoASILOXOF9Ux6zUkUuv_nfU2bUDAKUCY": true,
+    "LMu_sXpMdHtFpml18Gd1JsudZEL49fWj8cWPwwHT5fo": true,
+    "dN-aeBoX01m9o4Pg3uaUIyq_QxAmq9MLZxlG8li5Mao": true,
+    "ycH2uIbidjG7yAhQ7whkHylxgf-SjUPuOpYuLwXlIhY": true,
+    "OnvBpqAhhDUWbDlCpUwQq8jn3P_Y1zKvusa3naL8ARU": false
+  }
+}

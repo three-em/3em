@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Boobies Punks 1",
+    "ticker": "BOOBIES",
+    "title": "Boobies Punks",
+    "description": "Custom generated pixel art boobies to entertain the mind.",
+    "owner": "Ygcqww4Hq2mjMzqhWFnCTMsQ9VFEr4ytVWbYDbXCpDw",
+    "allowMinting": true,
+    "balances": {
+      "Ygcqww4Hq2mjMzqhWFnCTMsQ9VFEr4ytVWbYDbXCpDw": 1
+    },
+    "contentType": "image/gif",
+    "createdAt": "1635518674"
+  },
+  "validity": {}
+}

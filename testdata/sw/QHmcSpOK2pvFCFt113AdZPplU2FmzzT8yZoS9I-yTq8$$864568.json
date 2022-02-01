@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "pikachu",
+    "ticker": "VRTNFT",
+    "title": "pikachu",
+    "description": "huge",
+    "owner": "urt2zchXjMVu0QMobVR1298orb8vAt1Q9eBdTUayPDE",
+    "allowMinting": true,
+    "balances": {
+      "urt2zchXjMVu0QMobVR1298orb8vAt1Q9eBdTUayPDE": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1634288657"
+  },
+  "validity": {}
+}

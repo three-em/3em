@@ -1,0 +1,115 @@
+{
+  "state": {
+    "name": "Wisdom Wizards",
+    "ticker": "WWT",
+    "balances": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": 7940000,
+      "pvPWBZ8A5HLpGSEfhEmK1A3PfMgB_an8vVS6L14Hsls": 0,
+      "aoaJNC8NcKVfgwaUj6kyJi2hKrVGUsRHCGf8RhKnsic": 100000,
+      "yYVzfbLRPbdZjv1pRQ6WoHpqChkhZFv1trLnoEqcuns": 10000,
+      "eqfFHzWEUT4Irw4XZgg6vrrNZxLDi7rnwx9va-_7EKw": 50000,
+      "ZX2kD5ZPenf02YDdzpvXOs4DmNfEN1MwAwibJtwl3Go": 3100000,
+      "TId0Wix2KFl1gArtAT6Do1CbWU_0wneGvS5X9BfW5PE": 100000,
+      "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA": 700000,
+      "SpLXLYSs9Or3379AwIaqIBdrNnSSqwHFPAtfJAUxDLk": 2000000
+    },
+    "vault": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": [
+        {
+          "balance": 7000000,
+          "end": 865273,
+          "start": 845273
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Official domain is ready!",
+        "yays": 72000000,
+        "nays": 0,
+        "voted": [
+          "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg"
+        ],
+        "start": 756305,
+        "totalWeight": 72000000,
+        "key": "communityAppUrl",
+        "value": "http://wisdomwizards.school/"
+      },
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "Please let's increase the max length!",
+        "yays": 72000000,
+        "nays": 0,
+        "voted": [
+          "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg"
+        ],
+        "start": 756305,
+        "totalWeight": 72000000,
+        "key": "lockMaxLength",
+        "value": 20000
+      }
+    ],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        20000
+      ],
+      [
+        "communityLogo",
+        "LOfAaRUvPHvduAhv5jKqTtUF-EQjj3U26zgh9GvtLmc"
+      ],
+      [
+        "communityDescription",
+        "A decentralized Learning Management System to connect people through education."
+      ],
+      [
+        "communityAppUrl",
+        "http://wisdomwizards.school/"
+      ]
+    ]
+  },
+  "validity": {
+    "vhpvLJ9I-Zo0XgBuMMVIK1mT_Is2jSh1HSGByb7Ya3M": true,
+    "V7FqDKvnRbU1f_SqV5zycILCFtK4YnPVDqsYzPTj4-s": true,
+    "xbdSpojkX1hJk0_XUZ__B3LVT8nuLpZfn8lmQhMLJQc": true,
+    "JDKYOSv2u_ocL3GURBQc_cZb1FC8iwrR-8TVRy24MIc": true,
+    "RKLPqwbcgxnoG0pCsJ9StpUuMTOVjqdVg1AQScvWCiQ": true,
+    "7S-2nDJEanASg81G1I-wQn7mpQ9cjwuvc9l1UqtO2dU": true,
+    "oBCJTVBo8sATDEnHDWjkzW9gb4npZLFvSUAAeLQNQbM": true,
+    "k3YaHM_Gnx6xf51K1kjPTR2VUQATwcZZV1sO8Ji8zwQ": true,
+    "cEjAnIjM8UHIik3F8pm1QSNc4rosXIeDme4Tb20vYCo": true,
+    "7STT0eO0xSHvLoe6_vQh7FL81fd4MIpVtbNpZPFdYBk": true,
+    "-gibZX86mtf2_o67FWc8eUbGli6tUlaD00YhFeMA2yE": true,
+    "3MdLCcLvmOuToqYsv4UbNNl7C4N4Rfv5oHvUJ7cnZf4": true,
+    "Vb7hLv4HYufBhj0nyN1jKPN4LQEkgdlbzPFvTVkRe48": true,
+    "sXIYWeh_RhblnFaziGw3WI9WqcSBi3OM_Wv-YtjRO2A": true,
+    "GFkjXT6osit9kJOswKH-1T89245P15OKq9mUfuzUzYA": true,
+    "zhUcy1LEJnENUc7QGF_Q9OqyjlhI9gbN_jQ78ZGqdHY": true,
+    "UDalbekbvH2xpneA3mwYrcpFAYUaXzzM99EYV_V-UHs": true,
+    "OJnSs6dNIsY0Vwie7Dc2Ll8A7aP6Mhq1MfzwCEN65d4": true,
+    "asjsLjtNHZMvuSgAwjXwUz44ic9OIuHigFeo8K-NXAQ": true,
+    "UPdDuLkW-vvn7IofcIEiApQFnF4uWie0zxAkiY5aKV4": true,
+    "8ipfPXf_2MbpspLjV2-GWBVgHkM3L-50gLE_r2bHpVw": true,
+    "D1Mo7NEyEaBvNYBXA7cMUa4HBWgnsYm7Q-mbS0mN9m4": true
+  }
+}

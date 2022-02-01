@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Bark Blocks Series 1: Provenance",
+    "ticker": "VRTNFT",
+    "title": "Bark Blocks Series 1: Provenance",
+    "description": "Apparently Bark Blocks was the first NFT project launched onto Verto.\n\nThat's amazing!\n\nHere's the proof.",
+    "owner": "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA",
+    "allowMinting": true,
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1629544759"
+  },
+  "validity": {}
+}

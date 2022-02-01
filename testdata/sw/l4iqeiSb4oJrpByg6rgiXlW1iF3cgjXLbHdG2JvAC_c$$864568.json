@@ -1,0 +1,113 @@
+{
+  "state": {
+    "name": "fQR Weave",
+    "ticker": "FQR",
+    "balances": {
+      "yjC9CFWNkQ6lGGm3n_gJwAu8c45yBc9e8dazXJWBN9M": 99978969,
+      "BPr7vrFduuQqqVMu_tftxsScTKUq9ke0rx4q5C9ieQU": 25,
+      "9Oyncaa4eROwxPZtPp7k19T3C8Y5LXHy2SOsEYMcb2s": 1000,
+      "aLemOhg9OGovn-0o4cOCbueiHT9VgdYnpJpq7NgMA1A": 5,
+      "WNeEQzI24ZKWslZkQT573JZ8bhatwDVx6XVDrrGbUyk": 1001,
+      "0YURIZ8fXGzzx0VMYa7L3waV_YQs6JgQ5GKwiRUyRZM": 1000,
+      "yCwkp_9ZSeHcR1m4AIoBxESA2RFVddHgEDzxcOz-6jQ": 1000,
+      "wHXMHoK3PetRyUu6iwCR9r734oHQKNm6FSf-5-I5fqM": 1000,
+      "pvPWBZ8A5HLpGSEfhEmK1A3PfMgB_an8vVS6L14Hsls": 1000
+    },
+    "vault": {
+      "yjC9CFWNkQ6lGGm3n_gJwAu8c45yBc9e8dazXJWBN9M": [
+        {
+          "balance": 15000,
+          "end": 626400,
+          "start": 625680
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "setting fQR Weave logo",
+        "yays": 10800000,
+        "nays": 0,
+        "voted": [
+          "yjC9CFWNkQ6lGGm3n_gJwAu8c45yBc9e8dazXJWBN9M"
+        ],
+        "start": 625684,
+        "totalWeight": 10800000,
+        "key": "communityLogo",
+        "value": "TdcTqDDwTfYNTxZlX-BI-u9_20XQnzHcoD4U7ufLCrs"
+      },
+      {
+        "status": "passed",
+        "type": "set",
+        "note": "max length update",
+        "yays": 10800000,
+        "nays": 0,
+        "voted": [
+          "yjC9CFWNkQ6lGGm3n_gJwAu8c45yBc9e8dazXJWBN9M"
+        ],
+        "start": 625699,
+        "totalWeight": 10800000,
+        "key": "lockMaxLength",
+        "value": 1000000
+      }
+    ],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        1000000
+      ],
+      [
+        "communityLogo",
+        "TdcTqDDwTfYNTxZlX-BI-u9_20XQnzHcoD4U7ufLCrs"
+      ],
+      [
+        "communityDescription",
+        "fQR Weave is an anti-counterfeit solution built on arweave blockchain. With fQRs, the new version of QR code (or QR 2.0), customers will be able to verify product's authentification with fQR Weave platform. It's the time to fight trustless third parties and the cheating of retailers/wholesalers"
+      ],
+      [
+        "communityAppUrl",
+        "https://fqrweave.tech"
+      ]
+    ]
+  },
+  "validity": {
+    "DUxJm4jyLQ2YxiriKXPP3ZF1PeXYAttShsmMM6FJ1qs": true,
+    "z3f63WM2Yrj44eeH2Qex0bFqbW3gtYyHILhTh0-S5ZU": true,
+    "TC6rcI4iaplhbiVLeYiy6IX_kGkT0or66gnhKRfV_iI": true,
+    "VTGLtLvjlzep6gpOgKxzshpkMzvRNxTLzHZr0jxtzyE": true,
+    "BozskBpBeH6lw_pE4yihYb2OkEpiasEE_KoxsUFpBp4": true,
+    "5NcrH5JC_56WU2FMfsZRXvtupPMtuHMUllx-KXfJ5og": true,
+    "RZSCSeQoHSAHrjqQtZHPSLQhKkNTe-ibq3pvcL4dVnE": true,
+    "Q2G1FxODJkONsz2Mp1IIl8CnyQ62T97CQ3Jlr33Hw30": true,
+    "6tnF0TK4V7kzeVWTmVAwkAM0IUSdPBPAa3awzq-C-KQ": true,
+    "ZU2CRWy1QaXsMa4jLi9RFr6moBevqg4a-sFRhNWb8SU": true,
+    "u6FC_J1eS1bxEcj09oyvtQftGVzckRiO4HE1ZbCg0k8": true,
+    "RhZrgM5ha9ItwAbnnnD0THf73aEXSURvqX3e8mI3k8E": true,
+    "3hYoPwv9CGSdsa8J600ryCTu6XWNeqjpfQol1tM7e78": true,
+    "4D7JiVKjOpA5OvrEkS_kZ5HPyv76-VlPPUM2fd2DyJw": true,
+    "J-ykxj1dz0k24wgiDU1Z6dmJdML88_93oz6HniW0YZY": true,
+    "ZcbBzpEocM1C9i7REl1P8XiuCPf-D8k3cFGERti5dE4": true,
+    "sCJsINIVRuAES5rYzlTPbqW5OtLOKxoJ5chJWVkxBRA": false,
+    "MJIvfzfDhyNfCvwUYSHTEou_6eRxv6mqTsCTtUpLS1c": true,
+    "o5VRnC620H-ENa_KXl1A0sfUN2J0eMsCxjcv4QcUXa4": false,
+    "Ciakutw6pObdN__mgCkRXQSkWrag_J2NZJFygLh2qQU": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Shana",
+    "ticker": "VRTNFT",
+    "title": "ARWaifu",
+    "description": "My first GAN generated Picture.",
+    "owner": "C1ehBJaPu1OwHe9vyPR9M1rxr0UR1nZa-n_Cd6KwwoM",
+    "allowMinting": false,
+    "balances": {
+      "C1ehBJaPu1OwHe9vyPR9M1rxr0UR1nZa-n_Cd6KwwoM": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1630431044"
+  },
+  "validity": {}
+}

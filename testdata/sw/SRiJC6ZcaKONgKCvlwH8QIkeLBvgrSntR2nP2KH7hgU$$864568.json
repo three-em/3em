@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "shanghai autumn",
+    "ticker": "VRTNFT",
+    "title": "shanghai autumn",
+    "description": "beautiful",
+    "owner": "urt2zchXjMVu0QMobVR1298orb8vAt1Q9eBdTUayPDE",
+    "allowMinting": true,
+    "balances": {
+      "urt2zchXjMVu0QMobVR1298orb8vAt1Q9eBdTUayPDE": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1636528863"
+  },
+  "validity": {}
+}

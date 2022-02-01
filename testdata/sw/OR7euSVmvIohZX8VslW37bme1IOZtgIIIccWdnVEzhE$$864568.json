@@ -1,0 +1,47 @@
+{
+  "state": {
+    "name": "Limestone",
+    "ticker": "LIME",
+    "balances": {
+      "R9PL9jt-mZoV6XcNjJD2uB2ajiFTC7PYZ_iyySzzz6U": 1000000
+    },
+    "vault": {},
+    "votes": [],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.3
+      ],
+      [
+        "support",
+        0.51
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        720
+      ],
+      [
+        "communityLogo",
+        "m2QPJYkcJhEOmFO8nj3X78GJTCrTt1EcoUspzQ-TggI"
+      ],
+      [
+        "communityDescription",
+        "Limestone is the new generation of Oracles powered by Arweave. It's fully open to any data provider that is willing to put small collateral. Any data feed could be challenged by raising a dispute that is resolved by a decentralised voting protocol."
+      ],
+      [
+        "communityAppUrl",
+        "https://limestone.finance/#/"
+      ]
+    ]
+  },
+  "validity": {}
+}

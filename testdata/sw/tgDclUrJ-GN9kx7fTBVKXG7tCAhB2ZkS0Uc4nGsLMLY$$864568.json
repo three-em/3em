@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "testing",
+    "ticker": "VRTNFT",
+    "title": "testing",
+    "description": "testing testing 1 2 3",
+    "owner": "wy0VRTPYVpRN6RHLXIo0S7l-fyjCquLLDROAyi16Jx4",
+    "allowMinting": true,
+    "balances": {
+      "wy0VRTPYVpRN6RHLXIo0S7l-fyjCquLLDROAyi16Jx4": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1630360633"
+  },
+  "validity": {}
+}

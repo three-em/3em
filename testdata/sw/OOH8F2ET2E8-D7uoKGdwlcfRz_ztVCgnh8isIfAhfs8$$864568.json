@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Verto Beginnings",
+    "ticker": "VRTNFT",
+    "title": "Verto Beginnings",
+    "description": "The first message related to The Verto Protocol Project",
+    "owner": "ljvCPN31XCLPkBo9FUeB7vAK0VC6-eY52-CS-6Iho8U",
+    "allowMinting": false,
+    "balances": {
+      "ljvCPN31XCLPkBo9FUeB7vAK0VC6-eY52-CS-6Iho8U": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1628416521"
+  },
+  "validity": {}
+}

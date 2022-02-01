@@ -1,0 +1,83 @@
+{
+  "state": {
+    "name": "ArCode",
+    "ticker": "$CODE",
+    "balances": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": 4100000,
+      "IVNASX58t63A9Nodfw_d1pKtqBI93MgHEr-yRH-EQwA": 500000,
+      "ZX2kD5ZPenf02YDdzpvXOs4DmNfEN1MwAwibJtwl3Go": 1000000,
+      "SpLXLYSs9Or3379AwIaqIBdrNnSSqwHFPAtfJAUxDLk": 2000000,
+      "89tR0-C1m3_sCWCoVCChg4gFYKdiH5_ZDyZpdJ2DDRw": 50000,
+      "a5_du7BfZ3aCqAjVYWROr1uFogvX1O5oN-rMTV3GB1I": 50000,
+      "aoaJNC8NcKVfgwaUj6kyJi2hKrVGUsRHCGf8RhKnsic": 100000,
+      "TId0Wix2KFl1gArtAT6Do1CbWU_0wneGvS5X9BfW5PE": 100000,
+      "I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0": 50000,
+      "GH2IY_3vtE2c0KfQve9_BHoIPjZCS8s5YmSFS_fppKI": 50000
+    },
+    "vault": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": [
+        {
+          "balance": 2000000,
+          "end": 865272,
+          "start": 845272
+        }
+      ]
+    },
+    "votes": [],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        20000
+      ],
+      [
+        "communityLogo",
+        "wJGdli6nMQKCyCdtCewn84ba9-WsJ80-GS-KtKdkCLg"
+      ],
+      [
+        "communityDescription",
+        "This is the official Profit Sharing Community (PSTC) for ArCode Studio: Smartweave IDE."
+      ],
+      [
+        "communityAppUrl",
+        "https://arcode.studio"
+      ],
+      [
+        "appFeeInWinston",
+        "10000000"
+      ],
+      [
+        "vipMinimumBalance",
+        "10000"
+      ]
+    ]
+  },
+  "validity": {
+    "Z7MEcz7e8A7vKCRBb1mMU8-6fVwdlYAWT4FA63X4cgo": true,
+    "moNtMIb5bbp_gV7T4IwKEx8TxsJeJHwhrCPG-biiVOY": true,
+    "kbo-ow89wI7nUXMVaytKPhYcI4398tAjYpb-tNGMYsw": true,
+    "4auWKco8QYqTViY823-k2CcSjpPYL6ByODPTYMWScHk": true,
+    "2LY9Rzq5GyK0XqOuj6ymDJyxseqBqLV-pfM4cMs9pwQ": true,
+    "FZ-MjIlY-bGMeFFVxrMddU9G0HJxTtxNHagrYRqqlrY": true,
+    "-_IoiP15hp4i-u2j9lXmPUoPXzZOtJ5u29QwEVIfauI": true,
+    "Er1j9Uo8c6SoOHRuJHFd94_mDFGKig6OML7gTJI2pok": true,
+    "f2UsT1g19UKXaKDVJ8H9f-N0MbYqPrTvGIEHZx9yvE8": true,
+    "QJCuotFnU3PNPxcSRbQOxDW1gixRfETtdC7mvyOYYL8": true
+  }
+}

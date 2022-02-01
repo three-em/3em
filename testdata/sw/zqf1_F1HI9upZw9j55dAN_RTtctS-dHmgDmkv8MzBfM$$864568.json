@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Ribbons",
+    "ticker": "VRTNFT",
+    "title": "Ribbons",
+    "description": "the most amazing jack russell terrier on the planet",
+    "owner": "qdpklNc-gDIGsjjNME6XrGchibzOffw9UMrC4orV1ZQ",
+    "allowMinting": true,
+    "balances": {
+      "qdpklNc-gDIGsjjNME6XrGchibzOffw9UMrC4orV1ZQ": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1632931037"
+  },
+  "validity": {}
+}

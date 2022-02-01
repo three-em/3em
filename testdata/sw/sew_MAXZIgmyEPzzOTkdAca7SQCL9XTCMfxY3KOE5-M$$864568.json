@@ -1,0 +1,159 @@
+{
+  "state": {
+    "name": "Decent Land",
+    "ticker": "DLT",
+    "balances": {
+      "vZY2XY1RD9HIfWi8ift-1_DnHLDadZMWrufSh-_rKF0": 9740400,
+      "dxGmt44SZenqmHa-_IEl8AmuejgITs4pB3oe-xUR36A": 525,
+      "aLemOhg9OGovn-0o4cOCbueiHT9VgdYnpJpq7NgMA1A": 895,
+      "t8i_MHAPl-mwDSthhyBAwGWGrI-_foX5SZV_h9f6Vrc": 0,
+      "vb5lNHhmEbFmkUUwHaLfQO2kN-P83lEuT0N-0am0qsU": 2250,
+      "rB86LBc5uSm68ZGh5v2sdiM-8r4uFOZ35VZwBvnesqo": 2,
+      "JemMP4EfSvLJu2YEWQJqSZubctveq-8dWI4yCLtzsTg": 20,
+      "WNeEQzI24ZKWslZkQT573JZ8bhatwDVx6XVDrrGbUyk": 124952,
+      "WIJQX-GCz_ahWqGhqjd0wO_rpSzncwcADxLHSR_Oit0": 625,
+      "Z-9FOYM4V_ZqKn1GArnhtH3eZ4YDqY6Q8Y8OyCkuiuc": 20,
+      "6UTUty6yyAg3Q_0cZHB15H3wTVxq-a11tmiY2Ihk_O4": 300,
+      "v8S8Q9GT3wwni8KVILYedgB60VZQSz0Y4a54f4BrqMo": 125000
+    },
+    "vault": {
+      "vZY2XY1RD9HIfWi8ift-1_DnHLDadZMWrufSh-_rKF0": [
+        {
+          "balance": 1000,
+          "end": 643452,
+          "start": 642452
+        },
+        {
+          "balance": 2500,
+          "end": 776025,
+          "start": 774525
+        }
+      ],
+      "t8i_MHAPl-mwDSthhyBAwGWGrI-_foX5SZV_h9f6Vrc": [
+        {
+          "balance": 1500,
+          "end": 650801,
+          "start": 640289
+        }
+      ],
+      "rB86LBc5uSm68ZGh5v2sdiM-8r4uFOZ35VZwBvnesqo": [
+        {
+          "balance": 11,
+          "end": 659036,
+          "start": 649036
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "passed",
+        "type": "mint",
+        "note": "mint 9M DLT\nnew total supply: 10M DLT",
+        "yays": 2000,
+        "nays": 0,
+        "voted": [
+          "vZY2XY1RD9HIfWi8ift-1_DnHLDadZMWrufSh-_rKF0"
+        ],
+        "start": 628634,
+        "totalWeight": 2000,
+        "recipient": "vZY2XY1RD9HIfWi8ift-1_DnHLDadZMWrufSh-_rKF0",
+        "qty": 9000000
+      },
+      {
+        "status": "active",
+        "type": "burnVault",
+        "note": "burn 124,952.0 DLT that are stuck in Verto's marketplace",
+        "yays": 0,
+        "nays": 0,
+        "voted": [],
+        "start": 774523,
+        "totalWeight": 16878000,
+        "target": "WNeEQzI24ZKWslZkQT573JZ8bhatwDVx6XVDrrGbUyk"
+      }
+    ],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        720
+      ],
+      [
+        "lockMaxLength",
+        700000
+      ],
+      [
+        "communityLogo",
+        "lhIkxHTm6H4zMyWJVugLUt3EJsQ7zeFyKMLCMToDt3s"
+      ],
+      [
+        "communityDescription",
+        "a land of DAOs - your tribus, your users"
+      ],
+      [
+        "communityAppUrl",
+        "https://decent.land"
+      ]
+    ]
+  },
+  "validity": {
+    "VKb2QoUTeMu9uWG5M1vUxr9jbckh5UjVGv3LCPC1Gss": true,
+    "_-77C-F1Gbp5WgPKHMY_nYEClOKwKKMH5E24BpaGVFY": true,
+    "tgHITLM3DmN-mSNQruELUyr8OwhoGO1-ybBcIcgdUJY": true,
+    "2prnNSw0zdf14Q7FE21P8xxFli8-YiOrFQHMGRHhrcA": true,
+    "IAt-nk6co4iC4OHnTdZ-G1Eb0KK0SX14itOaqONwZcQ": true,
+    "PdfLANbJz9w_k3q6iUbG0wcH6Ee_h-YRg6Hztw5h78U": true,
+    "_czYDMqhhyesH6EOyBmPWoMi34Z5cMun_hBKqJmB1Xw": true,
+    "BCqA0c0EJBh9Yoi0duvR56HPPfr0et1V2nZahXH0F-o": true,
+    "YU8or-6HEhD8fWmZR3OHrMIkjOF8ghDC-l5acHGfOKE": true,
+    "L--CJaN0nj6dKCDh8tOdrtc0ir0pytBleqBSO5opaWE": true,
+    "0ULaajjQYDRez_RoiM7KP3C0lA2BKGRo9Jkgjiatxnk": true,
+    "blyLfMUldZXnW0XDcjTDgA0Anj7sP2n2i9oJZviAAd8": true,
+    "FNv31tSfCBOOVB5EVv32d9N_rOfeoUzNmQMsiLA3ciU": true,
+    "mxcyy7z3rid0vkqBCWhZUsqzzJBtaHMLvZ0jpNU28PA": true,
+    "rCLQ2VKdSiLqHE9yDyMmdoyOadGlLSc9XzBuTvn2fn0": true,
+    "D0H1I2bJtgIxQP7qVMQ0sN2NFOU77S7VzuTnKwqHo3U": true,
+    "XYoECUwhbGngCg1qWz1TDREzlSostd1SDxSLYvt9oUY": true,
+    "XRgH2gvoQ0zG30MlxjM7zXjgY0N29kox34um4wIlR2M": true,
+    "rkIHkQXGmeAKsejOrIAAnz9hlClA_h5Lu85iWi0TH_8": true,
+    "rRwp_5bul4ug03lXDhawi9BcWHRFlKQqCl1vZ4yw2HM": true,
+    "qvjEO4jfhoJ_qYW8-4sh2xnuM9JqAAblBTTI54S7mbY": true,
+    "PTHYjAHOrH0Dk7GmFy8D_RlYiCD5sHZPGEUK9A93_l0": true,
+    "lMzpF2Xs3oQTuXe3tvLXvDknOz_ktTx7CzGiB66EMLg": true,
+    "O3o-tlvT_1_Q1vTkbVlRE4AJv33nU_twobO6BCF6DJ0": true,
+    "ozr_1_Z3VWQ0JuwrScbLU0swCuL7khBZB7A0OTvnPcw": true,
+    "2Lt-pwgLkXiCI2EdstNVLDKmrhc76g1hapAlP_SFiZU": true,
+    "saAOOaXHsSGbuyj22NLO_qBngR3YL86zYVvaPXsn_MY": true,
+    "HiGncbinX9oroCrhnE_Kc58vrsmL84hKj2F4VfuT1OE": true,
+    "Nus_GUSiwUA6pQXuvDmkNmZUEueMFFNptd8F8HlfNE0": true,
+    "9OCwFweg7ZFY3m9Zt6r-kwdD5XxdssuAh1NecIjylLM": true,
+    "jg8iSbbte_XHFhkCP2zyu83bKsnc6zWxLqr2mDXz04M": true,
+    "tF2HG1wmvMdC9tMIB4AVR2mBJuUURrJkpuPvo1zj5nA": true,
+    "_qElgZDmFJYmn3GBd6cgiJ-aZJ5h13vxXPEbOyxz3Vw": true,
+    "cmgS8U08IyRWg7j3Zhh13kAof8icygUyTGs0I-vr6N0": true,
+    "F5ltOdBC8ZQW3JSBR_gh3Cv6puzNccj8bIfStRPBJUA": true,
+    "dFF9zYCCsMwwGgNIDBvUTyLLXGYMJ6yTrR-Oj62NTo4": true,
+    "iN0vNbyb3mHdCFUCfAq_6TLEOQZMoSA_k7_q-Skv6KY": true,
+    "6BYI_cB3XFjI-pJBaRxp3KUPVN0Y4gYd8iYE5nJR3KY": false,
+    "L7tVQCh-_yB4_POH9A4Fl5qRTDlMZOrQugbfd4ArugY": true,
+    "VCl8n_mAWZ32Hej_ENIQQAxrqfeDMelO7ob29hgMQfA": true,
+    "Mw2YZkIuxdw0LtMbyFLqIotcgns17_z1-BHskGGSaO0": true,
+    "IZYe4tvpq0QcivbmVa-QqcbLPAhkdfbRecfb1BlilTc": true,
+    "mmCrjwBxUX2aay08S41-TETjpEfX59Br9SDNh--JirY": false,
+    "LIdCIKsJT3JeTOP_W83pAn7_s0ytpoA39b9OhwhV_Eg": false,
+    "_vFF98UfTl5c0HKb15Qsg_8wDHzdXDReqUBei2PbL8Y": false,
+    "yX2qTeDS6uWpLtrSBpDCPjac9qtT3zuwwGaaF5GtW4g": false,
+    "tRuUba6nZq2CbPQ_vF2GKaNRj1arHoI5vUVIcXYs3K0": false
+  }
+}

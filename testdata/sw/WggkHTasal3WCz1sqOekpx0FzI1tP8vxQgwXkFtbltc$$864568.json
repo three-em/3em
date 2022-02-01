@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "Bark Blocks Series 1 ",
+    "ticker": "VRTNFT",
+    "title": "Bark Blocks Series 1 ",
+    "description": "Bark Blocks is a fine-art project inspired by nature and blockchain technology.",
+    "owner": "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA",
+    "allowMinting": true,
+    "balances": {
+      "STdoQcDVftwCrUN_oTsOSClFgG-PoQCRkYmHVgrGkBA": 1
+    },
+    "contentType": "image/jpeg",
+    "createdAt": "1629377157"
+  },
+  "validity": {}
+}

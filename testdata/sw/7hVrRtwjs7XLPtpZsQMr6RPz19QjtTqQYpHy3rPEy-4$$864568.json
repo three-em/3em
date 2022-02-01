@@ -1,0 +1,137 @@
+{
+  "state": {
+    "name": "Arcade City",
+    "ticker": "ARCADE",
+    "balances": {
+      "staBJp6fR5LGDJB23rNLT78QYrEjshLJC7xLQNcvMe0": 6921484500,
+      "wawczuq-7U5Zy836Er8whL_gSjfkPPVSAKHtsZVFTz8": 1000000,
+      "YkkWihuHa_tXra9couLzTWfi7KiFdcnKf7ngvBPFFuM": 2000,
+      "S8sKlyfGs8_fgm3d5ane01wLI749HVMtNXqCj32tBus": 25000,
+      "fGpnfgCWFuhW-MIPmlTZ5_A0nj0WrT9n631t1EDII30": 12500,
+      "x9r-yivjUWgqJKxsDu0QVLtgQ0-J8KMsw-CFoQRmv78": 10000,
+      "vzP-dVJzfZQg8do0Z-pO-FRJeXgMPAxwTw9KNKpepwI": 10000,
+      "6o8o74d8s66o6ZHKARA8NTppxTo1ie2VjdqiOEStPFs": 0
+    },
+    "vault": {
+      "staBJp6fR5LGDJB23rNLT78QYrEjshLJC7xLQNcvMe0": [
+        {
+          "balance": 10000000,
+          "end": 671603,
+          "start": 666603
+        },
+        {
+          "balance": 3000000000,
+          "end": 1666611,
+          "start": 666608
+        }
+      ],
+      "hlJi7-l2TUaD074i7q5njRmj-qoV03sRLUl9pOS7PHY": [
+        {
+          "balance": 67456000,
+          "start": 678152,
+          "end": 1423152
+        }
+      ]
+    },
+    "votes": [
+      {
+        "status": "passed",
+        "type": "mintLocked",
+        "note": "Token purchase",
+        "yays": 3000009000000000,
+        "nays": 0,
+        "voted": [
+          "staBJp6fR5LGDJB23rNLT78QYrEjshLJC7xLQNcvMe0"
+        ],
+        "start": 675627,
+        "totalWeight": 3000059000000000,
+        "recipient": "hlJi7-l2TUaD074i7q5njRmj-qoV03sRLUl9pOS7PHY",
+        "qty": 67456000,
+        "lockLength": 745000
+      },
+      {
+        "status": "failed",
+        "type": "burnVault",
+        "note": "Burning equivalent of token purchase to maintain 10B supply",
+        "yays": 3000009000000000,
+        "nays": 0,
+        "voted": [
+          "staBJp6fR5LGDJB23rNLT78QYrEjshLJC7xLQNcvMe0"
+        ],
+        "start": 675668,
+        "totalWeight": 3000059000000000,
+        "target": "6o8o74d8s66o6ZHKARA8NTppxTo1ie2VjdqiOEStPFs"
+      },
+      {
+        "status": "passed",
+        "type": "burnVault",
+        "note": "Burning equivalent of token purchase to maintain 10B supply - retry with tokens in vault",
+        "yays": 3000009000000000,
+        "nays": 0,
+        "voted": [
+          "staBJp6fR5LGDJB23rNLT78QYrEjshLJC7xLQNcvMe0"
+        ],
+        "start": 678170,
+        "totalWeight": 3050651000000000,
+        "target": "6o8o74d8s66o6ZHKARA8NTppxTo1ie2VjdqiOEStPFs"
+      }
+    ],
+    "roles": {},
+    "settings": [
+      [
+        "quorum",
+        0.5
+      ],
+      [
+        "support",
+        0.5
+      ],
+      [
+        "voteLength",
+        2000
+      ],
+      [
+        "lockMinLength",
+        5000
+      ],
+      [
+        "lockMaxLength",
+        1000000
+      ],
+      [
+        "communityLogo",
+        "Ckd-iFDKTQKXNVdus6cSJ1wPQbR6z5VWut9gucTrEjY"
+      ],
+      [
+        "communityDescription",
+        "Peer-to-peer everything"
+      ],
+      [
+        "communityAppUrl",
+        "https://arcade.city"
+      ]
+    ]
+  },
+  "validity": {
+    "k59YVpXTzrWD7SBwydzUACWFcvkjLujB8k7Gw-UtjVk": true,
+    "4tB6kVrSMDzRpCR5ZqRwjWW1VqtA_5mRFHo67PmYrtQ": true,
+    "7FfI4PZal0h32_9G894YfuwZfXgKppjj_37bXKQhHbY": true,
+    "Gt5h3wsKDcDrkGZE6sOGNdEhOuPUhBULFja2smrChw0": true,
+    "Wv3OM0J07x3-T2ATtCJ2QySaGCWaHZO1lL_cbGG8giE": true,
+    "k6oJkOTlcxTWx76QZrUN-aAGXxAhDrDrUQgTeGKrsEY": true,
+    "vxniS7BWOojX9bi6YpDWoWaCUOmg9fLtahKWrb2JIgk": true,
+    "q2gWXI-ZOxmtTrV5lFBU1fbuBDy561MJjnHunjZ2f4w": true,
+    "_vBW559ZNY9tRbDtEFE3FDkytndP74vD_Tfpvq_32Pg": true,
+    "ahSFCNfUA6zzsTUxiMd9vu7s_v1HcorZMq9hf70Sr10": true,
+    "Fk9pQK2lYgbq1CEJwS_z1CXQqALrh8OG2uyhexptgwU": true,
+    "cQ-qRul8-VFL7qIUN94Y3mQBYPz8sjnLhZefO96lXlk": true,
+    "xWRxAHBRB6CF8HQSloR9QjimfO3osOUJsfhLN-Ip-ss": true,
+    "5s-Sy_HNs8FCDune0kMoAUllXAZqJf1DBwAGDdyTbHc": true,
+    "S_65bSL338KBU0O-C6uvC1BSDa_5_jYTWwYcPnu4z1g": true,
+    "CBhf6Yotwv1QyBkaDV2nlkDJ8ULDSOM0XwXvNICQl00": true,
+    "HvP0agasMfdqSKWHX0T88t8jFLOdoSka2Ku84oc_pNk": true,
+    "VYVAAz_1M8PJIkMZ1j9kka23CVyEqoxQdqPwk7GG75I": true,
+    "FCck1vvMQ6z2svL1nm1r96UcxgxNAOsTemN_G8QDkn8": true,
+    "SPPTO7fZQpsez_1JgOtUR1kRmJs5tfVfQ-mvF_e-m8g": true
+  }
+}

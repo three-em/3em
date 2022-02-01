@@ -1,0 +1,16 @@
+{
+  "state": {
+    "name": "CryptoEinstein",
+    "ticker": "VRTNFT",
+    "title": "CryptoEinstein",
+    "description": "CryptoEinstein is a cute dog with a hidden message. Can you find it?",
+    "owner": "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg",
+    "allowMinting": true,
+    "balances": {
+      "7z8Vtlbdm-Vw6mQ_jZ7OEh3E-4RtUC1V5U0pQw8Flyg": 1
+    },
+    "contentType": "image/png",
+    "createdAt": "1641095981"
+  },
+  "validity": {}
+}

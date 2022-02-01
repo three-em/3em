@@ -1,0 +1,14 @@
+{
+  "state": {
+    "name": "ArCoNFT-01 Edition 54",
+    "ticker": "ARCONFT54",
+    "description": "An special token to commemorate the first ArConf.",
+    "balances": {
+      "YvdNQ-5DFa67zDH6ANMBaf7n4hg5jTpDoz84JtqXmAo": 0,
+      "2BvwE8Jb2AQMWMZea5QESiwI2z-dEGh8LGwFrmiHg1k": 1
+    }
+  },
+  "validity": {
+    "MQrb9VApat4VUdKRi1Pm4mSYNY8NJlYqMJ1Ak1f0fOA": true
+  }
+}
