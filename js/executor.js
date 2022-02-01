@@ -2,6 +2,12 @@ import { Runtime } from "./sw.js";
 import { hex, Machine } from "./evm/index.js";
 import { WasmRuntime } from "./wasm.js";
 
+const isNode = typeof process == "object";
+if (isNode) {
+  const w = await import("worker_threads");
+  global.Worker = w.Worker;
+}
+
 const getTagSource = `
 function getTag(tx, field) {
   const encodedName = btoa(field);
@@ -10,7 +16,12 @@ function getTag(tx, field) {
 
 const loadContractSource = `
 const baseUrl = "https://arweave.net";
-
+const isNode = typeof process == "object";
+const me = isNode ? require("worker_threads").parentPort : self;
+if(isNode) {
+  const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+  global.fetch = fetch;
+}
 async function loadContract(contractId) {
   const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrl).href);
   const tx = await response.json();
@@ -46,6 +57,8 @@ async function loadContract(contractId) {
   const sourceTxResponse = await fetch(
     new URL(\`/tx/\${contractSrcTxID}\`, baseUrl).href,
   );
+
+
   const sourceTx = await sourceTxResponse.json();
   const type = getTag(sourceTx, "Content-Type");
 
@@ -56,23 +69,25 @@ async function loadContract(contractId) {
   };
 }
 
-self.addEventListener("message", async (event) => {
+me.addEventListener("message", async (event) => {
   const { tx } = event.data;
-  self.postMessage(await loadContract(tx));
+  me.postMessage(await loadContract(tx));
 });
 `;
 
-const loadContractBlob = new Blob([getTagSource, loadContractSource], {
+const loadContractSources = [getTagSource, loadContractSource];
+const loadContractBlob = isNode ? loadContractSources.join("\n") : new Blob(loadContractSources, {
   type: "application/javascript",
 });
 const loadContractWorker = new Worker(
-  URL.createObjectURL(loadContractBlob),
-  { type: "module" },
+  isNode? loadContractBlob : URL.createObjectURL(loadContractBlob),
+  { eval: true, type: "module" },
 );
 
 const loadInteractionsSource = `
 const baseUrl = "https://arweave.net";
-
+const isNode = typeof process == "object";
+const me = isNode ? require("worker_threads").parentPort : self;
 const query =
   \`query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
   transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -159,28 +174,30 @@ async function loadInteractions(contractId, height, after) {
   return txs;
 }
 
-self.addEventListener("message", async (event) => {
+me.addEventListener("message", async (event) => {
   const { tx, height, last } = event.data;
   if (!last) {
-    self.postMessage(await loadInteractions(tx, height));
+    me.postMessage(await loadInteractions(tx, height));
   } else {    
-    self.postMessage(await loadInteractions(tx, height, last));
+    me.postMessage(await loadInteractions(tx, height, last));
   }
 });
 `;
 
-const loadInteractionsBlob = new Blob([getTagSource, loadInteractionsSource], {
+const sources = [getTagSource, loadInteractionsSource];
+const loadInteractionsBlob = isNode ? sources.join("\n") : new Blob(sources, {
   type: "application/javascript",
 });
 const loadInteractionsWorker = new Worker(
-  URL.createObjectURL(loadInteractionsBlob),
-  { type: "module" },
+  isNode ? loadInteractionsBlob : URL.createObjectURL(loadInteractionsBlob),
+  { eval: true, type: "module" },
 );
 
 export async function loadContract(tx) {
   loadContractWorker.postMessage({ tx });
   return new Promise((resolve, reject) => {
     loadContractWorker.onmessage = (event) => {
+      console.log(event.data);
       resolve(event.data);
     };
     loadContractWorker.onerror = (error) => {
