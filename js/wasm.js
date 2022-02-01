@@ -22,6 +22,9 @@ export class WasmRuntime {
         smartweave_read_state: () => {
           throw new Error("not implemented");
         },
+        throw_error: () => {
+          throw new Error("Contract panicked");
+        },
       },
       "wasi_snapshot_preview1": {
         "fd_close": () => {},

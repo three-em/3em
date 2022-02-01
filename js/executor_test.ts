@@ -1,4 +1,4 @@
-import { executeContract, loadContract } from "./executor";
+import { executeContract, loadContract } from "./executor.js";
 
 Deno.test("contract_load_test", async function () {
   await loadContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE");

@@ -3,7 +3,10 @@
 Read the current state of all kinds of contracts.
 
 ```typescript
-export function executeContract<T extends unknown>(contractTx: string, blockHeight?: number): Promise<T>;
+export function executeContract<T extends unknown>(
+  contractTx: string,
+  blockHeight?: number,
+): Promise<T>;
 ```
 
 ```javascript
@@ -14,7 +17,8 @@ await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y");
 
 ## Runtimes
 
-Three seperate libraries are available for low level use. The API is subject to breaking changes.
+Three seperate libraries are available for low level use. The API is subject to
+breaking changes.
 
 ### JavaScript
 
@@ -30,7 +34,7 @@ await rt.executeInteractions(interactions);
 // Slower than `rt.executeInteractions` but more readable
 // 100 interactions in ~30.06ms.
 for (const interaction of interactions) {
-  const input = interaction.node.tags.find(data => data.name === "Input");
+  const input = interaction.node.tags.find((data) => data.name === "Input");
   await rt.execute({ input, caller: interaction.node.owner.address });
 }
 

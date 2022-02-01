@@ -3,15 +3,15 @@ import { assertEquals } from "https://deno.land/std@0.123.0/testing/asserts.ts";
 
 Deno.test("test_runtime_1", async () => {
   const runtime = new Runtime(
-    "export async function handle(state) { state.counter += 1; return { state } }",
+    "export function handle(state) { state.counter += 1; return { state } }",
     {
       counter: 0,
     },
   );
 
-  await runtime.execute({}, 100_000_000);
+  await runtime.execute({});
 
-  assertEquals((runtime.state as any).counter, 100_000_000);
+  assertEquals((runtime.state as any).counter, 1);
   runtime.destroy();
 });
 
