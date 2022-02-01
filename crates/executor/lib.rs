@@ -181,6 +181,8 @@ mod test {
   use three_em_arweave::cache::ArweaveCache;
   use three_em_arweave::cache::CacheExt;
   use three_em_arweave::gql_result::GQLEdgeInterface;
+  use std::io::BufReader;
+  use deno_core::serde_json::Value;
 
   #[derive(Deserialize, Serialize)]
   struct People {
@@ -427,6 +429,48 @@ mod test {
         .is_some());
     } else {
       assert!(false);
+    }
+  }
+
+  #[tokio::test]
+  async fn test_tokens() {
+    let paths = std::fs::read_dir("../../testdata/sw").unwrap();
+
+    let arweave = Arweave::new(
+      80,
+      String::from("arweave.net"),
+      String::from("https"),
+      ArweaveCache::new(),
+    );
+
+    for path in paths {
+      let path = path.unwrap().path();
+      let second_path_str = path.to_owned().to_str().unwrap().to_owned().replace("../../testdata/sw/", "").replace(".json", "");
+      let file = std::fs::File::open(path).unwrap();
+      let reader = BufReader::new(file);
+      let u: Value = serde_json::from_reader(reader).unwrap();
+
+      let mut split = second_path_str.split("$$");
+      let (contract_id, height) = (split.next().unwrap(), split.next().unwrap());
+
+      let height = height.parse::<usize>().unwrap();
+
+      let result = execute_contract(
+        &arweave,
+        String::from(contract_id),
+        None,
+        None,
+        Some(height),
+        false,
+        false,
+      ).await.unwrap();
+
+      if let ExecuteResult::V8(value, validity) = result {
+        assert_eq!(*u.get("state").unwrap(), value);
+        assert_eq!(*u.get("validity").unwrap(), serde_json::json!(validity));
+      } else {
+        panic!("Invalid result");
+      }
     }
   }
 
