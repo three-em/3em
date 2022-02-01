@@ -50,7 +50,8 @@ rt.destroy();
 import { WasmRuntime } from "./wasm.js";
 
 const contractBytes = new Uint8Array([/* ... */]);
-const rt = new WasmRuntime(contractBytes, {});
+const rt = new WasmRuntime();
+await rt.compile(contractBytes, {});
 
 // `call` only accepts encoded bytes of
 // the JSON state to provide better performance and reduce
