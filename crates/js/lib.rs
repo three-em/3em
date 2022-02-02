@@ -86,12 +86,8 @@ impl Runtime {
     let module_loader =
       Rc::new(EmbeddedModuleLoader(source.to_owned(), specifier.clone()));
 
-    let flags = concat!(
-      "--predictable",
-      " --predictable-gc-schedule",
-      " --hash-seed=42",
-      " --random-seed=42",
-    );
+    let flags =
+      concat!("--predictable", " --hash-seed=42", " --random-seed=42",);
     v8::V8::set_flags_from_string(flags);
 
     // Make's Math.random() and V8 hash seeds, address space layout repr deterministic.
