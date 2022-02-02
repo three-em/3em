@@ -12,26 +12,33 @@ pub fn handler(_attr: TokenStream, input: TokenStream) -> TokenStream {
   let fn_block = &func.block;
 
   TokenStream::from(quote! {
-    use ::std::alloc::alloc;
-    use ::std::alloc::dealloc;
-    use ::std::alloc::Layout;
-    use ::std::mem::align_of;
+    use ::std::panic;
+    use ::std::sync::Once;  
+    use ::three_em::alloc::*;
+    use ::three_em::*;
 
+    #[link(wasm_import_module = "3em")]
+    extern "C" {
+      fn smartweave_read_state(
+        // `ptr` is the pointer to the base64 URL encoded sha256 txid.
+        ptr: *const u8,
+        ptr_len: usize,
+        // Pointer to the 4 byte array to store the length of the state.
+        result_len_ptr: *mut u8,
+      ) -> *mut u8;
+    }
+    
+    static mut LEN: usize = 0;
+   
     #[no_mangle]
     pub unsafe fn _alloc(len: usize) -> *mut u8 {
-      let align = align_of::<usize>();
-      let layout = Layout::from_size_align_unchecked(len, align);
-      alloc(layout)
+      contract_alloc(len)
     }
 
     #[no_mangle]
     pub unsafe fn _dealloc(ptr: *mut u8, size: usize) {
-      let align = align_of::<usize>();
-      let layout = Layout::from_size_align_unchecked(size, align);
-      dealloc(ptr, layout);
+      contract_dealloc(ptr, size)
     }
-
-    static mut LEN: usize = 0;
 
     #[no_mangle]
     pub extern "C" fn get_len() -> usize {
@@ -47,6 +54,11 @@ pub fn handler(_attr: TokenStream, input: TokenStream) -> TokenStream {
       contract_info: *mut u8,
       contract_info_size: usize,
     ) -> *const u8 {
+      static SET_HOOK: Once = Once::new();
+      SET_HOOK.call_once(|| {
+        panic::set_hook(Box::new(panic_hook));
+      });
+
       let state_buf = unsafe { Vec::from_raw_parts(state, state_size, state_size) };
       let action_buf = unsafe { Vec::from_raw_parts(action, action_size, action_size) };
 
