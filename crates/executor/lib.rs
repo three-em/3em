@@ -171,18 +171,22 @@ mod test {
   use crate::test_util::generate_fake_interaction;
   use crate::ExecuteResult;
   use crate::{execute_contract, sort_interactions};
-  use deno_core::serde_json;
-  use deno_core::serde_json::value::Value::Null;
+  use assert_json_diff::assert_json_matches;
+  use assert_json_diff::CompareMode;
+  use assert_json_diff::Config;
+  use assert_json_diff::NumericMode;
   use indexmap::map::IndexMap;
   use serde::Deserialize;
   use serde::Serialize;
+  use serde_json::value::Value::Null;
+  use serde_json::Serializer;
+  use serde_json::Value;
   use std::collections::HashMap;
+  use std::io::BufReader;
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::cache::ArweaveCache;
   use three_em_arweave::cache::CacheExt;
   use three_em_arweave::gql_result::GQLEdgeInterface;
-  use std::io::BufReader;
-  use deno_core::serde_json::Value;
 
   #[derive(Deserialize, Serialize)]
   struct People {
@@ -445,13 +449,20 @@ mod test {
 
     for path in paths {
       let path = path.unwrap().path();
-      let second_path_str = path.to_owned().to_str().unwrap().to_owned().replace("../../testdata/sw/", "").replace(".json", "");
+      let second_path_str = path
+        .to_owned()
+        .to_str()
+        .unwrap()
+        .to_owned()
+        .replace("../../testdata/sw/", "")
+        .replace(".json", "");
       let file = std::fs::File::open(path).unwrap();
       let reader = BufReader::new(file);
       let u: Value = serde_json::from_reader(reader).unwrap();
 
       let mut split = second_path_str.split("$$");
-      let (contract_id, height) = (split.next().unwrap(), split.next().unwrap());
+      let (contract_id, height) =
+        (split.next().unwrap(), split.next().unwrap());
 
       let height = height.parse::<usize>().unwrap();
 
@@ -463,10 +474,14 @@ mod test {
         Some(height),
         false,
         false,
-      ).await.unwrap();
+      )
+      .await
+      .unwrap();
 
+      let config =
+        Config::new(CompareMode::Strict).numeric_mode(NumericMode::AssumeFloat);
       if let ExecuteResult::V8(value, validity) = result {
-        assert_eq!(*u.get("state").unwrap(), value);
+        assert_json_matches!(u.get("state").unwrap().clone(), value, config);
         assert_eq!(*u.get("validity").unwrap(), serde_json::json!(validity));
       } else {
         panic!("Invalid result");
