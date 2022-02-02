@@ -10,6 +10,9 @@ members = [
   "./crates/wasm",
   "./tools/benchmarks/3em",
 ]
+exclude = [
+  "./helpers/rust/",
+]
 resolver = "2"
 
 [profile.release]

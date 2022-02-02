@@ -1,6 +1,6 @@
-import { Runtime } from "../../js/web/index.js";
-import { hex, Machine } from "../../evm/wasm/index.js";
-import { WasmRuntime } from "../../wasm/lib/index.js";
+import { Runtime } from "./sw.js";
+import { hex, Machine } from "./evm/index.js";
+import { WasmRuntime } from "./wasm.js";
 
 const getTagSource = `
 function getTag(tx, field) {
@@ -285,15 +285,35 @@ export async function executeContract(
         const input = interaction.node.tags.find((data) =>
           data.name === "Input"
         );
-        currState = wasm.call(currState, {
-          input,
-          caller: interaction.node.owner.address,
-        });
+        currState = wasm.call(
+          currState,
+          encode({
+            input,
+            caller: interaction.node.owner.address,
+          }),
+        );
       }
 
       return currState;
     case "application/octet-stream":
-      break;
+      // TODO(perf): Streaming initalization
+      const res = await fetch(
+        "https://github.com/three-em/3em/raw/js_library/js/evm/evm.wasm",
+      );
+      const evmModule = new Uint8Array(await res.arrayBuffer());
+      const bytecode = hex(source);
+      const _storage = hex(state);
+      for (const interaction of interactions) {
+        const input = interaction.node.tags.find((data) =>
+          data.name === "Input"
+        );
+
+        const machine = new Machine(evmModule, hex(input));
+        machine.execute(bytecode);
+        result = machine.result;
+      }
+
+      return result;
     default:
       throw new Error(`Unsupported contract type: ${type}`);
   }

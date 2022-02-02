@@ -1,7 +1,9 @@
 import { hex, Machine } from "./index.js";
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 
-const module = await Deno.readFile("./evm.wasm");
+const module = await Deno.readFile(
+  new URL("./evm.wasm", import.meta.url).pathname,
+);
 
 Deno.test("evm_test_solc2", () => {
   // label_0000:
