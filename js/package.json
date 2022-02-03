@@ -5,6 +5,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "node-fetch": "^3.2.0"
+    "find-cache-dir": "^3.3.2",
+    "node-fetch": "^3.2.0",
+    "node-localstorage": "^2.2.1"
   }
 }

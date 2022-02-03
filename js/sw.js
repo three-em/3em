@@ -1,9 +1,11 @@
 const WORKER = `{
-  const selfCloned = self;
+  const selfCloned = globalThis;
+  const isNode = typeof process == "object";
+  const me = isNode ? require("worker_threads").parentPort : self;
   const allowed = ["Reflect", "Event", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
-  const keys = Object.keys(self).filter(key => !allowed.includes(key));
+  const keys = Object.keys(globalThis).filter(key => !allowed.includes(key));
   for (const key of keys) {
-    Reflect.deleteProperty(self, key);
+    Reflect.deleteProperty(globalThis, key);
   }
 
   // Remove non-deterministic GC dependent V8 globals.
@@ -119,7 +121,7 @@ const WORKER = `{
   // JSON.stringify is deterministic. Not action required there.
   // https://github.com/nodejs/node/issues/15628#issuecomment-332588533
 
-  selfCloned.addEventListener("message", async function(e) {
+  me.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
       let currentState = e.data.state;
       const interactions = e.data.interactions ?? [];
@@ -148,10 +150,12 @@ const WORKER = `{
         } catch(e) {}
       }
 
-      selfCloned.postMessage(currentState);
+      me.postMessage(currentState);
     }
   });
 }`;
+
+const isNode = typeof process == "object";
 
 export class Runtime {
   #state;
@@ -159,16 +163,22 @@ export class Runtime {
 
   constructor(source, state = {}, info = {}) {
     this.#state = state;
-
-    const blob = new Blob([WORKER, source], { type: "application/javascript" });
+    const sources = [WORKER, source];
+    const blob = isNode
+      ? sources.join("").replace(/export/g, "")
+      : new Blob(sources, { type: "application/javascript" });
     this.#module = new Worker(
-      URL.createObjectURL(blob),
-      { type: "module" },
+      isNode ? blob : URL.createObjectURL(blob),
+      { eval: true, type: "module" },
     );
   }
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
+      // For Node.js
+      isNode && this.#module.once("message", (e) => {
+        resolve(e);
+      });
       this.#module.onmessage = function (e) {
         resolve(e.data);
       };

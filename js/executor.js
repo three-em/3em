@@ -6,6 +6,9 @@ const isNode = typeof process == "object";
 if (isNode) {
   const w = await import("worker_threads");
   global.Worker = w.Worker;
+  const L = (await import("node-localstorage")).LocalStorage;
+  const findCacheDir = (await import("find-cache-dir")).default;
+  global.localStorage = new L(findCacheDir({name: '3em'}));
 }
 
 const getTagSource = `
@@ -32,7 +35,7 @@ async function loadContract(contractId) {
     new URL(\`/tx/\${contractSrcTxID}/data\`, baseUrl).href,
   );
   const contractSrc = await contractSrcResponse.text();
-
+  
   const source = atob(contractSrc.replace(/_/g, "/").replace(/-/g, "+"));
   let state = getTag(tx, "Init-State");
 
@@ -53,12 +56,9 @@ async function loadContract(contractId) {
       state = atob(txData.replace(/_/g, "/").replace(/-/g, "+"));
     }
   }
-
   const sourceTxResponse = await fetch(
     new URL(\`/tx/\${contractSrcTxID}\`, baseUrl).href,
   );
-
-
   const sourceTx = await sourceTxResponse.json();
   const type = getTag(sourceTx, "Content-Type");
 
@@ -69,18 +69,20 @@ async function loadContract(contractId) {
   };
 }
 
-me.addEventListener("message", async (event) => {
+me.addEventListener("message", (event) => {
   const { tx } = event.data;
-  me.postMessage(await loadContract(tx));
+  loadContract(tx).then((r) => me.postMessage(r));
 });
 `;
 
 const loadContractSources = [getTagSource, loadContractSource];
-const loadContractBlob = isNode ? loadContractSources.join("\n") : new Blob(loadContractSources, {
-  type: "application/javascript",
-});
+const loadContractBlob = isNode
+  ? loadContractSources.join("\n")
+  : new Blob(loadContractSources, {
+    type: "application/javascript",
+  });
 const loadContractWorker = new Worker(
-  isNode? loadContractBlob : URL.createObjectURL(loadContractBlob),
+  isNode ? loadContractBlob : URL.createObjectURL(loadContractBlob),
   { eval: true, type: "module" },
 );
 
@@ -88,6 +90,10 @@ const loadInteractionsSource = `
 const baseUrl = "https://arweave.net";
 const isNode = typeof process == "object";
 const me = isNode ? require("worker_threads").parentPort : self;
+if(isNode) {
+  const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+  global.fetch = fetch;
+}
 const query =
   \`query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
   transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -117,7 +123,7 @@ const query =
   }
 }\`;
 
-const MAX_REQUEST = 100;
+const MAX_REQUEST = 200;
 
 async function nextPage(variables) {
   const response = await fetch(
@@ -161,10 +167,12 @@ async function loadInteractions(contractId, height, after) {
   }
 
   const tx = await nextPage(variables);
-  
   const txs = tx.edges;
 
   while (tx.pageInfo.hasNextPage) {
+    if(!txs[MAX_REQUEST - 1]) {
+      return txs;
+    }
     variables.after = txs[MAX_REQUEST - 1].cursor;
     const next = await nextPage(variables);
 
@@ -174,12 +182,12 @@ async function loadInteractions(contractId, height, after) {
   return txs;
 }
 
-me.addEventListener("message", async (event) => {
+me.addEventListener("message", (event) => {
   const { tx, height, last } = event.data;
   if (!last) {
-    me.postMessage(await loadInteractions(tx, height));
+    loadInteractions(tx, height).then(interactions => me.postMessage(interactions));
   } else {    
-    me.postMessage(await loadInteractions(tx, height, last));
+    loadInteractions(tx, height, last).then(interactions => me.postMessage(interactions));
   }
 });
 `;
@@ -196,8 +204,12 @@ const loadInteractionsWorker = new Worker(
 export async function loadContract(tx) {
   loadContractWorker.postMessage({ tx });
   return new Promise((resolve, reject) => {
+    // For Node.js
+    isNode && loadContractWorker.once("message", (event) => {
+      resolve(event);
+      loadContractWorker.once("message", () => {});
+    });
     loadContractWorker.onmessage = (event) => {
-      console.log(event.data);
       resolve(event.data);
     };
     loadContractWorker.onerror = (error) => {
@@ -209,6 +221,11 @@ export async function loadContract(tx) {
 export async function loadInteractions(tx, height) {
   loadInteractionsWorker.postMessage({ tx, height, last: false });
   return new Promise((resolve, reject) => {
+    // For Node.js
+    isNode && loadInteractionsWorker.once("message", (event) => {
+      resolve(event);
+      loadInteractionsWorker.once("message", (event) => {});
+    });
     loadInteractionsWorker.onmessage = (event) => {
       resolve(event.data);
     };
@@ -221,6 +238,11 @@ export async function loadInteractions(tx, height) {
 export async function updateInteractions(tx, height, last) {
   loadInteractionsWorker.postMessage({ tx, height, last });
   return new Promise((resolve, reject) => {
+    // For Node.js
+    isNode && loadInteractionsWorker.once("message", (event) => {
+      resolve(event);
+      loadInteractionsWorker.once("message", (event) => {});
+    });
     loadInteractionsWorker.onmessage = (event) => {
       resolve(event.data);
     };
@@ -243,7 +265,6 @@ export async function executeContract(
       ? JSON.parse(cachedInteractions)
       : loadInteractions(contractId, height),
   ]);
-
   let updatePromise = [];
   if (cachedInteractions) {
     // So now we have the cached interactions
