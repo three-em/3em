@@ -1,6 +1,6 @@
 [package]
 name = "bench"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["andresspirela <abdresspirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 
