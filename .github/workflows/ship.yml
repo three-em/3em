@@ -33,10 +33,6 @@ jobs:
             target: x86_64-unknown-linux-gnu
             cross: false
 
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            cross: true
-
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             cross: false
@@ -56,20 +52,6 @@ jobs:
           target: ${{ matrix.target }}
           default: true
 
-      - name: Setup Cross Compilation Tools
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt update
-
-          sudo apt install -yq --no-install-suggests --no-install-recommends \
-            binfmt-support g++-10-aarch64-linux-gnu g++-10-multilib \
-            gcc-10-aarch64-linux-gnu libc6-arm64-cross qemu qemu-user \
-            qemu-user-binfmt
-
-          sudo ln -s /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 /lib/ld-linux-aarch64.so.1
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc-10" >> $GITHUB_ENV
-          echo "QEMU_LD_PREFIX=/usr/aarch64-linux-gnu" >> $GITHUB_ENV
-
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -77,15 +59,10 @@ jobs:
           args: --color always --release --locked --target ${{ matrix.target }}
           use-cross: ${{ matrix.cross }}
 
-      - name: Zip unix release
-        if: runner.os != 'windows'
+      - name: Zip Builds
         working-directory: target/${{ matrix.target }}/release
-        run: zip -r three_em-${{ matrix.target }}.zip three_em
-
-      - name: Zip windows release
-        if: runner.os == 'windows'
-        working-directory: target/${{ matrix.target }}/release
-        run: Compress-Archive -CompressionLevel Optimal -Force -Path three_em.exe -DestinationPath three_em-${{ matrix.target }}.zip
+        shell: pwsh
+        run: Compress-Archive -CompressionLevel Optimal -Force -Path three_em${{ runner.os == 'windows' && '.exe' || '' }} -DestinationPath three_em-${{ matrix.target }}.zip
 
       - name: Upload Release Builds
         uses: actions/upload-artifact@v2
