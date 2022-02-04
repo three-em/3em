@@ -88,6 +88,11 @@ Please refer to the
 ["helpers"](https://github.com/three-em/3em/tree/main/helpers) for details on
 writing contracts.
 
+## Javascript Library
+3EM can be integrated in both client and server side through the Javascript library.
+
+Please [click here](https://github.com/three-em/3em/tree/main/js#executecontract) for more information.
+
 ## Smartweave Compatability
 
 3em follows the SmartWeave
