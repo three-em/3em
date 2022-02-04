@@ -1,5 +1,5 @@
 [package]
-name = "three_em"
+name = "three_em_cli"
 version = "0.1.0"
 authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"

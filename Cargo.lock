@@ -1608,7 +1608,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "three_em"
+name = "three_em_arweave"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bytes",
+ "deno_core",
+ "dirs",
+ "hex",
+ "indexmap",
+ "local_ipaddress",
+ "lru",
+ "once_cell",
+ "reqwest",
+ "serde",
+ "sha2",
+ "tokio",
+]
+
+[[package]]
+name = "three_em_cli"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1633,25 +1652,6 @@ dependencies = [
  "tokio",
  "url",
  "v8",
-]
-
-[[package]]
-name = "three_em_arweave"
-version = "0.1.0"
-dependencies = [
- "base64",
- "bytes",
- "deno_core",
- "dirs",
- "hex",
- "indexmap",
- "local_ipaddress",
- "lru",
- "once_cell",
- "reqwest",
- "serde",
- "sha2",
- "tokio",
 ]
 
 [[package]]
