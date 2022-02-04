@@ -1,6 +1,6 @@
 [package]
 name = "three_em_cli"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
@@ -17,8 +17,8 @@ deno_crypto = "0.48.0"
 base64 = "0.13.0"
 tokio = { version = "1.10.1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
-three_em_executor = { path = "../executor" }
-three_em_arweave = { path = "../arweave" }
+three_em_executor = { version = "0.2.0", path = "../executor" }
+three_em_arweave = { version = "0.2.0", path = "../arweave" }
 async-trait = "0.1.51"
 pico-args = "0.4.2"
 colored = "2"
