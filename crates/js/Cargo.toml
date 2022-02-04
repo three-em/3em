@@ -5,6 +5,8 @@ authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.sri
 edition = "2021"
 resolver = "2"
 build = "build.rs"
+description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
+license = "MIT"
 
 [lib]
 path = "lib.rs"
