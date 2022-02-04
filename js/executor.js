@@ -123,7 +123,7 @@ const query =
   }
 }\`;
 
-const MAX_REQUEST = 200;
+const MAX_REQUEST = 100;
 
 async function nextPage(variables) {
   const response = await fetch(
@@ -166,19 +166,22 @@ async function loadInteractions(contractId, height, after) {
     variables.after = after;
   }
 
-  const tx = await nextPage(variables);
+  let tx = await nextPage(variables);
   const txs = tx.edges;
-
-  while (tx.pageInfo.hasNextPage) {
-    if(!txs[MAX_REQUEST - 1]) {
+  let lastOfMax = txs[MAX_REQUEST - 1];
+  
+  let getLastTxInArray = () => txs[txs.length - 1];
+  
+  while (tx.edges.length > 0) {
+  
+    if(!lastOfMax) {
       return txs;
     }
-    variables.after = txs[MAX_REQUEST - 1].cursor;
-    const next = await nextPage(variables);
-
-    txs.push(next.edges);
+    
+    variables.after = getLastTxInArray().cursor;
+    tx = await nextPage(variables);
+    txs.push(...tx.edges);
   }
-
   return txs;
 }
 
@@ -255,7 +258,11 @@ export async function updateInteractions(tx, height, last) {
 export async function executeContract(
   contractId,
   height,
+  clearCache
 ) {
+  if(clearCache) {
+    localStorage.clear();
+  }
   const cachedContract = localStorage.getItem(contractId);
   const cachedInteractions = localStorage.getItem(`${contractId}-interactions`);
 

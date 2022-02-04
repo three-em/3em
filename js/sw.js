@@ -120,6 +120,28 @@ const WORKER = `{
 
   // JSON.stringify is deterministic. Not action required there.
   // https://github.com/nodejs/node/issues/15628#issuecomment-332588533
+  
+  class ContractError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "ContractError";
+    }
+  }
+
+  function ContractAssert(cond, message) {
+    if (!cond) throw new ContractError(message);
+  }
+  
+  if(typeof global === 'object') { 
+    global.ContractError = ContractError;
+    global.ContractAssert = ContractAssert;
+  } else if(typeof globalThis === 'object') { 
+    globalThis.ContractError = ContractError;
+    globalThis.ContractAssert = ContractAssert;
+  } else if(typeof window === 'object') { 
+    window.ContractError = ContractError;
+    window.ContractAssert = ContractAssert;
+  }
 
   me.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
@@ -141,13 +163,21 @@ const WORKER = `{
         const tx = interactions[i].node;
         const input = tx.tags.find(data => data.name === "Input");
         try {
-          const state = await handle(
-            currentState,
-            { tx, input },
-          );
+          if(input) {
+            const inp = JSON.parse(input.value);
+            const state = await handle(
+              currentState,
+              { tx, input: inp },
+            );
+          }
+          
+        // console.log(state);
   
           currentState = state.state;
-        } catch(e) {}
+          // console.log("passed");
+        } catch(e) {
+         // console.log(e);
+        }
       }
 
       me.postMessage(currentState);
