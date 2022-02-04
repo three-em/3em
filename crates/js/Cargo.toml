@@ -1,6 +1,6 @@
 [package]
 name = "three_em_js"
-version = "0.5.0"
+version = "0.1.0"
 authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 resolver = "2"

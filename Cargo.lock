@@ -121,7 +121,7 @@ checksum = "e6b4d9b1225d28d360ec6a231d65af1fd99a2a095154c8040689617290569c5c"
 
 [[package]]
 name = "bench"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "three_em_arweave",
  "three_em_executor",
@@ -1609,7 +1609,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_arweave"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "base64",
  "bytes",
@@ -1628,7 +1628,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_cli"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "async-trait",
  "base64",
@@ -1656,7 +1656,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_evm"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "hex",
  "hex-literal",
@@ -1666,7 +1666,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_executor"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "base64",
  "deno_core",
@@ -1688,7 +1688,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_js"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "deno_core",
  "deno_crypto",
@@ -1714,7 +1714,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_smartweave"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "deno_core",
  "deno_crypto",
@@ -1731,7 +1731,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_wasm"
-version = "0.5.0"
+version = "0.1.0"
 dependencies = [
  "deno_core",
  "serde",

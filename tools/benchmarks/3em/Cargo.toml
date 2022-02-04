@@ -1,6 +1,6 @@
 [package]
 name = "bench"
-version = "0.5.0"
+version = "0.1.0"
 authors = ["andresspirela <abdresspirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 
@@ -25,7 +25,7 @@ name = "bench_evm"
 path = "evm.rs"
 
 [dependencies]
-three_em_executor = { path = "../../../crates/executor" }
-three_em_arweave = { path = "../../../crates/arweave" }
+three_em_executor = { version = "0.1.0", path = "../../../crates/executor" }
+three_em_arweave = { version = "0.1.0", path = "../../../crates/arweave" }
 tokio = { version = "1.10.1", features = ["full"] }
 
