@@ -37,6 +37,6 @@ ax.set_xlabel('mean time (ms)')
 ax.set_title('Time taken to calculate contract state\n(lower is better)')
 
 ax.bar_label(bars, fmt='%d ms', padding=8)
-ax.set_xlim(right=4000)  # adjust xlim to fit labels
+ax.set_xlim(right=8000)  # adjust xlim to fit labels
 
 plt.savefig(os.path.realpath(os.path.dirname(__file__)) + '/bench_mean.png')

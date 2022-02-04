@@ -1,9 +1,11 @@
 [package]
 name = "three_em_smartweave"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 resolver = "2"
+description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
+license = "MIT"
 
 [lib]
 path = "lib.rs"
@@ -18,5 +20,5 @@ deno_webidl = "0.34.0"
 tokio = { version = "1.10.1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
-three_em_arweave = { path = "../arweave" }
+three_em_arweave = { version = "0.2.0", path = "../arweave" }
 lazy_static = "1.2.0"
