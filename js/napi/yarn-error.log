@@ -1,0 +1,53 @@
+Arguments: 
+  /Users/divy/.nvm/versions/node/v16.13.1/bin/node /Users/divy/.nvm/versions/node/v16.13.1/bin/yarn build
+
+PATH: 
+  /opt/homebrew/bin:/opt/homebrew/sbin:/Users/divy/.deno/bin:/Users/divy/.cargo/bin:/Users/divy/.nvm/versions/node/v16.13.1/bin/:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/opt/homebrew/sbin
+
+Yarn version: 
+  1.22.17
+
+Node version: 
+  16.13.1
+
+Platform: 
+  darwin arm64
+
+Trace: 
+  SyntaxError: /Users/divy/gh/3em/js/napi/package.json: Unexpected token } in JSON at position 530
+      at JSON.parse (<anonymous>)
+      at /Users/divy/.nvm/versions/node/v16.13.1/lib/node_modules/yarn/lib/cli.js:1625:59
+      at Generator.next (<anonymous>)
+      at step (/Users/divy/.nvm/versions/node/v16.13.1/lib/node_modules/yarn/lib/cli.js:310:30)
+      at /Users/divy/.nvm/versions/node/v16.13.1/lib/node_modules/yarn/lib/cli.js:321:13
+
+npm manifest: 
+  {
+      "name": "@three-em/js",
+      "version": "0.2.0",
+      "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
+      "license": "MIT",
+      "napi": {
+        "name": "three_em_node"
+      },
+      "files": [
+        "*.node",
+        "index.js"
+      ],
+      "scripts": {
+        "build": "napi build --platform --dts false --js false",
+        "build-release": "napi build --platform --release --dts false --js false"
+      },
+      "dependencies": {
+        "detect-libc": "^1.0.3"
+      },
+      "devDependencies": {
+        "@napi-rs/cli": "^2.0.0",
+      }
+    }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

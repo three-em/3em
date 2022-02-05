@@ -2,10 +2,10 @@ pub mod executor;
 pub mod test_util;
 
 use crate::executor::raw_execute_contract;
-use crate::executor::ExecuteResult;
+pub use crate::executor::ExecuteResult;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
-use indexmap::map::IndexMap;
+pub use indexmap::map::IndexMap;
 use lru::LruCache;
 use once_cell::sync::Lazy;
 use std::cmp::Ordering;
