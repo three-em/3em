@@ -1,7 +1,5 @@
 const WORKER = `{
   const selfCloned = globalThis;
-  const isNode = typeof process == "object";
-  const me = isNode ? require("worker_threads").parentPort : self;
   const allowed = ["Reflect", "Event", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
   const keys = Object.keys(globalThis).filter(key => !allowed.includes(key));
   for (const key of keys) {
@@ -134,8 +132,9 @@ const WORKER = `{
   
   globalThis.ContractError = ContractError;
   globalThis.ContractAssert = ContractAssert;
-  me.addEventListener("message", async function(e) {
+  self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
+      console.log(e.data.state)
       let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
       if (interactions.length == 0) {
@@ -172,12 +171,10 @@ const WORKER = `{
         }
       }
 
-      me.postMessage({ state: currentState, validity });
+      self.postMessage({ state: currentState, validity });
     }
   });
 }`;
-
-const isNode = typeof process == "object";
 
 export class Runtime {
   #state;
@@ -186,21 +183,15 @@ export class Runtime {
   constructor(source, state = {}, info = {}) {
     this.#state = state;
     const sources = [WORKER, source];
-    const blob = isNode
-      ? sources.join("").replace(/export/g, "")
-      : new Blob(sources, { type: "application/javascript" });
+    const blob = new Blob(sources, { type: "application/javascript" });
     this.#module = new Worker(
-      isNode ? blob : URL.createObjectURL(blob),
+      URL.createObjectURL(blob),
       { eval: true, type: "module" },
     );
   }
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
-      // For Node.js
-      isNode && this.#module.once("message", (e) => {
-        resolve(e);
-      });
       this.#module.onmessage = function (e) {
         resolve(e.data);
       };
