@@ -1,7 +1,0 @@
-{
-  "name": "tests",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "node.js",
-  "license": "MIT"
-}
