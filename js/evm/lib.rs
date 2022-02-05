@@ -8,7 +8,7 @@ fn dummy_cost_fn(_: &Instruction) -> U256 {
 }
 
 #[no_mangle]
-pub extern "C" fn machine_new() -> *mut Machine {
+pub extern "C" fn machine_new() -> *mut Machine<'static> {
   Box::into_raw(Box::new(Machine::new(dummy_cost_fn)))
 }
 
@@ -16,7 +16,7 @@ pub extern "C" fn machine_new() -> *mut Machine {
 pub extern "C" fn machine_new_with_data(
   data: *mut u8,
   data_len: usize,
-) -> *mut Machine {
+) -> *mut Machine<'static> {
   let data = unsafe { Vec::from_raw_parts(data, data_len, data_len) };
   Box::into_raw(Box::new(Machine::new_with_data(dummy_cost_fn, data)))
 }
@@ -30,7 +30,7 @@ pub extern "C" fn machine_free(machine: *mut Machine) {
 
 #[no_mangle]
 pub extern "C" fn machine_result(machine: *mut Machine) -> *const u8 {
-  let mut machine = unsafe { Box::from_raw(machine) };
+  let machine = unsafe { Box::from_raw(machine) };
   let ptr = machine.result.as_ptr();
   Box::leak(machine);
   ptr
@@ -38,7 +38,7 @@ pub extern "C" fn machine_result(machine: *mut Machine) -> *const u8 {
 
 #[no_mangle]
 pub extern "C" fn machine_result_len(machine: *mut Machine) -> usize {
-  let mut machine = unsafe { Box::from_raw(machine) };
+  let machine = unsafe { Box::from_raw(machine) };
   let length = machine.result.len();
   Box::leak(machine);
   length
@@ -53,7 +53,7 @@ pub extern "C" fn machine_execute(
   let mut machine = unsafe { Box::from_raw(machine) };
   let bytecode = unsafe { std::slice::from_raw_parts(ptr, length) };
 
-  let status = machine.execute(bytecode);
+  let status = machine.execute(bytecode, Default::default());
   if status != evm::ExecutionState::Ok {
     panic!("Execution failed");
   }

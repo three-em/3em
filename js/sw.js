@@ -1,9 +1,9 @@
 const WORKER = `{
-  const selfCloned = self;
+  const selfCloned = globalThis;
   const allowed = ["Reflect", "Event", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
-  const keys = Object.keys(self).filter(key => !allowed.includes(key));
+  const keys = Object.keys(globalThis).filter(key => !allowed.includes(key));
   for (const key of keys) {
-    Reflect.deleteProperty(self, key);
+    Reflect.deleteProperty(globalThis, key);
   }
 
   // Remove non-deterministic GC dependent V8 globals.
@@ -116,12 +116,26 @@ const WORKER = `{
     return now;
   }
 
-  // JSON.stringify is deterministic. Not action required there.
+  // JSON.stringify is deterministic. No action required there.
   // https://github.com/nodejs/node/issues/15628#issuecomment-332588533
+  
+  class ContractError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "ContractError";
+    }
+  }
 
-  selfCloned.addEventListener("message", async function(e) {
+  function ContractAssert(cond, message) {
+    if (!cond) throw new ContractError(message);
+  }
+  
+  globalThis.ContractError = ContractError;
+  globalThis.ContractAssert = ContractAssert;
+  self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
-      let currentState = e.data.state;
+      console.log(e.data.state)
+      let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
       if (interactions.length == 0) {
         const input = e.data.action;
@@ -135,20 +149,29 @@ const WORKER = `{
         } catch(e) {}
       }
 
+      const validity = {};
       for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
         const input = tx.tags.find(data => data.name === "Input");
+
         try {
+          const inp = JSON.parse(input.value);
           const state = await handle(
             currentState,
-            { tx, input },
+            { tx, input: inp, caller: tx.owner.address },
           );
-  
+          if (!state) {
+            validity[tx.id] = false;
+            continue;
+          }
           currentState = state.state;
-        } catch(e) {}
+          validity[tx.id] = true;
+        } catch(e) {
+          validity[tx.id] = false;
+        }
       }
 
-      selfCloned.postMessage(currentState);
+      self.postMessage({ state: currentState, validity });
     }
   });
 }`;
@@ -159,11 +182,11 @@ export class Runtime {
 
   constructor(source, state = {}, info = {}) {
     this.#state = state;
-
-    const blob = new Blob([WORKER, source], { type: "application/javascript" });
+    const sources = [WORKER, source];
+    const blob = new Blob(sources, { type: "application/javascript" });
     this.#module = new Worker(
       URL.createObjectURL(blob),
-      { type: "module" },
+      { eval: true, type: "module" },
     );
   }
 

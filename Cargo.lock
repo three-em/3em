@@ -1618,8 +1618,27 @@ dependencies = [
 ]
 
 [[package]]
-name = "three_em"
-version = "0.1.0"
+name = "three_em_arweave"
+version = "0.2.0"
+dependencies = [
+ "base64",
+ "bytes",
+ "deno_core",
+ "dirs",
+ "hex",
+ "indexmap",
+ "local_ipaddress",
+ "lru",
+ "once_cell",
+ "reqwest",
+ "serde",
+ "sha2",
+ "tokio",
+]
+
+[[package]]
+name = "three_em_cli"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "base64",
@@ -1646,27 +1665,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "three_em_arweave"
-version = "0.1.0"
-dependencies = [
- "base64",
- "bytes",
- "deno_core",
- "dirs",
- "hex",
- "indexmap",
- "local_ipaddress",
- "lru",
- "once_cell",
- "reqwest",
- "serde",
- "sha2",
- "tokio",
-]
-
-[[package]]
 name = "three_em_evm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "hex",
  "hex-literal",
@@ -1676,7 +1676,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_executor"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "assert-json-diff",
  "base64",
@@ -1700,7 +1700,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_js"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "deno_core",
  "deno_crypto",
@@ -1726,7 +1726,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_smartweave"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "deno_core",
  "deno_crypto",
@@ -1743,7 +1743,7 @@ dependencies = [
 
 [[package]]
 name = "three_em_wasm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "deno_core",
  "serde",

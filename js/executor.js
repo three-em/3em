@@ -10,7 +10,6 @@ function getTag(tx, field) {
 
 const loadContractSource = `
 const baseUrl = "https://arweave.net";
-
 async function loadContract(contractId) {
   const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrl).href);
   const tx = await response.json();
@@ -21,7 +20,7 @@ async function loadContract(contractId) {
     new URL(\`/tx/\${contractSrcTxID}/data\`, baseUrl).href,
   );
   const contractSrc = await contractSrcResponse.text();
-
+  
   const source = atob(contractSrc.replace(/_/g, "/").replace(/-/g, "+"));
   let state = getTag(tx, "Init-State");
 
@@ -42,7 +41,6 @@ async function loadContract(contractId) {
       state = atob(txData.replace(/_/g, "/").replace(/-/g, "+"));
     }
   }
-
   const sourceTxResponse = await fetch(
     new URL(\`/tx/\${contractSrcTxID}\`, baseUrl).href,
   );
@@ -57,22 +55,23 @@ async function loadContract(contractId) {
 }
 
 self.addEventListener("message", async (event) => {
-  const { tx } = event.data;
-  self.postMessage(await loadContract(tx));
+  const { tx, key } = event.data;
+  const r = await loadContract(tx);
+  self.postMessage({ key, result: r });
 });
 `;
 
-const loadContractBlob = new Blob([getTagSource, loadContractSource], {
-  type: "application/javascript",
-});
+const loadContractSources = [getTagSource, loadContractSource];
+const loadContractBlob = new Blob(loadContractSources, {
+    type: "application/javascript",
+  });
 const loadContractWorker = new Worker(
   URL.createObjectURL(loadContractBlob),
-  { type: "module" },
+  { eval: true, type: "module" },
 );
 
 const loadInteractionsSource = `
 const baseUrl = "https://arweave.net";
-
 const query =
   \`query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
   transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -145,78 +144,98 @@ async function loadInteractions(contractId, height, after) {
     variables.after = after;
   }
 
-  const tx = await nextPage(variables);
-  
+  let tx = await nextPage(variables);
   const txs = tx.edges;
-
-  while (tx.pageInfo.hasNextPage) {
-    variables.after = txs[MAX_REQUEST - 1].cursor;
-    const next = await nextPage(variables);
-
-    txs.push(next.edges);
+  let lastOfMax = txs[MAX_REQUEST - 1];
+  
+  let getLastTxInArray = () => txs[txs.length - 1];
+  
+  while (tx.edges.length > 0) {
+  
+    if(!lastOfMax) {
+      return txs;
+    }
+    
+    variables.after = getLastTxInArray().cursor;
+    tx = await nextPage(variables);
+    txs.push(...tx.edges);
   }
-
   return txs;
 }
 
 self.addEventListener("message", async (event) => {
-  const { tx, height, last } = event.data;
+  const { tx, height, last, key } = event.data;
+  let interactions;
   if (!last) {
-    self.postMessage(await loadInteractions(tx, height));
+    interactions = await loadInteractions(tx, height)
   } else {    
-    self.postMessage(await loadInteractions(tx, height, last));
+    interactions = await loadInteractions(tx, height, last);
   }
+  self.postMessage({ key, result: interactions });
 });
 `;
 
-const loadInteractionsBlob = new Blob([getTagSource, loadInteractionsSource], {
+const sources = [getTagSource, loadInteractionsSource];
+const loadInteractionsBlob = new Blob(sources, {
   type: "application/javascript",
 });
-const loadInteractionsWorker = new Worker(
-  URL.createObjectURL(loadInteractionsBlob),
-  { type: "module" },
+const loadInteractionsSourceURL = URL.createObjectURL(loadInteractionsBlob);
+let loadInteractionsWorker = new Worker(
+  loadInteractionsSourceURL,
+  { eval: true, type: "module" },
 );
 
+const contractProcessingQueue = {};
+let k = 0;
+loadContractWorker.onmessage = (event) => {
+  const p = contractProcessingQueue[event.data.key];
+  p(event.data.result);
+};
+loadContractWorker.onerror = (error) => {
+  throw error;
+};
+
 export async function loadContract(tx) {
-  loadContractWorker.postMessage({ tx });
-  return new Promise((resolve, reject) => {
-    loadContractWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadContractWorker.onerror = (error) => {
-      reject(error);
-    };
+  const key = k++;
+  const args = { tx, key };
+  return new Promise((r) => {
+    loadContractWorker.postMessage(args);
+    contractProcessingQueue[key] = r;
   });
 }
 
-export async function loadInteractions(tx, height) {
-  loadInteractionsWorker.postMessage({ tx, height, last: false });
-  return new Promise((resolve, reject) => {
-    loadInteractionsWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadInteractionsWorker.onerror = (error) => {
-      reject(error);
-    };
-  });
+const interactionProcessingQueue = {};
+
+loadInteractionsWorker.onmessage = (event) => {
+  const p = interactionProcessingQueue[event.data.key];
+  p(event.data.result);
+};
+loadInteractionsWorker.onerror = (error) => {
+  throw error;
+};
+
+export function loadInteractions(tx, height) {
+  return updateInteractions(tx, height, false);
 }
 
-export async function updateInteractions(tx, height, last) {
-  loadInteractionsWorker.postMessage({ tx, height, last });
-  return new Promise((resolve, reject) => {
-    loadInteractionsWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadInteractionsWorker.onerror = (error) => {
-      reject(error);
-    };
+export function updateInteractions(tx, height, last) {
+  const key = k++;
+  const args = { tx, height, last, key };
+
+  return new Promise((r) => {
+    loadInteractionsWorker.postMessage(args);
+    interactionProcessingQueue[key] = r;
   });
 }
 
 export async function executeContract(
   contractId,
   height,
+  clearCache,
 ) {
+  if (clearCache) {
+    localStorage.clear();
+  }
   const cachedContract = localStorage.getItem(contractId);
   const cachedInteractions = localStorage.getItem(`${contractId}-interactions`);
 
@@ -226,7 +245,6 @@ export async function executeContract(
       ? JSON.parse(cachedInteractions)
       : loadInteractions(contractId, height),
   ]);
-
   let updatePromise = [];
   if (cachedInteractions) {
     // So now we have the cached interactions
@@ -248,7 +266,6 @@ export async function executeContract(
   }
 
   const { source, state, type } = contract;
-
   switch (type) {
     case "application/javascript":
       const rt = new Runtime(source, state, {});

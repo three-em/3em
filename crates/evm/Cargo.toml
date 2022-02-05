@@ -1,9 +1,11 @@
 [package]
 name = "three_em_evm"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 resolver = "2"
+description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
+license = "MIT"
 
 [lib]
 path = "lib.rs"
@@ -14,4 +16,4 @@ tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [dev-dependencies]
 hex-literal = "0.3.4"
-hex = "*"
+hex = "0.4.3"

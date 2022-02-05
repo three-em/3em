@@ -1,9 +1,11 @@
 [package]
 name = "three_em_wasm"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 resolver = "2"
+description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
+license = "MIT"
 
 [lib]
 path = "lib.rs"
@@ -12,8 +14,8 @@ path = "lib.rs"
 v8 = "0.38.1"
 deno_core = "0.116.0"
 serde = { version = "1", features = ["derive"] }
-three_em_smartweave = { path = "../smartweave" }
-three_em_js = { path = "../js" }
+three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
+three_em_js = { version = "0.2.0", path = "../js" }
 
 [dev-dependencies]
 tokio = { version = "1.10.1", features = ["full"] }

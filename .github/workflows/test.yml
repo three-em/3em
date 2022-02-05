@@ -11,14 +11,22 @@ env:
 
 jobs:
   test:
-    name: debug / ${{ matrix.os }}
+    name: ${{ matrix.os }} / ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
 
     steps:
       - name: Checkout repo
@@ -28,6 +36,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.target }}
           default: true
 
       - name: Use Cache
@@ -37,3 +46,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --color always --target ${{ matrix.target }}

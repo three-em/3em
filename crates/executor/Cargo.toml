@@ -1,9 +1,11 @@
 [package]
 name = "three_em_executor"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["andreespirela <andreespirela@outlook.com>", "Divy Srivastava <dj.srivastava23@gmail.com>"]
 edition = "2021"
 resolver = "2"
+description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
+license = "MIT"
 
 [lib]
 path = "lib.rs"
@@ -18,8 +20,12 @@ three_em_smartweave = { path = "../smartweave" }
 three_em_js = { path = "../js" }
 three_em_wasm = { path = "../wasm" }
 three_em_evm = { path = "../evm" }
+three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
+three_em_js = { version = "0.2.0", path = "../js" }
+three_em_wasm = { version = "0.2.0", path = "../wasm" }
+three_em_evm = { version = "0.2.0", path = "../evm" }
 tokio = { version = "1.10.1", features = ["full"] }
-three_em_arweave = { path = "../arweave" }
+three_em_arweave = { version = "0.2.0", path = "../arweave" }
 base64 = "0.13.0"
 hex = "0.4.3"
 indexmap = "1.7.0"
@@ -29,3 +35,4 @@ once_cell = "1.9.0"
 
 [dev-dependencies]
 assert-json-diff = "2.0.1"
+once_cell = "1.9.0"
