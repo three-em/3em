@@ -54,8 +54,8 @@ jobs:
           target: ${{ matrix.target }}
           default: true
 
-      - name: Use Rust Cache
-        uses: Swatinem/rust-cache@v1
+      # - name: Use Rust Cache
+      #   uses: Swatinem/rust-cache@v1
 
       - name: Setup Cross Compilation Tools
         if: matrix.cross == 'true' && contains(matrix.target, 'linux')
