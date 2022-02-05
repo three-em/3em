@@ -12,6 +12,7 @@
     "index.d.ts"
   ],
   "scripts": {
+    "artifacts": "napi artifacts",
     "build": "napi build --platform --dts index.d.ts --js index.js",
     "build-release": "napi build --platform --release --dts index.d.ts --js index.js",
     "test": "node tests.js"
