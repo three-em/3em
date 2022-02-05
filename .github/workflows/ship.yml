@@ -1,4 +1,4 @@
-name: ship
+name: Ship
 
 on:
   push:
