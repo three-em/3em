@@ -2,15 +2,6 @@ import { Runtime } from "./sw.js";
 import { hex, Machine } from "./evm/index.js";
 import { WasmRuntime } from "./wasm.js";
 
-const isNode = typeof process == "object";
-if (isNode) {
-  const w = await import("worker_threads");
-  global.Worker = w.Worker;
-  const L = (await import("node-localstorage")).LocalStorage;
-  const findCacheDir = (await import("find-cache-dir")).default;
-  global.localStorage = new L(findCacheDir({ name: "3em" }));
-}
-
 const getTagSource = `
 function getTag(tx, field) {
   const encodedName = btoa(field);
@@ -19,12 +10,6 @@ function getTag(tx, field) {
 
 const loadContractSource = `
 const baseUrl = "https://arweave.net";
-const isNode = typeof process == "object";
-const me = isNode ? require("worker_threads").parentPort : self;
-if(isNode) {
-  const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-  global.fetch = fetch;
-}
 async function loadContract(contractId) {
   const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrl).href);
   const tx = await response.json();
@@ -69,35 +54,24 @@ async function loadContract(contractId) {
   };
 }
 
-me.addEventListener("message", async (event) => {
+self.addEventListener("message", async (event) => {
   const { tx, key } = event.data;
   const r = await loadContract(tx);
-  me.postMessage({ key, result: r });
+  self.postMessage({ key, result: r });
 });
 `;
 
 const loadContractSources = [getTagSource, loadContractSource];
-const loadContractBlob = isNode
-  ? loadContractSources.join("\n")
-  : new Blob(loadContractSources, {
+const loadContractBlob = new Blob(loadContractSources, {
     type: "application/javascript",
   });
-const loadContractSourceURL = isNode
-  ? loadContractBlob
-  : URL.createObjectURL(loadContractBlob);
-let loadContractWorker = new Worker(
-  loadContractSourceURL,
+const loadContractWorker = new Worker(
+  URL.createObjectURL(loadContractBlob),
   { eval: true, type: "module" },
 );
 
 const loadInteractionsSource = `
 const baseUrl = "https://arweave.net";
-const isNode = typeof process == "object";
-const me = isNode ? require("worker_threads").parentPort : self;
-if(isNode) {
-  const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-  global.fetch = fetch;
-}
 const query =
   \`query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
   transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -189,7 +163,7 @@ async function loadInteractions(contractId, height, after) {
   return txs;
 }
 
-me.addEventListener("message", async (event) => {
+self.addEventListener("message", async (event) => {
   const { tx, height, last, key } = event.data;
   let interactions;
   if (!last) {
@@ -197,13 +171,12 @@ me.addEventListener("message", async (event) => {
   } else {    
     interactions = await loadInteractions(tx, height, last);
   }
-  me.postMessage({ key, result: interactions });
-  
+  self.postMessage({ key, result: interactions });
 });
 `;
 
 const sources = [getTagSource, loadInteractionsSource];
-const loadInteractionsBlob = isNode ? sources.join("\n") : new Blob(sources, {
+const loadInteractionsBlob = new Blob(sources, {
   type: "application/javascript",
 });
 const loadInteractionsSourceURL = isNode
@@ -216,11 +189,6 @@ let loadInteractionsWorker = new Worker(
 
 const contractProcessingQueue = {};
 let k = 0;
-// For Node.js
-isNode && loadContractWorker.once("message", (event) => {
-  const p = contractProcessingQueue[event.key];
-  p(event.result);
-});
 loadContractWorker.onmessage = (event) => {
   const p = contractProcessingQueue[event.data.key];
   p(event.data.result);
@@ -240,11 +208,6 @@ export async function loadContract(tx) {
 
 const interactionProcessingQueue = {};
 
-// For Node.js
-isNode && loadInteractionsWorker.once("message", (event) => {
-  const p = interactionProcessingQueue[event.key];
-  p(event.result);
-});
 loadInteractionsWorker.onmessage = (event) => {
   const p = interactionProcessingQueue[event.data.key];
   p(event.data.result);
