@@ -11,7 +11,10 @@ members = [
   "./tools/benchmarks/3em",
 ]
 exclude = [
+  # Rust WASM proc_macro helper.
   "./helpers/rust/",
+  # Node API bindings
+  "./js/napi",
 ]
 resolver = "2"
 
