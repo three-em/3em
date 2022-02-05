@@ -179,9 +179,7 @@ const sources = [getTagSource, loadInteractionsSource];
 const loadInteractionsBlob = new Blob(sources, {
   type: "application/javascript",
 });
-const loadInteractionsSourceURL = isNode
-  ? loadInteractionsBlob
-  : URL.createObjectURL(loadInteractionsBlob);
+const loadInteractionsSourceURL = URL.createObjectURL(loadInteractionsBlob);
 let loadInteractionsWorker = new Worker(
   loadInteractionsSourceURL,
   { eval: true, type: "module" },
