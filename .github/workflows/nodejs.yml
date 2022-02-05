@@ -1,4 +1,4 @@
-name: Node.js CI
+name: node / build
 env:
   DEBUG: napi:*
   APP_NAME: three_em_node
