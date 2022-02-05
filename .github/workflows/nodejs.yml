@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: ${{ env.APP_NAME }}.*.node
+          path: ./js/napi/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
@@ -108,6 +108,9 @@ jobs:
           - '14'
           - '16'
     runs-on: ${{ matrix.settings.host }}
+    defaults:
+      run:
+        working-directory: ./js/napi
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
@@ -127,7 +130,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: .
+          path: ./js/napi
       - name: List packages
         run: ls -R .
         shell: bash
@@ -145,6 +148,9 @@ jobs:
           - '14'
           - '16'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./js/napi
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
@@ -164,7 +170,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: bindings-x86_64-unknown-linux-gnu
-          path: .
+          path: ./js/napi
       - name: List packages
         run: ls -R .
         shell: bash
@@ -174,6 +180,9 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./js/napi
     needs:
       - test-macOS-windows-binding
       - test-linux-x64-gnu-binding
@@ -197,7 +206,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
         with:
-          path: artifacts
+          path: ./js/napi/artifacts
       - name: Move artifacts
         run: yarn artifacts
       - name: List packages
