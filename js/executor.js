@@ -8,7 +8,7 @@ if (isNode) {
   global.Worker = w.Worker;
   const L = (await import("node-localstorage")).LocalStorage;
   const findCacheDir = (await import("find-cache-dir")).default;
-  global.localStorage = new L(findCacheDir({name: '3em'}));
+  global.localStorage = new L(findCacheDir({ name: "3em" }));
 }
 
 const getTagSource = `
@@ -69,9 +69,10 @@ async function loadContract(contractId) {
   };
 }
 
-me.addEventListener("message", (event) => {
-  const { tx } = event.data;
-  loadContract(tx).then((r) => me.postMessage(r));
+me.addEventListener("message", async (event) => {
+  const { tx, key } = event.data;
+  const r = await loadContract(tx);
+  me.postMessage({ key, result: r });
 });
 `;
 
@@ -81,8 +82,11 @@ const loadContractBlob = isNode
   : new Blob(loadContractSources, {
     type: "application/javascript",
   });
-const loadContractWorker = new Worker(
-  isNode ? loadContractBlob : URL.createObjectURL(loadContractBlob),
+const loadContractSourceURL = isNode
+  ? loadContractBlob
+  : URL.createObjectURL(loadContractBlob);
+let loadContractWorker = new Worker(
+  loadContractSourceURL,
   { eval: true, type: "module" },
 );
 
@@ -185,13 +189,16 @@ async function loadInteractions(contractId, height, after) {
   return txs;
 }
 
-me.addEventListener("message", (event) => {
-  const { tx, height, last } = event.data;
+me.addEventListener("message", async (event) => {
+  const { tx, height, last, key } = event.data;
+  let interactions;
   if (!last) {
-    loadInteractions(tx, height).then(interactions => me.postMessage(interactions));
+    interactions = await loadInteractions(tx, height)
   } else {    
-    loadInteractions(tx, height, last).then(interactions => me.postMessage(interactions));
+    interactions = await loadInteractions(tx, height, last);
   }
+  me.postMessage({ key, result: interactions });
+  
 });
 `;
 
@@ -199,68 +206,73 @@ const sources = [getTagSource, loadInteractionsSource];
 const loadInteractionsBlob = isNode ? sources.join("\n") : new Blob(sources, {
   type: "application/javascript",
 });
-const loadInteractionsWorker = new Worker(
-  isNode ? loadInteractionsBlob : URL.createObjectURL(loadInteractionsBlob),
+const loadInteractionsSourceURL = isNode
+  ? loadInteractionsBlob
+  : URL.createObjectURL(loadInteractionsBlob);
+let loadInteractionsWorker = new Worker(
+  loadInteractionsSourceURL,
   { eval: true, type: "module" },
 );
 
+const contractProcessingQueue = {};
+let k = 0;
+// For Node.js
+isNode && loadContractWorker.once("message", (event) => {
+  const p = contractProcessingQueue[event.key];
+  p(event.result);
+});
+loadContractWorker.onmessage = (event) => {
+  const p = contractProcessingQueue[event.data.key];
+  p(event.data.result);
+};
+loadContractWorker.onerror = (error) => {
+  throw error;
+};
+
 export async function loadContract(tx) {
-  loadContractWorker.postMessage({ tx });
-  return new Promise((resolve, reject) => {
-    // For Node.js
-    isNode && loadContractWorker.once("message", (event) => {
-      resolve(event);
-      loadContractWorker.once("message", () => {});
-    });
-    loadContractWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadContractWorker.onerror = (error) => {
-      reject(error);
-    };
+  const key = k++;
+  const args = { tx, key };
+  return new Promise((r) => {
+    loadContractWorker.postMessage(args);
+    contractProcessingQueue[key] = r;
   });
 }
 
-export async function loadInteractions(tx, height) {
-  loadInteractionsWorker.postMessage({ tx, height, last: false });
-  return new Promise((resolve, reject) => {
-    // For Node.js
-    isNode && loadInteractionsWorker.once("message", (event) => {
-      resolve(event);
-      loadInteractionsWorker.once("message", (event) => {});
-    });
-    loadInteractionsWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadInteractionsWorker.onerror = (error) => {
-      reject(error);
-    };
-  });
+const interactionProcessingQueue = {};
+
+// For Node.js
+isNode && loadInteractionsWorker.once("message", (event) => {
+  const p = interactionProcessingQueue[event.key];
+  p(event.result);
+});
+loadInteractionsWorker.onmessage = (event) => {
+  const p = interactionProcessingQueue[event.data.key];
+  p(event.data.result);
+};
+loadInteractionsWorker.onerror = (error) => {
+  throw error;
+};
+
+export function loadInteractions(tx, height) {
+  return updateInteractions(tx, height, false);
 }
 
-export async function updateInteractions(tx, height, last) {
-  loadInteractionsWorker.postMessage({ tx, height, last });
-  return new Promise((resolve, reject) => {
-    // For Node.js
-    isNode && loadInteractionsWorker.once("message", (event) => {
-      resolve(event);
-      loadInteractionsWorker.once("message", (event) => {});
-    });
-    loadInteractionsWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadInteractionsWorker.onerror = (error) => {
-      reject(error);
-    };
+export function updateInteractions(tx, height, last) {
+  const key = k++;
+  const args = { tx, height, last, key };
+
+  return new Promise((r) => {
+    loadInteractionsWorker.postMessage(args);
+    interactionProcessingQueue[key] = r;
   });
 }
 
 export async function executeContract(
   contractId,
   height,
-  clearCache
+  clearCache,
 ) {
-  if(clearCache) {
+  if (clearCache) {
     localStorage.clear();
   }
   const cachedContract = localStorage.getItem(contractId);
@@ -293,7 +305,6 @@ export async function executeContract(
   }
 
   const { source, state, type } = contract;
-
   switch (type) {
     case "application/javascript":
       const rt = new Runtime(source, state, {});

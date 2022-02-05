@@ -118,7 +118,7 @@ const WORKER = `{
     return now;
   }
 
-  // JSON.stringify is deterministic. Not action required there.
+  // JSON.stringify is deterministic. No action required there.
   // https://github.com/nodejs/node/issues/15628#issuecomment-332588533
   
   class ContractError extends Error {
@@ -132,20 +132,11 @@ const WORKER = `{
     if (!cond) throw new ContractError(message);
   }
   
-  if(typeof global === 'object') { 
-    global.ContractError = ContractError;
-    global.ContractAssert = ContractAssert;
-  } else if(typeof globalThis === 'object') { 
-    globalThis.ContractError = ContractError;
-    globalThis.ContractAssert = ContractAssert;
-  } else if(typeof window === 'object') { 
-    window.ContractError = ContractError;
-    window.ContractAssert = ContractAssert;
-  }
-
+  globalThis.ContractError = ContractError;
+  globalThis.ContractAssert = ContractAssert;
   me.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
-      let currentState = e.data.state;
+      let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
       if (interactions.length == 0) {
         const input = e.data.action;
@@ -159,28 +150,29 @@ const WORKER = `{
         } catch(e) {}
       }
 
+      const validity = {};
       for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
         const input = tx.tags.find(data => data.name === "Input");
+
         try {
-          if(input) {
-            const inp = JSON.parse(input.value);
-            const state = await handle(
-              currentState,
-              { tx, input: inp },
-            );
+          const inp = JSON.parse(input.value);
+          const state = await handle(
+            currentState,
+            { tx, input: inp, caller: tx.owner.address },
+          );
+          if (!state) {
+            validity[tx.id] = false;
+            continue;
           }
-          
-        // console.log(state);
-  
           currentState = state.state;
-          // console.log("passed");
+          validity[tx.id] = true;
         } catch(e) {
-         // console.log(e);
+          validity[tx.id] = false;
         }
       }
 
-      me.postMessage(currentState);
+      me.postMessage({ state: currentState, validity });
     }
   });
 }`;
