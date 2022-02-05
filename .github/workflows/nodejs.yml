@@ -87,6 +87,7 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: ./js/napi/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
+
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs:
@@ -125,6 +126,7 @@ jobs:
       - name: Test bindings
         working-directory: ./js/napi
         run: yarn test
+
   test-linux-x64-gnu-binding:
     name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
     needs:
@@ -159,7 +161,7 @@ jobs:
         shell: bash
       - name: Test bindings
         working-directory: ./js/napi
-        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim yarn test
+        run: yarn test
 
   publish:
     name: Publish
