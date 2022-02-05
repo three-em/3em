@@ -54,9 +54,10 @@ async function loadContract(contractId) {
   };
 }
 
-self.addEventListener("message", (event) => {
-  const { tx } = event.data;
-  loadContract(tx).then((r) => self.postMessage(r));
+self.addEventListener("message", async (event) => {
+  const { tx, key } = event.data;
+  const r = await loadContract(tx);
+  self.postMessage({ key, result: r });
 });
 `;
 
@@ -100,7 +101,7 @@ const query =
   }
 }\`;
 
-const MAX_REQUEST = 200;
+const MAX_REQUEST = 100;
 
 async function nextPage(variables) {
   const response = await fetch(
@@ -143,29 +144,34 @@ async function loadInteractions(contractId, height, after) {
     variables.after = after;
   }
 
-  const tx = await nextPage(variables);
+  let tx = await nextPage(variables);
   const txs = tx.edges;
-
-  while (tx.pageInfo.hasNextPage) {
-    if(!txs[MAX_REQUEST - 1]) {
+  let lastOfMax = txs[MAX_REQUEST - 1];
+  
+  let getLastTxInArray = () => txs[txs.length - 1];
+  
+  while (tx.edges.length > 0) {
+  
+    if(!lastOfMax) {
       return txs;
     }
-    variables.after = txs[MAX_REQUEST - 1].cursor;
-    const next = await nextPage(variables);
-
-    txs.push(next.edges);
+    
+    variables.after = getLastTxInArray().cursor;
+    tx = await nextPage(variables);
+    txs.push(...tx.edges);
   }
-
   return txs;
 }
 
-self.addEventListener("message", (event) => {
-  const { tx, height, last } = event.data;
+self.addEventListener("message", async (event) => {
+  const { tx, height, last, key } = event.data;
+  let interactions;
   if (!last) {
-    loadInteractions(tx, height).then(interactions => self.postMessage(interactions));
+    interactions = await loadInteractions(tx, height)
   } else {    
-    loadInteractions(tx, height, last).then(interactions => self.postMessage(interactions));
+    interactions = await loadInteractions(tx, height, last);
   }
+  self.postMessage({ key, result: interactions });
 });
 `;
 
@@ -173,51 +179,63 @@ const sources = [getTagSource, loadInteractionsSource];
 const loadInteractionsBlob = new Blob(sources, {
   type: "application/javascript",
 });
-const loadInteractionsWorker = new Worker(
-  URL.createObjectURL(loadInteractionsBlob),
+const loadInteractionsSourceURL = URL.createObjectURL(loadInteractionsBlob);
+let loadInteractionsWorker = new Worker(
+  loadInteractionsSourceURL,
   { eval: true, type: "module" },
 );
 
+const contractProcessingQueue = {};
+let k = 0;
+loadContractWorker.onmessage = (event) => {
+  const p = contractProcessingQueue[event.data.key];
+  p(event.data.result);
+};
+loadContractWorker.onerror = (error) => {
+  throw error;
+};
+
 export async function loadContract(tx) {
-  loadContractWorker.postMessage({ tx });
-  return new Promise((resolve, reject) => {
-    loadContractWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadContractWorker.onerror = (error) => {
-      reject(error);
-    };
+  const key = k++;
+  const args = { tx, key };
+  return new Promise((r) => {
+    loadContractWorker.postMessage(args);
+    contractProcessingQueue[key] = r;
   });
 }
 
-export async function loadInteractions(tx, height) {
-  loadInteractionsWorker.postMessage({ tx, height, last: false });
-  return new Promise((resolve, reject) => {
-    loadInteractionsWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadInteractionsWorker.onerror = (error) => {
-      reject(error);
-    };
-  });
+const interactionProcessingQueue = {};
+
+loadInteractionsWorker.onmessage = (event) => {
+  const p = interactionProcessingQueue[event.data.key];
+  p(event.data.result);
+};
+loadInteractionsWorker.onerror = (error) => {
+  throw error;
+};
+
+export function loadInteractions(tx, height) {
+  return updateInteractions(tx, height, false);
 }
 
-export async function updateInteractions(tx, height, last) {
-  loadInteractionsWorker.postMessage({ tx, height, last });
-  return new Promise((resolve, reject) => {
-    loadInteractionsWorker.onmessage = (event) => {
-      resolve(event.data);
-    };
-    loadInteractionsWorker.onerror = (error) => {
-      reject(error);
-    };
+export function updateInteractions(tx, height, last) {
+  const key = k++;
+  const args = { tx, height, last, key };
+
+  return new Promise((r) => {
+    loadInteractionsWorker.postMessage(args);
+    interactionProcessingQueue[key] = r;
   });
 }
 
 export async function executeContract(
   contractId,
   height,
+  clearCache,
 ) {
+  if (clearCache) {
+    localStorage.clear();
+  }
   const cachedContract = localStorage.getItem(contractId);
   const cachedInteractions = localStorage.getItem(`${contractId}-interactions`);
 
@@ -248,7 +266,6 @@ export async function executeContract(
   }
 
   const { source, state, type } = contract;
-
   switch (type) {
     case "application/javascript":
       const rt = new Runtime(source, state, {});
