@@ -38,6 +38,10 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             cross: false
+          
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            cross: false
 
     steps:
       - name: Checkout repo
@@ -66,6 +70,16 @@ jobs:
           sudo ln -s /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 /lib/ld-linux-aarch64.so.1
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc-10" >> $GITHUB_ENV
           echo "QEMU_LD_PREFIX=/usr/aarch64-linux-gnu" >> $GITHUB_ENV
+
+      - name: Setup cross complitation (aarch64-apple-darwin)
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: |
+          sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
+          export CC=$(xcrun -f clang);
+          export CXX=$(xcrun -f clang++);
+          SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
+          export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
+          export JEMALLOC_SYS_WITH_LG_PAGE=14;
 
       - name: Build
         uses: actions-rs/cargo@v1
