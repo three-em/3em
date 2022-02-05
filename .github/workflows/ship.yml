@@ -1,4 +1,4 @@
-name: ship
+name: rust / ship
 
 on:
   push:

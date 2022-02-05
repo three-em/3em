@@ -1,0 +1,16 @@
+{
+  "name": "@three-em/node-win32-x64-msvc",
+  "version": "0.2.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "three_em_node.win32-x64-msvc.node",
+  "files": [
+    "three_em_node.win32-x64-msvc.node"
+  ],
+  "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
+  "license": "MIT"
+}

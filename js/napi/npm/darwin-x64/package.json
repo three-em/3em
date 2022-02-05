@@ -1,0 +1,16 @@
+{
+  "name": "@three-em/node-darwin-x64",
+  "version": "0.2.0",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "three_em_node.darwin-x64.node",
+  "files": [
+    "three_em_node.darwin-x64.node"
+  ],
+  "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
+  "license": "MIT"
+}
