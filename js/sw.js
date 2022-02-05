@@ -134,8 +134,7 @@ const WORKER = `{
   globalThis.ContractAssert = ContractAssert;
   self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
-      console.log(e.data.state)
-      let currentState = JSON.parse(e.data.state);
+      let currentState = e.data.state;
       const interactions = e.data.interactions ?? [];
       if (interactions.length == 0) {
         const input = e.data.action;
