@@ -1,3 +1,23 @@
+## NodeJS
+
+In order for use `3EM` for Node, please install the following package:
+
+```shell
+$ npm install @three-em/js
+```
+
+```shell
+import { executeContract } from "@three-em/js";
+```
+
+## Browser
+
+```html
+<script type="module">
+    import { executeContract } from "https://unpkg.com/@three-em/js@0.2.1/index.js";
+</script>
+```
+
 ## `executeContract`
 
 Read the current state of all kinds of contracts.
