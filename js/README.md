@@ -3,11 +3,13 @@
 In order for use `3EM` for Node, please install the following package:
 
 ```shell
-$ npm install @three-em/js
+$ yarn add @three-em/node
+# OR
+# $ npm install @three-em/node
 ```
 
-```shell
-import { executeContract } from "@three-em/js";
+```javascript
+import { executeContract } from "@three-em/node";
 ```
 
 ## Browser
