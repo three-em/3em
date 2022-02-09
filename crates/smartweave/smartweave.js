@@ -323,18 +323,22 @@
       return {
         transactions: {
           getData: async (txId, opts) => {
-            const arweave = this.arweave;
-            const data = await Deno.core.opAsync("op_smartweave_get_tx_data", txId);
+            if(this.transaction && this.transaction.id === txId) {
+              const arweave = this.arweave;
+              const data = await Deno.core.opAsync("op_smartweave_get_tx_data", txId);
 
-            if(opts && opts.decode && !opts.string) {
-              return data;
+              if (opts && opts.decode && !opts.string) {
+                return data;
+              }
+
+              if (opts && opts.decode && opts.string) {
+                return arweave.utils.bufferToString(data);
+              }
+
+              return arweave.utils.bufferTob64Url(data);
+            } else {
+              Deno.core.opSync("op_smartweave_unsafe_exit_process");
             }
-
-            if(opts && opts.decode && opts.string) {
-              return arweave.utils.bufferToString(data);
-            }
-
-            return arweave.utils.bufferTob64Url(data);
           }
         }
       }

@@ -65,6 +65,10 @@ pub fn init(arweave: (i32, String, String)) -> Extension {
         "op_smartweave_get_tx_data",
         op_async(op_smartweave_get_tx_data),
       ),
+      (
+        "op_smartweave_unsafe_exit_process",
+        op_sync(op_smartweave_unsafe_exit_process),
+      ),
     ])
     .state(move |state| {
       let (port, host, protocol) = arweave.clone();
@@ -76,6 +80,15 @@ pub fn init(arweave: (i32, String, String)) -> Extension {
       Ok(())
     })
     .build()
+}
+
+pub fn op_smartweave_unsafe_exit_process(
+  _state: &mut OpState,
+  _: (),
+  _: (),
+) -> Result<(), AnyError> {
+  println!("Unsafe calls have been invoked outside of a safe context");
+  std::process::exit(1)
 }
 
 pub async fn op_smartweave_wallet_balance(
