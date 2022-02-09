@@ -30,4 +30,9 @@ lru = "0.7.2"
 once_cell = "1.9.0"
 
 [dev-dependencies]
+<<<<<<< HEAD
 assert-json-diff = "2.0.1"
+=======
+assert-json-diff = "2.0.1"
+once_cell = "1.9.0"
+>>>>>>> 66584c74fa73aee283a178cffe4ae2a8b03ad5c9
