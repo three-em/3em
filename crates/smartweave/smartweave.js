@@ -2,6 +2,7 @@
   const { crypto } = window.__bootstrap.crypto;
   const { subtle } = crypto;
   const { TextEncoder, TextDecoder } = window.__bootstrap.encoding;
+  const { btoa, atob } = window.__bootstrap.base64;
 
   // Intentional copy.
   const BigNumber = window.BigNumber;
@@ -319,7 +320,24 @@
     get contracts() {}
 
     get unsafeClient() {
-      throw new TypeError("Unsafe client not supported.");
+      return {
+        transactions: {
+          getData: async (txId, opts) => {
+            const arweave = this.arweave;
+            const data = await Deno.core.opAsync("op_smartweave_get_tx_data", txId);
+
+            if(opts && opts.decode && !opts.string) {
+              return data;
+            }
+
+            if(opts && opts.decode && opts.string) {
+              return arweave.utils.bufferToString(data);
+            }
+
+            return arweave.utils.bufferTob64Url(data);
+          }
+        }
+      }
     }
   }
 
@@ -445,4 +463,9 @@
     step += 0.1;
     return now;
   };
+
+  window.btoa = btoa;
+  window.atob = atob;
+  window.TextEncoder = TextEncoder;
+  window.TextDecoder = TextDecoder;
 })(this);
