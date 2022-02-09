@@ -1,4 +1,4 @@
-name: build
+name: rust / build
 
 on:
   push:
@@ -11,14 +11,33 @@ env:
 
 jobs:
   build:
-    name: release / ${{ matrix.os }}
+    name: ${{ matrix.os }} / ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            cross: false
+
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            cross: true
+
+          - os: ubuntu-latest
+            target: aarch64-linux-android
+            cross: true
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            cross: false
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            cross: false
 
     steps:
       - name: Checkout repo
@@ -28,23 +47,66 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.target }}
           default: true
 
-      - name: Use Cache
+      - name: Use Rust Cache
         uses: Swatinem/rust-cache@v1
+
+      - name: Setup Cross Compilation Tools
+        if: matrix.cross == 'true' && contains(matrix.target, 'linux')
+        run: |
+          sudo apt update
+
+          sudo apt install -yq --no-install-suggests --no-install-recommends \
+            binfmt-support g++-10-aarch64-linux-gnu g++-10-multilib \
+            gcc-10-aarch64-linux-gnu libc6-arm64-cross qemu qemu-user \
+            qemu-user-binfmt
+
+          sudo ln -s /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 /lib/ld-linux-aarch64.so.1
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc-10" >> $GITHUB_ENV
+          echo "QEMU_LD_PREFIX=/usr/aarch64-linux-gnu" >> $GITHUB_ENV
 
       - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --color always --release --target ${{ matrix.target }}
+          use-cross: ${{ matrix.cross }}
 
-      - name: Upload Canary Builds
+      - name: Get Build Name
+        id: zip
+        run: echo "::set-output name=name::three_em-${{ matrix.target }}-${{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-$(git rev-parse --short HEAD)"
+
+      - name: Upload ${{ github.ref == 'refs/heads/main' && 'Canary' || 'Dev' }} Builds
         uses: actions/upload-artifact@v2
         with:
-          name: three_em-${{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-${{ runner.os }}-${{ github.sha }}
+          name: ${{ steps.zip.outputs.name }}
           path: |
-            target/release/three_em
-            target/release/three_em.exe
+            target/${{ matrix.target }}/release/three_em
+            target/${{ matrix.target }}/release/three_em.exe
           if-no-files-found: error
           retention-days: 7
+
+      # Benchmarks
+
+      - name: Benchmark
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        working-directory: tools/benchmarks
+        run: |
+          wget https://github.com/sharkdp/hyperfine/releases/download/v1.12.0/hyperfine_1.12.0_amd64.deb
+          sudo dpkg -i hyperfine_1.12.0_amd64.deb
+
+          pip install matplotlib numpy six --upgrade
+          yarn install
+
+          ./benchmark.sh
+          ./mean.py results.json
+          ./times.py results.json
+
+      - name: Post Benchmark
+        if: matrix.target == 'x86_64-unknown-linux-gnu' && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: benchmark
+          path: tools/benchmarks/results.md

@@ -1,0 +1,26 @@
+[package]
+name = "three_em_node"
+authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
+version = "0.2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[dependencies]
+napi = { version = "2", features = ["serde-json", "async"] }
+serde_json = "1"
+tokio = { version = "1.10.1", features = ["full"] }
+napi-derive = "2"
+three_em_executor = { version = "0.2.0", path = "../../crates/executor" }
+three_em_arweave = { version = "0.2.0", path = "../../crates/arweave" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+jemallocator = { version = "0.3.2", features = ["disable_initial_exec_tls"] }
+
+[build-dependencies]
+napi-build = { version = "1" }

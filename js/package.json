@@ -1,0 +1,12 @@
+{
+  "name": "@three-em/js",
+  "type": "module",
+  "version": "0.2.1",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "find-cache-dir": "^3.3.2",
+    "node-fetch": "^3.2.0",
+    "node-localstorage": "^2.2.1"
+  }
+}

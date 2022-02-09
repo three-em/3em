@@ -1,0 +1,26 @@
+{
+  "name": "@three-em/node",
+  "version": "0.2.1",
+  "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
+  "license": "MIT",
+  "napi": {
+    "name": "three_em_node"
+  },
+  "files": [
+    "*.node",
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --dts index.d.ts --js index.js",
+    "build-release": "napi build --platform --release --dts index.d.ts --js index.js",
+    "test": "node tests.js"
+  },
+  "dependencies": {
+    "detect-libc": "^1.0.3"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.0.0"
+  }
+}

@@ -1,5 +1,6 @@
 /target
 /.idea
+.vscode
 /node_modules
 ./node_modules
 /snapshot-bin
@@ -16,8 +17,7 @@ redstone-js-benchmark.json
 /testdata/01_wasm/target
 /testdata/02_wasm/node_modules
 /crates/evm/wasm/target
-/data/benchmark_dev.json
-
+tools/benchmarks/results.md
 **/node_modules
 */node_modules
 **/target/**

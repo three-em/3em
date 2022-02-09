@@ -2,6 +2,8 @@
 name = "three_em"
 version = "0.1.0"
 edition = "2021"
+description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."
+license = "MIT"
 
 [dependencies]
 three_em_macro = { path = "./proc_macro", version = "0.1.0" }

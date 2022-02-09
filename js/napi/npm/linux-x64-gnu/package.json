@@ -1,0 +1,16 @@
+{
+  "name": "@three-em/node-linux-x64-gnu",
+  "version": "0.2.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "three_em_node.linux-x64-gnu.node",
+  "files": [
+    "three_em_node.linux-x64-gnu.node"
+  ],
+  "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
+  "license": "MIT"
+}

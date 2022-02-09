@@ -2,6 +2,7 @@
   const { crypto } = window.__bootstrap.crypto;
   const { subtle } = crypto;
   const { TextEncoder, TextDecoder } = window.__bootstrap.encoding;
+  const { btoa, atob } = window.__bootstrap.base64;
 
   // Intentional copy.
   const BigNumber = window.BigNumber;
