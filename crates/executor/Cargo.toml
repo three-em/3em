@@ -34,5 +34,9 @@ once_cell = "1.9.0"
 assert-json-diff = "2.0.1"
 =======
 assert-json-diff = "2.0.1"
+<<<<<<< HEAD
+once_cell = "1.9.0"
+>>>>>>> 66584c74fa73aee283a178cffe4ae2a8b03ad5c9
+=======
 once_cell = "1.9.0"
 >>>>>>> 66584c74fa73aee283a178cffe4ae2a8b03ad5c9
