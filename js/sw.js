@@ -223,8 +223,9 @@ export class Runtime {
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
-      this.#module.onmessage = function (e) {
+      this.#module.onmessage = (e) => {
         resolve(e.data);
+        this.#module.terminate();
       };
     });
   }
