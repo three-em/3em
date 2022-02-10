@@ -197,7 +197,6 @@ const WORKER = `{
           currentState = state.state;
           validity[tx.id] = true;
         } catch(e) {
-        console.log(e);
           validity[tx.id] = false;
         }
       }
