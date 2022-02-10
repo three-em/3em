@@ -160,7 +160,6 @@ const WORKER = `{
   
   globalThis.ContractError = ContractError;
   globalThis.ContractAssert = ContractAssert;
-  globalThis.handleInteractionGlobals = handleInteractionGlobals;
   globalThis.SmartWeave = SmartWeave;
   self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
