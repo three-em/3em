@@ -130,8 +130,38 @@ const WORKER = `{
     if (!cond) throw new ContractError(message);
   }
   
+  class SmartWeave {
+    get transaction() {
+      return globalThis.interactionContext.transaction;
+    }
+    
+    get block() {
+      return globalThis.interactionContext.block;
+    }    
+  }
+  
+  function handleInteractionGlobals(tx) { 
+    globalThis.interactionContext = { 
+      transaction: {
+        id: tx.id,
+        owner: tx.owner.address,
+        tags: [...(tx.tags)]
+        target: tx.recipient,
+        quantity: tx.quantity,
+        reward: tx.fee
+      },
+      block: {
+        height: tx.block.height,
+        id: tx.block.id,
+        timestamp: tx.block.timestamp
+      }
+    }
+  }
+  
   globalThis.ContractError = ContractError;
   globalThis.ContractAssert = ContractAssert;
+  globalThis.handleInteractionGlobals = handleInteractionGlobals;
+  globalThis.SmartWeave = SmartWeave;
   self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
       let currentState = e.data.state;
@@ -151,6 +181,7 @@ const WORKER = `{
       const validity = {};
       for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
+        handleInteractionGlobals(tx);
         const input = tx.tags.find(data => data.name === "Input");
 
         try {
