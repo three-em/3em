@@ -136,7 +136,8 @@ const WORKER = `{
     }
     
     get block() {
-      return globalThis.interactionContext.block;
+      const block = globalThis.interactionContext.block;
+      return {...block, indep_hash: block.id };
     }    
   }
   
@@ -145,7 +146,7 @@ const WORKER = `{
       transaction: {
         id: tx.id,
         owner: tx.owner.address,
-        tags: [...(tx.tags)]
+        tags: [...(tx.tags)],
         target: tx.recipient,
         quantity: tx.quantity,
         reward: tx.fee
@@ -160,7 +161,7 @@ const WORKER = `{
   
   globalThis.ContractError = ContractError;
   globalThis.ContractAssert = ContractAssert;
-  globalThis.SmartWeave = SmartWeave;
+  globalThis.SmartWeave = new SmartWeave();
   self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
       let currentState = e.data.state;
@@ -196,6 +197,7 @@ const WORKER = `{
           currentState = state.state;
           validity[tx.id] = true;
         } catch(e) {
+        console.log(e);
           validity[tx.id] = false;
         }
       }
