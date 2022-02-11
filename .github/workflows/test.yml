@@ -38,6 +38,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
           default: true
+          override: true
 
       - name: Use Cache
         uses: Swatinem/rust-cache@v1
