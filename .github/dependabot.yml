@@ -6,8 +6,7 @@ updates:
       interval: 'monthly'
     labels: ['npm', 'dependencies']
     commit-message:
-      prefix: 'npm'
-      prefix-development: 'npm-dev'
+      prefix: 'chore'
       include: 'scope'
 
   - package-ecosystem: 'cargo'
@@ -16,8 +15,7 @@ updates:
       interval: 'monthly'
     labels: ['cargo', 'dependencies']
     commit-message:
-      prefix: 'cargo'
-      prefix-development: 'cargo-dev'
+      prefix: 'chore'
       include: 'scope'
 
   - package-ecosystem: 'gitsubmodule'
@@ -26,8 +24,7 @@ updates:
       interval: 'monthly'
     labels: ['gitsubmodule', 'dependencies']
     commit-message:
-      prefix: 'gitsubmodule'
-      prefix-development: 'gitsubmodule-dev'
+      prefix: 'chore'
       include: 'scope'
 
   - package-ecosystem: 'github-actions'
@@ -36,6 +33,5 @@ updates:
       interval: 'monthly'
     labels: ['github-actions', 'dependencies']
     commit-message:
-      prefix: 'github-actions'
-      prefix-development: 'github-actions-dev'
+      prefix: 'chore'
       include: 'scope'
