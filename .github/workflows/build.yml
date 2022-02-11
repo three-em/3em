@@ -84,6 +84,8 @@ jobs:
         with:
           name: ${{ steps.zip.outputs.name }}
           path: |
+            README.md
+            LICENSE
             target/${{ matrix.target }}/release/three_em
             target/${{ matrix.target }}/release/three_em.exe
           if-no-files-found: error
