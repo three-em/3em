@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    labels: ['npm', 'dependencies']
+    commit-message:
+      prefix: 'npm'
+      prefix-development: 'npm-dev'
+      include: 'scope'
+
+  - package-ecosystem: 'cargo'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    labels: ['cargo', 'dependencies']
+    commit-message:
+      prefix: 'cargo'
+      prefix-development: 'cargo-dev'
+      include: 'scope'
+
+  - package-ecosystem: 'gitsubmodule'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    labels: ['gitsubmodule', 'dependencies']
+    commit-message:
+      prefix: 'gitsubmodule'
+      prefix-development: 'gitsubmodule-dev'
+      include: 'scope'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    labels: ['github-actions', 'dependencies']
+    commit-message:
+      prefix: 'github-actions'
+      prefix-development: 'github-actions-dev'
+      include: 'scope'
