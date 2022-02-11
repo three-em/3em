@@ -110,6 +110,8 @@ jobs:
           ./mean.py results.json
           ./times.py results.json
 
+          ./mdimages.sh bench_mean.png bench_times.png >> results.md
+
       - name: Post Benchmark
         if: matrix.target == 'x86_64-unknown-linux-gnu' && github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
