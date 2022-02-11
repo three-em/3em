@@ -6,7 +6,7 @@ hyperfine \
   "$REPO/$BUILDS/bench_evm" \
   "$REPO/$BUILDS/bench_fh" \
   "$REPO/$BUILDS/bench" \
-  "node ./smartweave/index.js" \
+  "node $REPO/tools/benchmarks/smartweave/index.js" \
   --runs 20 \
   --warmup 5 \
   --time-unit "millisecond" \
