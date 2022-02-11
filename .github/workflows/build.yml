@@ -96,13 +96,15 @@ jobs:
       - name: Benchmark
         if: matrix.target == 'x86_64-unknown-linux-gnu'
         working-directory: tools/benchmarks
+        env:
+          BUILDS: target/${{ matrix.target }}/release
         run: |
-          wget https://github.com/sharkdp/hyperfine/releases/download/v1.12.0/hyperfine_1.12.0_amd64.deb
-          sudo dpkg -i hyperfine_1.12.0_amd64.deb
-          rm hyperfine_1.12.0_amd64.deb
+          wget https://github.com/sharkdp/hyperfine/releases/download/v1.12.0/hyperfine_1.12.0_amd64.deb --quiet
+          sudo dpkg -i hyperfine_1.12.0_amd64.deb > /dev/null
+          rm hyperfine_1.12.0_amd64.deb > /dev/null
 
-          pip install matplotlib numpy six --upgrade
-          yarn install
+          pip install matplotlib numpy six --upgrade --quiet --quiet
+          yarn install --silent
 
           ./benchmark.sh
           ./mean.py results.json

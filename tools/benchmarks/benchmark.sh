@@ -1,9 +1,12 @@
+REPO=$(git rev-parse --show-toplevel)
+BUILDS=${BUILDS:-$REPO/target/release}
+
 hyperfine \
-  '../../target/release/bench_wasm' \
-  '../../target/release/bench_evm' \
-  '../../target/release/bench_fh' \
-  '../../target/release/bench' \
-  'node ./smartweave/index.js' \
+  "$BUILDS/bench_wasm" \
+  "$BUILDS/bench_evm" \
+  "$BUILDS/bench_fh" \
+  "$BUILDS/bench" \
+  "node ./smartweave/index.js" \
   --runs 20 \
   --warmup 5 \
   --time-unit "millisecond" \
