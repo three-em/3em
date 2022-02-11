@@ -1,5 +1,5 @@
 REPO=$(git rev-parse --show-toplevel)
-BUILDS=${BUILDS:-$REPO/target/release}
+BUILDS=${BUILDS:-target/release}
 
 hyperfine \
   "$REPO/$BUILDS/bench_wasm" \
