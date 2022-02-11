@@ -15,11 +15,11 @@ plt.rcdefaults()
 fig, ax = plt.subplots(figsize=(10, 5))
 
 labels = {
-    "bench": "3em JS",
-    "bench_evm": "3em EVM",
-    "bench_wasm": "3em WASM",
-    "bench_fh": "3em JS (fh)",
-    "index.js": "Smartweave JS",
+    "3em_js_fh": "3em JS (fh)",
+    "3em_js": "3em JS",
+    "3em_evm": "3em EVM",
+    "3em_wasm": "3em WASM",
+    "smartweave.js": "Smartweave JS",
 }
 
 y_pos = np.arange(len(labels))
@@ -31,7 +31,7 @@ with open(args.file, encoding="utf8") as f:
 performance = [round(b["mean"] * 1000) for b in results]
 
 bars = ax.barh(y_pos, performance, align='center')
-ax.set_yticks(y_pos, labels=map(lambda x: labels[x["command"].split("/")[-1]], results))
+ax.set_yticks(y_pos, labels=map(lambda x: labels[x["command"]], results))
 ax.invert_yaxis()  # labels read top-to-bottom
 ax.set_xlabel('mean time (ms)')
 ax.set_title('Time taken to calculate contract state\n(lower is better)')
