@@ -19,6 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         node: [14, 16, 17]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: macos-latest
             target: x86_64-apple-darwin
@@ -43,9 +44,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
+          architecture: ${{ matrix.arch }}
           check-latest: true
           cache: yarn
-          architecture: ${{ matrix.arch }}
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -70,19 +71,20 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: bindings-${{ matrix.settings.target }}
+          name: bindings-${{ matrix.target }}
           path: ./js/napi/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
 
   test:
     name: test / ${{ matrix.target }} / node ${{ matrix.node }}
     needs: [build]
-    runs-on: ${{ matrix.settings.host }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         node: [14, 16, 17]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -135,7 +137,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
           check-latest: true
           cache: yarn
 
