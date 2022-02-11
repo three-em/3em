@@ -7,6 +7,6 @@ imgupload() {
 
 echo "\n<details><summary>Graphs</summary>\n"
 for file in "$@"; do
-  echo "![$(basename $file)](https://ipfs.infura.io/ipfs/$(imgupload $file))"
+  echo "![$(basename $file)](https://images.weserv.nl/?url=ipfs.infura.io/ipfs/$(imgupload $file))"
 done
 echo "\n</details>\n"
