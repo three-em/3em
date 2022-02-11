@@ -267,7 +267,11 @@ mod test {
   use crate::Error;
   use crate::HeapLimitState;
   use crate::Runtime;
+  use deno_core::serde::Deserialize;
+  use deno_core::serde::Serialize;
+  use deno_core::serde_json::Value;
   use deno_core::ZeroCopyBuf;
+  use three_em_smartweave::InteractionContext;
 
   #[tokio::test]
   async fn test_runtime() {
@@ -474,6 +478,48 @@ export async function handle() {
     rt.call((), None).await.unwrap();
     let host = rt.get_contract_state::<String>().unwrap();
     assert_eq!(host, "http://arweave.net:12345");
+  }
+
+  #[derive(Serialize, Deserialize)]
+  struct GetDataTest {
+    data: String,
+    data2: String,
+  }
+
+  #[tokio::test]
+  async fn test_smartweave_ops_get_data() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+try {
+  return { state: [await SmartWeave.unsafeClient.transactions.getData("YzVdaDBnaiGToFQJAnJCGtyJwJZbaCASotWEPFhBgBY"),
+                  await SmartWeave.unsafeClient.transactions.getData("YzVdaDBnaiGToFQJAnJCGtyJwJZbaCASotWEPFhBgBY", { decode: true, string: true })]
+  };
+  } catch(error) {
+    return { state: [error.toString()] }
+  }
+}
+"#,
+      (),
+      (443, String::from("arweave.net"), String::from("https")),
+    )
+        .await
+        .unwrap();
+
+    let mut interaction_data = InteractionContext {
+      transaction: Default::default(),
+      block: Default::default(),
+    };
+    interaction_data.transaction.id =
+      String::from("YzVdaDBnaiGToFQJAnJCGtyJwJZbaCASotWEPFhBgBY");
+
+    rt.call((), Some(interaction_data)).await.unwrap();
+    let host = rt.get_contract_state::<Vec<String>>().unwrap();
+    assert_eq!(host.get(0).unwrap().to_owned(), String::from("eyJjb250ZW50Ijp7ImJvZHkiOiJoZWxsbyB3b3JsZCIsInRpbWVzdGFtcCI6MTY0MTYzNDQzOCwidGl0bGUiOiJoZWxsbyB3b3JsZCJ9LCJkaWdlc3QiOiJOLVJ6UmZXMmxzV0RqdV9GcE5RUzZhWmdzTzdma1Z5eVo3bWJzRWhpNjZ3IiwiYXV0aG9yc2hpcCI6eyJjb250cmlidXRvciI6IjB4ZWFlYjIyNjIwREJEOTgwRTc0NjNjOWQ5NkE1YWU0ZDk0NDhiMTMzYyIsInNpZ25pbmdLZXkiOiJ7XCJjcnZcIjpcIlAtMjU2XCIsXCJleHRcIjp0cnVlLFwia2V5X29wc1wiOltcInZlcmlmeVwiXSxcImt0eVwiOlwiRUNcIixcInhcIjpcImRVcEI3MVhJV1lZYjBQSGlqdkJicTNtMl9CNFA2aGZFZHNBdndkS0JDNk1cIixcInlcIjpcIlBHRmlveWtaODU4cHN3cEZXODZtdjZKQlBFZ1Y4WFNVZWY5M3pqNUFoNFFcIn0iLCJzaWduYXR1cmUiOiJ1WE9YWVJrX1dFVmdaM0xOR0xhWUVsNmVGYS1xa1JyWURwRjJ5ektwUXJhS1I1R0lqWEdiSXg4QUFZQ0VPNEZEQXhVeF93bjVkUWR1RldZZTNKTHEtUSIsInNpZ25pbmdLZXlTaWduYXR1cmUiOiIweDhhMmFjNTE3NTg5OTA2NDkwMWEzZTBlM2VjODc0ZjZmOTFjMWE3NzVjODM4NjNmMDY2OWE0YjUxMjhiYjgxODcwYTQzMmUwZTM1YjAwMjUxZTdmMTg0ZTRlYzE2ZTNjOWVkNDM0YjBjMjkzMDc3N2I3M2UzMzg3MDk5MWQ0NjhlMWIiLCJzaWduaW5nS2V5TWVzc2FnZSI6IkkgYXV0aG9yaXplIHB1Ymxpc2hpbmcgb24gbWlycm9yLnh5eiBmcm9tIHRoaXMgZGV2aWNlIHVzaW5nOlxue1wiY3J2XCI6XCJQLTI1NlwiLFwiZXh0XCI6dHJ1ZSxcImtleV9vcHNcIjpbXCJ2ZXJpZnlcIl0sXCJrdHlcIjpcIkVDXCIsXCJ4XCI6XCJkVXBCNzFYSVdZWWIwUEhpanZCYnEzbTJfQjRQNmhmRWRzQXZ3ZEtCQzZNXCIsXCJ5XCI6XCJQR0Zpb3lrWjg1OHBzd3BGVzg2bXY2SkJQRWdWOFhTVWVmOTN6ajVBaDRRXCJ9IiwiYWxnb3JpdGhtIjp7Im5hbWUiOiJFQ0RTQSIsImhhc2giOiJTSEEtMjU2In19LCJuZnQiOnt9LCJ2ZXJzaW9uIjoiMTItMjEtMjAyMCIsIm9yaWdpbmFsRGlnZXN0IjoiTi1SelJmVzJsc1dEanVfRnBOUVM2YVpnc083ZmtWeXlaN21ic0VoaTY2dyJ9"));
+    assert_eq!(
+      host.get(1).unwrap().to_owned(),
+      include_str!("../../testdata/test_smartweave_ops_get_data.json").trim()
+    );
   }
 
   #[tokio::test]

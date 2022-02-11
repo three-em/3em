@@ -3,6 +3,7 @@ use deno_core::error::AnyError;
 use deno_core::include_js_files;
 use deno_core::op_async;
 use deno_core::op_sync;
+use deno_core::serde::Deserialize;
 use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
 use deno_core::Extension;
@@ -60,6 +61,14 @@ pub fn init(arweave: (i32, String, String)) -> Extension {
         op_async(op_smartweave_wallet_last_tx),
       ),
       ("op_smartweave_get_host", op_async(op_smartweave_get_host)),
+      (
+        "op_smartweave_get_tx_data",
+        op_async(op_smartweave_get_tx_data),
+      ),
+      (
+        "op_smartweave_unsafe_exit_process",
+        op_sync(op_smartweave_unsafe_exit_process),
+      ),
     ])
     .state(move |state| {
       let (port, host, protocol) = arweave.clone();
@@ -71,6 +80,15 @@ pub fn init(arweave: (i32, String, String)) -> Extension {
       Ok(())
     })
     .build()
+}
+
+pub fn op_smartweave_unsafe_exit_process(
+  _state: &mut OpState,
+  _: (),
+  _: (),
+) -> Result<(), AnyError> {
+  println!("Unsafe calls have been invoked outside of a safe context");
+  std::process::exit(1)
 }
 
 pub async fn op_smartweave_wallet_balance(
@@ -105,6 +123,22 @@ pub async fn op_smartweave_wallet_last_tx(
       .text()
       .await?;
   Ok(tx)
+}
+
+pub async fn op_smartweave_get_tx_data(
+  _state: Rc<RefCell<OpState>>,
+  tx_id: String,
+  _: (),
+) -> Result<ZeroCopyBuf, AnyError> {
+  let s = _state.borrow();
+  let arweave = s.borrow::<ArweaveInfo>();
+
+  let req = reqwest::get(format!("{}/{}", get_host(arweave), tx_id))
+    .await?
+    .bytes()
+    .await?;
+
+  Ok(req.to_vec().into())
 }
 
 pub fn read_contract_state(id: String) -> Value {
