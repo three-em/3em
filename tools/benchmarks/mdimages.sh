@@ -8,6 +8,6 @@ imgupload() {
 
 echo -e "\n<details><summary>Graphs</summary>\n"
 for file in "$@"; do
-  echo "![$(basename $file)](https://images.weserv.nl/?url=gateway.ipfs.io/ipfs/$(imgupload $file))"
+  echo "![$(basename $file)](https://images.weserv.nl/?url=ipfs.infura.io/ipfs/$(imgupload $file))"
 done
 echo -e "\n</details>\n"
