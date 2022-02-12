@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: release
-          path: target/${{ matrix.target }}/release/*.zip
+          path: three_em-${{ matrix.target }}.zip
           if-no-files-found: error
           retention-days: 1
 
