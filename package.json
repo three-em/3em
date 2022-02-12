@@ -4,7 +4,7 @@
   },
   "dependencies": {
     "arweave": "^1.10.18",
-    "redstone-smartweave": "^0.4.1",
+    "redstone-smartweave": "^0.4.30",
     "smartweave": "^0.4.46"
   }
 }
