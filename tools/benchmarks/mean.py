@@ -15,11 +15,11 @@ plt.rcdefaults()
 fig, ax = plt.subplots(figsize=(10, 5))
 
 labels = {
-    "../../target/release/bench": "3em JS",
-    "../../target/release/bench_evm": "3em EVM",
-    "../../target/release/bench_wasm": "3em WASM",
-    "../../target/release/bench_fh": "3em JS (fh)",
-    "node ./smartweave/index.js": "Smartweave JS",
+    "3em_js_fh": "3em JS (fh)",
+    "3em_js": "3em JS",
+    "3em_evm": "3em EVM",
+    "3em_wasm": "3em WASM",
+    "smartweave.js": "Smartweave JS",
 }
 
 y_pos = np.arange(len(labels))

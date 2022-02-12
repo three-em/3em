@@ -17,7 +17,8 @@ redstone-js-benchmark.json
 /testdata/01_wasm/target
 /testdata/02_wasm/node_modules
 /crates/evm/wasm/target
-tools/benchmarks/results.md
+tools/benchmarks/results.*
+tools/benchmarks/bench_*.png
 **/node_modules
 */node_modules
 **/target/**

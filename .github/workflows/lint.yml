@@ -1,4 +1,4 @@
-name: rust / lint
+name: lint
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  lint:
+  clippy:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -32,7 +32,7 @@ jobs:
           command: clippy
           args: --no-deps --workspace
 
-  fmt:
+  rustfmt:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 

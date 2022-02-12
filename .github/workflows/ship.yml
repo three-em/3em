@@ -22,9 +22,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
 
-    outputs:
-      commit: ${{ steps.commit.outputs.hash }}
-
     strategy:
       fail-fast: true
       matrix:
@@ -51,6 +48,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
           default: true
+          override: true
 
       - name: Build
         uses: actions-rs/cargo@v1
@@ -59,10 +57,13 @@ jobs:
           args: --color always --release --locked --target ${{ matrix.target }}
           use-cross: ${{ matrix.cross }}
 
+      - name: Get Binary path
+        id: binary
+        run: echo "::set-output name=path::target/${{ matrix.target }}/release/three_em${{ runner.os == 'windows' && '.exe' || '' }}"
+
       - name: Zip Builds
-        working-directory: target/${{ matrix.target }}/release
         shell: pwsh
-        run: Compress-Archive -CompressionLevel Optimal -Force -Path three_em${{ runner.os == 'windows' && '.exe' || '' }} -DestinationPath three_em-${{ matrix.target }}.zip
+        run: Compress-Archive -CompressionLevel Optimal -Force -Path ${{ steps.binary.outputs.path }}, README.md, LICENSE -DestinationPath three_em-${{ matrix.target }}.zip
 
       - name: Upload Release Builds
         uses: actions/upload-artifact@v2
