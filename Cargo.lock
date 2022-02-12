@@ -285,7 +285,7 @@ dependencies = [
  "serde_json",
  "serde_v8",
  "url",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
@@ -1487,7 +1487,7 @@ checksum = "c4652c035fe8467ec48d084a2119c63995cabfbeffa8e07fb85c87d078566e9b"
 dependencies = [
  "serde",
  "serde_bytes",
- "v8",
+ "v8 0.38.1",
 ]
 
 [[package]]
@@ -1651,7 +1651,7 @@ dependencies = [
  "three_em_executor",
  "tokio",
  "url",
- "v8",
+ "v8 0.39.0",
 ]
 
 [[package]]
@@ -1698,7 +1698,7 @@ dependencies = [
  "serde",
  "three_em_smartweave",
  "tokio",
- "v8",
+ "v8 0.39.0",
 ]
 
 [[package]]
@@ -1726,7 +1726,7 @@ dependencies = [
  "serde",
  "three_em_arweave",
  "tokio",
- "v8",
+ "v8 0.39.0",
 ]
 
 [[package]]
@@ -1738,7 +1738,7 @@ dependencies = [
  "three_em_js",
  "three_em_smartweave",
  "tokio",
- "v8",
+ "v8 0.39.0",
 ]
 
 [[package]]
@@ -2002,6 +2002,19 @@ name = "v8"
 version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "684e95fe02e0acfeaf630df3a1623f6ad02145f9a92c54ceae8a1923319d3273"
+dependencies = [
+ "bitflags",
+ "fslock",
+ "lazy_static",
+ "libc",
+ "which",
+]
+
+[[package]]
+name = "v8"
+version = "0.39.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "540bde9c1b5c4760c9402428bc6c75b6ad07e10fd7e6e47bcff9b4ddaa5ef55e"
 dependencies = [
  "bitflags",
  "fslock",
