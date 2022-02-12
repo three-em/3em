@@ -283,7 +283,28 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "serde_v8",
+ "serde_v8 0.27.0",
+ "url",
+ "v8",
+]
+
+[[package]]
+name = "deno_core"
+version = "0.118.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68be6990e070141d1413797b84d8a05d3eb426fa18a9962ecf21d2f045014db4"
+dependencies = [
+ "anyhow",
+ "futures",
+ "indexmap",
+ "libc",
+ "log",
+ "once_cell",
+ "parking_lot",
+ "pin-project",
+ "serde",
+ "serde_json",
+ "serde_v8 0.29.0",
  "url",
  "v8",
 ]
@@ -300,7 +321,7 @@ dependencies = [
  "base64",
  "block-modes",
  "ctr",
- "deno_core",
+ "deno_core 0.116.0",
  "deno_web",
  "elliptic-curve",
  "num-traits",
@@ -325,7 +346,7 @@ version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1191635d07c94b7405d57ed9829c0a719bef275894081654ce4b635f5a1fcc8"
 dependencies = [
- "deno_core",
+ "deno_core 0.116.0",
  "serde",
  "serde_repr",
  "urlpattern",
@@ -339,7 +360,7 @@ checksum = "d1196f316256d1b79d29f6ee04fa6305bf6be60ce561c51d2cb7c6184f4668e1"
 dependencies = [
  "async-trait",
  "base64",
- "deno_core",
+ "deno_core 0.116.0",
  "encoding_rs",
  "serde",
  "tokio",
@@ -348,11 +369,11 @@ dependencies = [
 
 [[package]]
 name = "deno_webidl"
-version = "0.34.0"
+version = "0.36.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cab60598e00ab051eacae9a88e9c59a134c003b09e432bf8269cb176a9ad9fff"
+checksum = "a01ee1feb9530440ad00bdaebccd3eb3a137b3c1e7b0b65ad97cd5bfe7d06290"
 dependencies = [
- "deno_core",
+ "deno_core 0.118.0",
 ]
 
 [[package]]
@@ -1491,6 +1512,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_v8"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27266c014ef9b11fcf7f1a248f25603529432aab4d0ce777d6c6f6aea2b367bb"
+dependencies = [
+ "serde",
+ "serde_bytes",
+ "v8",
+]
+
+[[package]]
 name = "sha-1"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1613,7 +1645,7 @@ version = "0.2.0"
 dependencies = [
  "base64",
  "bytes",
- "deno_core",
+ "deno_core 0.116.0",
  "dirs",
  "hex",
  "indexmap",
@@ -1633,7 +1665,7 @@ dependencies = [
  "async-trait",
  "base64",
  "colored",
- "deno_core",
+ "deno_core 0.116.0",
  "deno_crypto",
  "hex",
  "hyper",
@@ -1669,7 +1701,7 @@ name = "three_em_executor"
 version = "0.2.0"
 dependencies = [
  "base64",
- "deno_core",
+ "deno_core 0.116.0",
  "hex",
  "indexmap",
  "libc",
@@ -1690,7 +1722,7 @@ dependencies = [
 name = "three_em_js"
 version = "0.2.0"
 dependencies = [
- "deno_core",
+ "deno_core 0.116.0",
  "deno_crypto",
  "deno_url",
  "deno_web",
@@ -1705,7 +1737,7 @@ dependencies = [
 name = "three_em_metering"
 version = "0.1.0"
 dependencies = [
- "deno_core",
+ "deno_core 0.116.0",
  "three_em_wasm",
  "tokio",
  "wasm-encoder",
@@ -1716,7 +1748,7 @@ dependencies = [
 name = "three_em_smartweave"
 version = "0.2.0"
 dependencies = [
- "deno_core",
+ "deno_core 0.116.0",
  "deno_crypto",
  "deno_url",
  "deno_web",
@@ -1733,7 +1765,7 @@ dependencies = [
 name = "three_em_wasm"
 version = "0.2.0"
 dependencies = [
- "deno_core",
+ "deno_core 0.116.0",
  "serde",
  "three_em_js",
  "three_em_smartweave",
