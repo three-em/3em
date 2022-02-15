@@ -20,7 +20,7 @@ use three_em_smartweave::{
 };
 use three_em_wasm::WasmRuntime;
 
-pub type ValidityTable = IndexMap<String, bool>;
+pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
 
 #[derive(Clone)]
@@ -77,10 +77,11 @@ pub async fn raw_execute_contract<
   contract_id: String,
   loaded_contract: LoadedContract,
   interactions: Vec<GQLEdgeInterface>,
-  mut validity: IndexMap<String, bool>,
+  mut validity: IndexMap<String, Value>,
   cache_state: Option<Value>,
   needs_processing: bool,
   show_errors: bool,
+  meaningful_error: bool,
   on_cached: CachedCallBack,
   shared_client: &Arweave,
 ) -> ExecuteResult {
@@ -128,7 +129,7 @@ pub async fn raw_execute_contract<
 
           let valid = match rt.call(call_input, Some(interaction_context)).await
           {
-            Ok(None) => true,
+            Ok(None) => serde_json::Value::Bool(true),
             Ok(Some(CallResult::Evolve(evolve))) => {
               let contract = shared_client
                 .load_contract(contract_id.clone(), Some(evolve), None, true)
@@ -144,14 +145,19 @@ pub async fn raw_execute_contract<
               .await
               .unwrap();
 
-              true
+              serde_json::Value::Bool(true)
             }
-            Ok(Some(CallResult::Result(_))) => true,
+            Ok(Some(CallResult::Result(_))) => serde_json::Value::Bool(true),
             Err(err) => {
               if show_errors {
                 println!("{}", err);
               }
-              false
+
+              if meaningful_error {
+                serde_json::Value::String(err.to_string())
+              } else {
+                serde_json::Value::Bool(false)
+              }
             }
           };
 
@@ -205,17 +211,21 @@ pub async fn raw_execute_contract<
           let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
           let exec = rt.call(&mut state, &mut input, interaction_context);
           let valid_with_result = match exec {
-            Ok(result) => (true, Some(result)),
+            Ok(result) => (serde_json::Value::Bool(true), Some(result)),
             Err(err) => {
               if show_errors {
                 println!("{}", err);
               }
-              (false, None)
+              if meaningful_error {
+                (serde_json::Value::String(err.to_string()), None)
+              } else {
+                (serde_json::Value::Bool(false), None)
+              }
             }
           };
           let valid = valid_with_result.0;
 
-          if valid {
+          if valid.is_boolean() && valid.as_bool().unwrap() {
             state = valid_with_result.1.unwrap();
           }
           validity.insert(tx.id, valid);
@@ -289,12 +299,12 @@ pub async fn raw_execute_contract<
 
         match machine.execute(&bytecode, block_info) {
           ExecutionState::Abort(_) | ExecutionState::Revert => {
-            validity.insert(tx.id, false);
+            validity.insert(tx.id, serde_json::Value::Bool(false));
           }
           ExecutionState::Ok => {
             account_store = machine.storage;
             result = machine.result;
-            validity.insert(tx.id, true);
+            validity.insert(tx.id, serde_json::Value::Bool(true));
           }
         }
       }
@@ -364,6 +374,7 @@ mod tests {
       IndexMap::new(),
       None,
       true,
+      false,
       false,
       |_, _| {
         panic!("not implemented");
@@ -446,27 +457,32 @@ mod tests {
       ),
     ];
 
-    let result = raw_execute_contract(
-      String::new(),
-      fake_contract,
-      fake_interactions,
-      IndexMap::new(),
-      None,
-      true,
-      false,
-      |_, _| {
-        panic!("not implemented");
-      },
-      &Arweave::new(
-        443,
-        "arweave.net".to_string(),
-        String::from("https"),
-        ArweaveCache::new(),
-      ),
-    )
-    .await;
+    let execute = || async {
+      let result = raw_execute_contract(
+        String::new(),
+        fake_contract,
+        fake_interactions,
+        IndexMap::new(),
+        None,
+        true,
+        false,
+        false,
+        |_, _| {
+          panic!("not implemented");
+        },
+        &Arweave::new(
+          443,
+          "arweave.net".to_string(),
+          String::from("https"),
+          ArweaveCache::new(),
+        ),
+      )
+      .await;
 
-    if let ExecuteResult::V8(value, validity) = result {
+      result
+    };
+
+    if let ExecuteResult::V8(value, validity) = execute().await {
       assert_eq!(validity.len(), 3);
       let (tx1, tx2, tx3) = (
         validity.get("tx1"),
@@ -554,6 +570,7 @@ mod tests {
       None,
       true,
       false,
+      false,
       |_, _| {
         panic!("not implemented");
       },
@@ -630,6 +647,7 @@ mod tests {
       IndexMap::new(),
       None,
       true,
+      false,
       false,
       |_, _| {
         panic!("not implemented");

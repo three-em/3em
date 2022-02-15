@@ -21,13 +21,22 @@ pub async fn run(
   height: Option<usize>,
   no_cache: bool,
   show_errors: bool,
+  meaningful_error: bool,
 ) -> Result<(), AnyError> {
   let arweave = Arweave::new(port, host, protocol, ArweaveCache::new());
   let start = std::time::Instant::now();
 
-  let execution =
-    execute_contract(&arweave, tx, None, None, height, !no_cache, show_errors)
-      .await?;
+  let execution = execute_contract(
+    &arweave,
+    tx,
+    None,
+    None,
+    height,
+    !no_cache,
+    show_errors,
+    meaningful_error,
+  )
+  .await?;
 
   if benchmark {
     let elapsed = start.elapsed();

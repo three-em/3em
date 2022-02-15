@@ -37,7 +37,7 @@ pub struct ArweaveCache {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct StateResult {
   pub state: Value,
-  pub validity: IndexMap<String, bool>,
+  pub validity: IndexMap<String, Value>,
 }
 
 impl Default for ArweaveCache {
