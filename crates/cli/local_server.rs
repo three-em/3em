@@ -66,7 +66,7 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
               response_result = Some(build_error("contractId was not provided in query parameters. A contract id must be provided."));
             } else {
                  let arweave = Arweave::new(port, gateway_host.to_owned(), gateway_protocol.to_owned(), ArweaveCache::new());
-                 let execute_result = execute_contract(&arweave, contract_id.unwrap().to_owned(), None, None, height, cache, show_errors).await;
+                 let execute_result = execute_contract(&arweave, contract_id.unwrap().to_owned(), None, None, height, cache, show_errors, true).await;
                 match execute_result {
                      Ok(result) => {
                          match result {

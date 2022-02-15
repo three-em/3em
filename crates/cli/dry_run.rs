@@ -119,6 +119,7 @@ pub async fn dry_run_result(
     None,
     true,
     true,
+    true,
     |_, _| panic!("Unimplemented"),
     &Arweave::new(port, host, protocol, ArweaveCache::new()),
   )
@@ -189,7 +190,7 @@ mod tests {
           "users": ["Andres Pirela", "Divy", "Some Other"]
         })
       );
-      assert_eq!(validity_table.get_index(2).unwrap().1.to_owned(), false);
+      assert_eq!(validity_table.get_index(2).unwrap().1.to_owned(), "Error: Invalid operation\n    at handle (file:///main.js:5:12)");
     } else {
       panic!("Unexpected result");
     }
