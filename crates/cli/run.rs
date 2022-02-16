@@ -20,8 +20,7 @@ pub async fn run(
   save_path: String,
   height: Option<usize>,
   no_cache: bool,
-  show_errors: bool,
-  meaningful_error: bool,
+  show_errors: bool
 ) -> Result<(), AnyError> {
   let arweave = Arweave::new(port, host, protocol, ArweaveCache::new());
   let start = std::time::Instant::now();
@@ -33,8 +32,7 @@ pub async fn run(
     None,
     height,
     !no_cache,
-    show_errors,
-    meaningful_error,
+    show_errors
   )
   .await?;
 

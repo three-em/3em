@@ -81,7 +81,6 @@ pub async fn raw_execute_contract<
   cache_state: Option<Value>,
   needs_processing: bool,
   show_errors: bool,
-  meaningful_error: bool,
   on_cached: CachedCallBack,
   shared_client: &Arweave,
 ) -> ExecuteResult {
@@ -153,7 +152,7 @@ pub async fn raw_execute_contract<
                 println!("{}", err);
               }
 
-              if meaningful_error {
+              if show_errors {
                 serde_json::Value::String(err.to_string())
               } else {
                 serde_json::Value::Bool(false)
@@ -216,7 +215,8 @@ pub async fn raw_execute_contract<
               if show_errors {
                 println!("{}", err);
               }
-              if meaningful_error {
+
+              if show_errors {
                 (serde_json::Value::String(err.to_string()), None)
               } else {
                 (serde_json::Value::Bool(false), None)
@@ -375,7 +375,6 @@ mod tests {
       None,
       true,
       false,
-      false,
       |_, _| {
         panic!("not implemented");
       },
@@ -465,7 +464,6 @@ mod tests {
         IndexMap::new(),
         None,
         true,
-        false,
         false,
         |_, _| {
           panic!("not implemented");
@@ -570,7 +568,6 @@ mod tests {
       None,
       true,
       false,
-      false,
       |_, _| {
         panic!("not implemented");
       },
@@ -647,7 +644,6 @@ mod tests {
       IndexMap::new(),
       None,
       true,
-      false,
       false,
       |_, _| {
         panic!("not implemented");

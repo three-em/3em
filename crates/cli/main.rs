@@ -67,8 +67,7 @@ fn main() -> Result<(), AnyError> {
           benchmark,
           height,
           no_cache,
-          show_errors,
-          meaningful_error,
+          show_errors
         } => {
           if tx.is_none() {
             print_help::print_help(Some("run"));
@@ -87,8 +86,7 @@ fn main() -> Result<(), AnyError> {
               save_path,
               height,
               no_cache,
-              show_errors,
-              meaningful_error,
+              show_errors
             ))?;
           }
         }

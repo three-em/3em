@@ -22,8 +22,7 @@ pub enum Flags {
     save_path: String,
     height: Option<usize>,
     no_cache: bool,
-    show_errors: bool,
-    meaningful_error: bool,
+    show_errors: bool
   },
   DryRun {
     host: String,
@@ -115,8 +114,7 @@ pub fn parse() -> Result<ParseResult, pico_args::Error> {
             .unwrap_or_else(|| String::from("")),
           height: { pargs.opt_value_from_str("--height").unwrap() },
           no_cache: pargs.contains("--no-cache"),
-          show_errors: pargs.contains("--show-errors"),
-          meaningful_error: pargs.contains("--meaningful-error"),
+          show_errors: pargs.contains("--show-errors")
         },
       },
       "serve" => ParseResult::Known {

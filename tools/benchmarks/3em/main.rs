@@ -19,7 +19,6 @@ async fn main() {
     None,
     None,
     true,
-    false,
     false
   )
   .await

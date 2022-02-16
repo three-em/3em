@@ -119,7 +119,6 @@ pub async fn dry_run_result(
     None,
     true,
     true,
-    true,
     |_, _| panic!("Unimplemented"),
     &Arweave::new(port, host, protocol, ArweaveCache::new()),
   )
