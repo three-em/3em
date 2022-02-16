@@ -19,7 +19,7 @@ async fn main() {
     None,
     Some(749180),
     true,
-    false
+    false,
   )
   .await
   .unwrap();

@@ -30,7 +30,7 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   height: Option<usize>,
   cache: bool,
-  show_errors: bool
+  show_errors: bool,
 ) -> Result<ExecuteResult, AnyError> {
   if let Some(result) = LRU_CACHE.lock().unwrap().get(&contract_id) {
     return Ok(result.clone());
@@ -366,7 +366,7 @@ mod test {
       None,
       Some(838269),
       false,
-      false
+      false,
     )
     .await
     .unwrap();
@@ -411,7 +411,7 @@ mod test {
       None,
       Some(822062),
       false,
-      false
+      false,
     )
     .await
     .unwrap();
@@ -446,7 +446,7 @@ mod test {
       None,
       None,
       false,
-      false
+      false,
     )
     .await
     .unwrap();

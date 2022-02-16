@@ -189,7 +189,10 @@ mod tests {
           "users": ["Andres Pirela", "Divy", "Some Other"]
         })
       );
-      assert_eq!(validity_table.get_index(2).unwrap().1.to_owned(), "Error: Invalid operation\n    at handle (file:///main.js:5:12)");
+      assert_eq!(
+        validity_table.get_index(2).unwrap().1.to_owned(),
+        "Error: Invalid operation\n    at handle (file:///main.js:5:12)"
+      );
     } else {
       panic!("Unexpected result");
     }
