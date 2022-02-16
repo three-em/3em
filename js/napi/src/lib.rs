@@ -37,6 +37,7 @@ async fn execute_contract(
         maybe_height.map(|h| h as usize),
         true,
         false,
+        false
       )
       .await
       .unwrap();
