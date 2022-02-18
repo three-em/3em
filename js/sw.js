@@ -164,8 +164,9 @@ const WORKER = `{
   globalThis.SmartWeave = new SmartWeave();
   self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
-      let currentState = e.data.state;
+      let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
+      
       if (interactions.length == 0) {
         const input = e.data.action;
         try {

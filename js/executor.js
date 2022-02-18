@@ -63,8 +63,8 @@ self.addEventListener("message", async (event) => {
 
 const loadContractSources = [getTagSource, loadContractSource];
 const loadContractBlob = new Blob(loadContractSources, {
-    type: "application/javascript",
-  });
+  type: "application/javascript",
+});
 const loadContractWorker = new Worker(
   URL.createObjectURL(loadContractBlob),
   { eval: true, type: "module" },

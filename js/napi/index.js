@@ -1,241 +1,249 @@
-const { existsSync, readFileSync } = require('fs')
-const { join } = require('path')
+const { existsSync, readFileSync } = require("fs");
+const { join } = require("path");
 
-const { platform, arch } = process
+const { platform, arch } = process;
 
-let nativeBinding = null
-let localFileExisted = false
-let loadError = null
+let nativeBinding = null;
+let localFileExisted = false;
+let loadError = null;
 
 function isMusl() {
   // For Node 10
-  if (!process.report || typeof process.report.getReport !== 'function') {
+  if (!process.report || typeof process.report.getReport !== "function") {
     try {
-      return readFileSync('/usr/bin/ldd', 'utf8').includes('musl')
+      return readFileSync("/usr/bin/ldd", "utf8").includes("musl");
     } catch (e) {
-      return true
+      return true;
     }
   } else {
-    const { glibcVersionRuntime } = process.report.getReport().header
-    return !glibcVersionRuntime
+    const { glibcVersionRuntime } = process.report.getReport().header;
+    return !glibcVersionRuntime;
   }
 }
 
 switch (platform) {
-  case 'android':
+  case "android":
     switch (arch) {
-      case 'arm64':
-        localFileExisted = existsSync(join(__dirname, 'three_em_node.android-arm64.node'))
+      case "arm64":
+        localFileExisted = existsSync(
+          join(__dirname, "three_em_node.android-arm64.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.android-arm64.node')
+            nativeBinding = require("./three_em_node.android-arm64.node");
           } else {
-            nativeBinding = require('@three-em/node-android-arm64')
+            nativeBinding = require("@three-em/node-android-arm64");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
-      case 'arm':
-        localFileExisted = existsSync(join(__dirname, 'three_em_node.android-arm-eabi.node'))
+        break;
+      case "arm":
+        localFileExisted = existsSync(
+          join(__dirname, "three_em_node.android-arm-eabi.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.android-arm-eabi.node')
+            nativeBinding = require("./three_em_node.android-arm-eabi.node");
           } else {
-            nativeBinding = require('@three-em/node-android-arm-eabi')
+            nativeBinding = require("@three-em/node-android-arm-eabi");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
+        break;
       default:
-        throw new Error(`Unsupported architecture on Android ${arch}`)
+        throw new Error(`Unsupported architecture on Android ${arch}`);
     }
-    break
-  case 'win32':
+    break;
+  case "win32":
     switch (arch) {
-      case 'x64':
+      case "x64":
         localFileExisted = existsSync(
-          join(__dirname, 'three_em_node.win32-x64-msvc.node')
-        )
+          join(__dirname, "three_em_node.win32-x64-msvc.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.win32-x64-msvc.node')
+            nativeBinding = require("./three_em_node.win32-x64-msvc.node");
           } else {
-            nativeBinding = require('@three-em/node-win32-x64-msvc')
+            nativeBinding = require("@three-em/node-win32-x64-msvc");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
-      case 'ia32':
+        break;
+      case "ia32":
         localFileExisted = existsSync(
-          join(__dirname, 'three_em_node.win32-ia32-msvc.node')
-        )
+          join(__dirname, "three_em_node.win32-ia32-msvc.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.win32-ia32-msvc.node')
+            nativeBinding = require("./three_em_node.win32-ia32-msvc.node");
           } else {
-            nativeBinding = require('@three-em/node-win32-ia32-msvc')
+            nativeBinding = require("@three-em/node-win32-ia32-msvc");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
-      case 'arm64':
+        break;
+      case "arm64":
         localFileExisted = existsSync(
-          join(__dirname, 'three_em_node.win32-arm64-msvc.node')
-        )
+          join(__dirname, "three_em_node.win32-arm64-msvc.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.win32-arm64-msvc.node')
+            nativeBinding = require("./three_em_node.win32-arm64-msvc.node");
           } else {
-            nativeBinding = require('@three-em/node-win32-arm64-msvc')
+            nativeBinding = require("@three-em/node-win32-arm64-msvc");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
+        break;
       default:
-        throw new Error(`Unsupported architecture on Windows: ${arch}`)
+        throw new Error(`Unsupported architecture on Windows: ${arch}`);
     }
-    break
-  case 'darwin':
+    break;
+  case "darwin":
     switch (arch) {
-      case 'x64':
-        localFileExisted = existsSync(join(__dirname, 'three_em_node.darwin-x64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./three_em_node.darwin-x64.node')
-          } else {
-            nativeBinding = require('@three-em/node-darwin-x64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm64':
+      case "x64":
         localFileExisted = existsSync(
-          join(__dirname, 'three_em_node.darwin-arm64.node')
-        )
+          join(__dirname, "three_em_node.darwin-x64.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.darwin-arm64.node')
+            nativeBinding = require("./three_em_node.darwin-x64.node");
           } else {
-            nativeBinding = require('@three-em/node-darwin-arm64')
+            nativeBinding = require("@three-em/node-darwin-x64");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
+        break;
+      case "arm64":
+        localFileExisted = existsSync(
+          join(__dirname, "three_em_node.darwin-arm64.node"),
+        );
+        try {
+          if (localFileExisted) {
+            nativeBinding = require("./three_em_node.darwin-arm64.node");
+          } else {
+            nativeBinding = require("@three-em/node-darwin-arm64");
+          }
+        } catch (e) {
+          loadError = e;
+        }
+        break;
       default:
-        throw new Error(`Unsupported architecture on macOS: ${arch}`)
+        throw new Error(`Unsupported architecture on macOS: ${arch}`);
     }
-    break
-  case 'freebsd':
-    if (arch !== 'x64') {
-      throw new Error(`Unsupported architecture on FreeBSD: ${arch}`)
+    break;
+  case "freebsd":
+    if (arch !== "x64") {
+      throw new Error(`Unsupported architecture on FreeBSD: ${arch}`);
     }
-    localFileExisted = existsSync(join(__dirname, 'three_em_node.freebsd-x64.node'))
+    localFileExisted = existsSync(
+      join(__dirname, "three_em_node.freebsd-x64.node"),
+    );
     try {
       if (localFileExisted) {
-        nativeBinding = require('./three_em_node.freebsd-x64.node')
+        nativeBinding = require("./three_em_node.freebsd-x64.node");
       } else {
-        nativeBinding = require('@three-em/node-freebsd-x64')
+        nativeBinding = require("@three-em/node-freebsd-x64");
       }
     } catch (e) {
-      loadError = e
+      loadError = e;
     }
-    break
-  case 'linux':
+    break;
+  case "linux":
     switch (arch) {
-      case 'x64':
+      case "x64":
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, 'three_em_node.linux-x64-musl.node')
-          )
+            join(__dirname, "three_em_node.linux-x64-musl.node"),
+          );
           try {
             if (localFileExisted) {
-              nativeBinding = require('./three_em_node.linux-x64-musl.node')
+              nativeBinding = require("./three_em_node.linux-x64-musl.node");
             } else {
-              nativeBinding = require('@three-em/node-linux-x64-musl')
+              nativeBinding = require("@three-em/node-linux-x64-musl");
             }
           } catch (e) {
-            loadError = e
+            loadError = e;
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, 'three_em_node.linux-x64-gnu.node')
-          )
+            join(__dirname, "three_em_node.linux-x64-gnu.node"),
+          );
           try {
             if (localFileExisted) {
-              nativeBinding = require('./three_em_node.linux-x64-gnu.node')
+              nativeBinding = require("./three_em_node.linux-x64-gnu.node");
             } else {
-              nativeBinding = require('@three-em/node-linux-x64-gnu')
+              nativeBinding = require("@three-em/node-linux-x64-gnu");
             }
           } catch (e) {
-            loadError = e
+            loadError = e;
           }
         }
-        break
-      case 'arm64':
+        break;
+      case "arm64":
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, 'three_em_node.linux-arm64-musl.node')
-          )
+            join(__dirname, "three_em_node.linux-arm64-musl.node"),
+          );
           try {
             if (localFileExisted) {
-              nativeBinding = require('./three_em_node.linux-arm64-musl.node')
+              nativeBinding = require("./three_em_node.linux-arm64-musl.node");
             } else {
-              nativeBinding = require('@three-em/node-linux-arm64-musl')
+              nativeBinding = require("@three-em/node-linux-arm64-musl");
             }
           } catch (e) {
-            loadError = e
+            loadError = e;
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, 'three_em_node.linux-arm64-gnu.node')
-          )
+            join(__dirname, "three_em_node.linux-arm64-gnu.node"),
+          );
           try {
             if (localFileExisted) {
-              nativeBinding = require('./three_em_node.linux-arm64-gnu.node')
+              nativeBinding = require("./three_em_node.linux-arm64-gnu.node");
             } else {
-              nativeBinding = require('@three-em/node-linux-arm64-gnu')
+              nativeBinding = require("@three-em/node-linux-arm64-gnu");
             }
           } catch (e) {
-            loadError = e
+            loadError = e;
           }
         }
-        break
-      case 'arm':
+        break;
+      case "arm":
         localFileExisted = existsSync(
-          join(__dirname, 'three_em_node.linux-arm-gnueabihf.node')
-        )
+          join(__dirname, "three_em_node.linux-arm-gnueabihf.node"),
+        );
         try {
           if (localFileExisted) {
-            nativeBinding = require('./three_em_node.linux-arm-gnueabihf.node')
+            nativeBinding = require("./three_em_node.linux-arm-gnueabihf.node");
           } else {
-            nativeBinding = require('@three-em/node-linux-arm-gnueabihf')
+            nativeBinding = require("@three-em/node-linux-arm-gnueabihf");
           }
         } catch (e) {
-          loadError = e
+          loadError = e;
         }
-        break
+        break;
       default:
-        throw new Error(`Unsupported architecture on Linux: ${arch}`)
+        throw new Error(`Unsupported architecture on Linux: ${arch}`);
     }
-    break
+    break;
   default:
-    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
+    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`);
 }
 
 if (!nativeBinding) {
   if (loadError) {
-    throw loadError
+    throw loadError;
   }
-  throw new Error(`Failed to load native binding`)
+  throw new Error(`Failed to load native binding`);
 }
 
-const { executeContract } = nativeBinding
+const { executeContract } = nativeBinding;
 
-module.exports.executeContract = executeContract
+module.exports.executeContract = executeContract;
