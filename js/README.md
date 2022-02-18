@@ -28,19 +28,24 @@ Read the current state of all kinds of contracts.
 export function executeContract<T extends unknown>(
   contractTx: string,
   blockHeight?: number,
-): Promise<T>;
+): Promise<{
+  state: T;
+  validity: Record<string, bool>;
+}>;
 ```
 
 ```javascript
 import { executeContract } from "./index.js";
 
-await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y");
+const { state, validity } = await executeContract(
+  "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y",
+);
 ```
 
 ## Runtimes
 
-Three seperate libraries are available for low level use. The API is subject to
-breaking changes.
+Three seperate libraries are available for low level use **only**. The API is
+subject to breaking changes.
 
 ### JavaScript
 
