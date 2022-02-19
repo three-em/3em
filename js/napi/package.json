@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
   "license": "MIT",
   "napi": {
@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "detect-libc": "^1.0.3"
+  },
+  "optionalDependencies": {
+    "@three-em/node-darwin-arm64": "0.2.0"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.0.0"
