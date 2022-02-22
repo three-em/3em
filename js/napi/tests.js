@@ -7,7 +7,7 @@ const { executeContract } = require("./");
     749180,
   );
   const end = performance.now();
-  console.log(state1);
+
   console.log(`[JS] Execution time: ${(end - start)}ms.`);
 
   const start2 = performance.now();

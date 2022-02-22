@@ -3,6 +3,7 @@ pub mod test_util;
 
 use crate::executor::raw_execute_contract;
 pub use crate::executor::ExecuteResult;
+pub use crate::executor::ValidityTable;
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
 pub use indexmap::map::IndexMap;

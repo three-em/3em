@@ -11,6 +11,7 @@ export class ExternalObject<T> {
 }
 export interface ExecuteContractResult {
   state: any;
+  validity: Record<string, any>;
 }
 export function executeContract(
   tx: string,
