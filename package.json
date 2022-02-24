@@ -3,7 +3,7 @@
     "docker-build": "docker build -t 3em -m 12g ."
   },
   "dependencies": {
-    "arweave": "^1.10.18",
+    "arweave": "^1.10.23",
     "redstone-smartweave": "^0.4.1",
     "smartweave": "^0.4.46"
   }
