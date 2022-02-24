@@ -5,7 +5,7 @@ In order for use `3EM` for Node, please install the following package:
 ```shell
 $ yarn add @three-em/node
 # OR
-# $ npm install @three-em/node
+# $ npm install --save @three-em/node
 ```
 
 ```javascript
@@ -16,14 +16,14 @@ import { executeContract } from "@three-em/node";
 
 ```html
 <script type="module">
-    import { executeContract } from "https://unpkg.com/@three-em/js@0.2.2/index.js";
+    import { executeContract } from "https://unpkg.com/@three-em/js@0.2.4/index.js";
 </script>
 ```
 
 ## Deno
 
 ```typescript
-import { executeContract } from "https://deno.land/x/three_em@0.2.2/index.js";
+import { executeContract } from "https://deno.land/x/three_em@0.2.4/index.js";
 ```
 
 ## `executeContract`
