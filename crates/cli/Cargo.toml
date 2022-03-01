@@ -19,7 +19,7 @@ tokio = { version = "1.10.1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 three_em_executor = { version = "0.2.0", path = "../executor" }
 three_em_arweave = { version = "0.2.0", path = "../arweave" }
-async-trait = "0.1.51"
+async-trait = "0.1.52"
 pico-args = "0.4.2"
 colored = "2"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
