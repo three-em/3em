@@ -76,7 +76,7 @@ fn wasmer_bench(
 }
 
 static BENCH_CONTRACT1: &[u8] =
-  include_bytes!("../helpers/rust/example/contract.wasm");
+  include_bytes!("../wasm_tools/rust/example/contract.wasm");
 
 fn setup_wasmer(store: Store) -> Result<Instance, Box<dyn std::error::Error>> {
   let module = Module::new(&store, BENCH_CONTRACT1)?;
