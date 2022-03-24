@@ -1,9 +1,9 @@
-use deno_core::error::type_error;
+
 use deno_core::error::AnyError;
 use deno_core::include_js_files;
 use deno_core::op_async;
 use deno_core::op_sync;
-use deno_core::serde::Deserialize;
+
 use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
 use deno_core::Extension;
