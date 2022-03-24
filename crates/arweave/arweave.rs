@@ -1,4 +1,4 @@
-use crate::cache::ArweaveCache;
+
 use crate::cache::CacheExt;
 use crate::gql_result::GQLNodeParent;
 use crate::gql_result::GQLResultInterface;
@@ -555,7 +555,7 @@ impl Arweave {
             let edge = tx.edges.get(max_requests);
 
             if let Some(result_edge) = edge {
-              let cursor = (&result_edge.cursor).to_owned();
+              let cursor = result_edge.cursor.to_owned();
               Some((tx, State::Next(Some(cursor), variables)))
             } else {
               None
