@@ -12,7 +12,7 @@ license = "MIT"
 path = "lib.rs"
 
 [dependencies]
-v8 = "0.38.1"
+v8 = "0.41.0"
 deno_core = "0.116.0"
 deno_crypto = "0.48.0"
 deno_url = "0.34.0"
@@ -23,7 +23,7 @@ serde = { version = "1", features = ["derive"] }
 three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
 
 [build-dependencies]
-v8 = "0.38.1"
+v8 = "0.41.0"
 deno_core = "0.116.0"
 deno_crypto = "0.48.0"
 deno_url = "0.34.0"
