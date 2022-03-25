@@ -53,9 +53,9 @@ impl CacheExt for ArweaveCache {
       let interactions_cache_dir = cache_dir.join("3em").join("interactions");
       let states_cache_dir = cache_dir.join("3em").join("states");
 
-      create_dir_all(root_cache_dir.to_owned()).unwrap();
-      create_dir_all(interactions_cache_dir.to_owned()).unwrap();
-      create_dir_all(states_cache_dir.to_owned()).unwrap();
+      create_dir_all(&root_cache_dir).unwrap();
+      create_dir_all(&interactions_cache_dir).unwrap();
+      create_dir_all(&states_cache_dir).unwrap();
 
       ArweaveCache {
         contracts_cache_folder: root_cache_dir,

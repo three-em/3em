@@ -975,11 +975,11 @@ mod tests {
     let sources: [(usize, &[u8]); 4] = [
       (
         3384,
-        include_bytes!("../../helpers/rust/example/contract.wasm"),
+        include_bytes!("../../wasm_tools/rust/example/contract.wasm"),
       ),
       (11545, include_bytes!("../../testdata/02_wasm/02_wasm.wasm")),
-      (11975, include_bytes!("../../helpers/zig/contract.wasm")),
-      (9901, include_bytes!("../../helpers/cpp/contract.wasm")),
+      (11975, include_bytes!("../../wasm_tools/zig/contract.wasm")),
+      (9901, include_bytes!("../../wasm_tools/cpp/contract.wasm")),
     ];
 
     for source in sources {

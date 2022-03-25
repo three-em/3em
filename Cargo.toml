@@ -12,7 +12,7 @@ members = [
 ]
 exclude = [
   # Rust WASM proc_macro helper.
-  "./helpers/rust/",
+  "./wasm_tools/rust/",
   # Node API bindings
   "./js/napi",
 ]

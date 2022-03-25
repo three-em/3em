@@ -3,6 +3,10 @@
   const { subtle } = crypto;
   const { TextEncoder, TextDecoder } = window.__bootstrap.encoding;
   const { btoa, atob } = window.__bootstrap.base64;
+  
+  function notSupported() {
+    throw new Error("Operation not supported.");
+  }
 
   // Intentional copy.
   const BigNumber = window.BigNumber;
@@ -17,22 +21,7 @@
   // https://github.com/ArweaveTeam/arweave-js/blob/master/src/common/lib/crypto/webcrypto-driver.ts
   class CryptoInterface {
     async generateJwk() {
-      const cryptoKey = await subtle.generateKey(
-        {
-          name: "RSA-PSS",
-          modulusLength: 4096,
-          publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-          hash: {
-            name: "SHA-256",
-          },
-        },
-        true,
-        ["sign"],
-      );
-
-      const jwk = await subtle.exportKey("jwk", cryptoKey.privateKey);
-
-      return jwk;
+      notSupported();
     }
 
     async sign(jwk, data, options) {
@@ -257,7 +246,7 @@
     #utils = new ArweaveUtils();
 
     generate() {
-      return this.#crypto.generateJwk();
+      notSupported();
     }
 
     async ownerToAddress(owner) {
