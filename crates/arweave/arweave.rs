@@ -1,4 +1,3 @@
-
 use crate::cache::CacheExt;
 use crate::gql_result::GQLNodeParent;
 use crate::gql_result::GQLResultInterface;
