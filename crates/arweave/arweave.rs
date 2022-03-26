@@ -598,7 +598,7 @@ impl Arweave {
 #[cfg(test)]
 mod tests {
   use crate::arweave::Arweave;
-  use crate::arweave::ArweaveCache;
+  use crate::cache::ArweaveCache;
   use crate::cache::CacheExt;
 
   #[tokio::test]

@@ -46,7 +46,6 @@ jobs:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.arch }}
           check-latest: true
-          cache: yarn
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
