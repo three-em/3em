@@ -45,7 +45,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.arch }}
-
+          cache: 'yarn'
+          cache-dependency-path: js/napi/yarn.lock
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
