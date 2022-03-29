@@ -161,8 +161,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
-          check-latest: true
           cache: yarn
+          cache-dependency-path: js/napi/yarn.lock
 
       - name: Install Node Dependencies
         uses: bahmutov/npm-install@v1
@@ -196,8 +196,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          check-latest: true
           cache: yarn
+          cache-dependency-path: js/napi/yarn.lock
 
       - name: Install Node Dependencies
         uses: bahmutov/npm-install@v1
