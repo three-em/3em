@@ -20,23 +20,7 @@ use std::net::IpAddr;
 use std::ops::Deref;
 use std::str::FromStr;
 
-static BANNER: &str = r#"
-██████╗     ███████╗    ███╗   ███╗
-╚════██╗    ██╔════╝    ████╗ ████║
- █████╔╝    █████╗      ██╔████╔██║
- ╚═══██╗    ██╔══╝      ██║╚██╔╝██║
-██████╔╝    ███████╗    ██║ ╚═╝ ██║
-╚═════╝     ╚══════╝    ╚═╝     ╚═╝
-
-The Web3 Execution Machine
-Languages supported: Javascript, Solidity, Rust, C++, C, AssemblyScript, Zig, Vyper.
-"#;
-
 fn main() -> Result<(), AnyError> {
-  println!("{}", BANNER);
-  println!("Version: {}", env!("CARGO_PKG_VERSION"));
-  println!();
-
   let parse_result = parse::parse()?;
 
   let rt = tokio::runtime::Runtime::new()?;
