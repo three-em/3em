@@ -18,4 +18,4 @@ three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
 three_em_js = { version = "0.2.0", path = "../js" }
 
 [dev-dependencies]
-tokio = { version = "1.10.1", features = ["full"] }
+tokio = { version = "1.16.1", features = ["full"] }

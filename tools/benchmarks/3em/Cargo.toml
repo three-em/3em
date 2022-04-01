@@ -27,5 +27,5 @@ path = "evm.rs"
 [dependencies]
 three_em_executor = { version = "0.2.0", path = "../../../crates/executor" }
 three_em_arweave = { version = "0.2.0", path = "../../../crates/arweave" }
-tokio = { version = "1.10.1", features = ["full"] }
+tokio = { version = "1.16.1", features = ["full"] }
 

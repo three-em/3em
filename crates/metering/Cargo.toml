@@ -17,5 +17,5 @@ wasm-encoder = "0.8.0"
 [dev-dependencies]
 deno_core = "0.116.0"
 three_em_wasm = { path = "../wasm" }
-tokio = { version = "1.10.1", features = ["full"] }
+tokio = { version = "1.16.1", features = ["full"] }
 
