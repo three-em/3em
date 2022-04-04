@@ -24,17 +24,17 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             arch: x64
-            build: yarn build; strip -x *.node
+            build: yarn build-release; strip -x *.node
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             arch: x64
-            build: yarn build
+            build: yarn build-release
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             arch: x64
-            build: yarn build
+            build: yarn build --release
 
     steps:
       - name: Checkout repo
