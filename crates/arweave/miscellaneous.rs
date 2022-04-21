@@ -46,7 +46,8 @@ pub fn get_sort_key(
   let hashed = hex::encode(hasher(&hasher_bytes[..]));
   let height = format!("000000{}", *block_height);
 
-  format!("{},{}", &height[height.len() - 12..], hashed)
+  let start = height.len() - std::cmp::min(height.len(), 12);
+  format!("{},{}", &height[start..], hashed)
 }
 
 #[cfg(test)]
