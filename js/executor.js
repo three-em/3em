@@ -8,8 +8,10 @@ function getTag(tx, field) {
   return atob(tx.tags.find((data) => data.name === encodedName)?.value || "");
 }`;
 
+const arweaveUrl = `${((globalThis || window).ARWEAVE_PROTOCOL) || "https"}://${((globalThis || window).ARWEAVE_HOST) || "arweave.net"}:${((globalThis || window).ARWEAVE_PORT) || 443}`;
+
 const loadContractSource = `
-const baseUrl = "https://arweave.net";
+const baseUrl = "${arweaveUrl}";
 async function loadContract(contractId) {
   const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrl).href);
   const tx = await response.json();
@@ -71,7 +73,7 @@ const loadContractWorker = new Worker(
 );
 
 const loadInteractionsSource = `
-const baseUrl = "https://arweave.net";
+const baseUrl = "${arweaveUrl}";
 const query =
   \`query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
   transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
