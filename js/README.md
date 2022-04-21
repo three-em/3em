@@ -63,6 +63,13 @@ const { state, validity } = await executeContract(
 );
 ```
 
+## Global Variables (Deno & Browser)
+```javascript
+globalThis.ARWEAVE_HOST = "www.arweave.run";
+globalThis.ARWEAVE_PROTOCOL = "https";
+globalThis.ARWEAVE_PORT = 443;
+```
+
 ## Runtimes
 
 Three seperate libraries are available for low level use **only**. The API is
