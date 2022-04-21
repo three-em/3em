@@ -8,16 +8,18 @@ function getTag(tx, field) {
   return atob(tx.tags.find((data) => data.name === encodedName)?.value || "");
 }`;
 
+const arweaveUrl = `${((globalThis || window).ARWEAVE_PROTOCOL) || "https"}://${((globalThis || window).ARWEAVE_HOST) || "arweave.net"}:${((globalThis || window).ARWEAVE_PORT) || 443}`;
+
 const loadContractSource = `
-const baseUrl = "https://arweave.net";
-async function loadContract(contractId) {
-  const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrl).href);
+const baseUrl = "${arweaveUrl}";
+async function loadContract(contractId, baseUrlCustom) {
+  const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrlCustom || baseUrl).href);
   const tx = await response.json();
 
   const contractSrcTxID = getTag(tx, "Contract-Src");
 
   const contractSrcResponse = await fetch(
-    new URL(\`/tx/\${contractSrcTxID}/data\`, baseUrl).href,
+    new URL(\`/tx/\${contractSrcTxID}/data\`, baseUrlCustom || baseUrl).href,
   );
   const contractSrc = await contractSrcResponse.text();
   
@@ -28,13 +30,13 @@ async function loadContract(contractId) {
     const stateTx = getTag(tx, "Init-State-TX");
     if (stateTx) {
       const stateTxResponse = await fetch(
-        new URL(\`/tx/\${stateTx}/data\`, baseUrl).href,
+        new URL(\`/tx/\${stateTx}/data\`, baseUrlCustom || baseUrl).href,
       );
       const stateTxData = await stateTxResponse.text();
       state = atob(stateTxData.data.replace(/_/g, "/").replace(/-/g, "+"));
     } else {
       const txDataResonse = await fetch(
-        new URL(\`/tx/\${contractId}/data\`, baseUrl).href,
+        new URL(\`/tx/\${contractId}/data\`, baseUrlCustom || baseUrl).href,
       );
       const txData = await txDataResonse.text();
 
@@ -42,7 +44,7 @@ async function loadContract(contractId) {
     }
   }
   const sourceTxResponse = await fetch(
-    new URL(\`/tx/\${contractSrcTxID}\`, baseUrl).href,
+    new URL(\`/tx/\${contractSrcTxID}\`, baseUrlCustom || baseUrl).href,
   );
   const sourceTx = await sourceTxResponse.json();
   const type = getTag(sourceTx, "Content-Type");
@@ -55,8 +57,8 @@ async function loadContract(contractId) {
 }
 
 self.addEventListener("message", async (event) => {
-  const { tx, key } = event.data;
-  const r = await loadContract(tx);
+  const { tx, key, baseUrlCustom } = event.data;
+  const r = await loadContract(tx, baseUrlCustom);
   self.postMessage({ key, result: r });
 });
 `;
@@ -71,7 +73,7 @@ const loadContractWorker = new Worker(
 );
 
 const loadInteractionsSource = `
-const baseUrl = "https://arweave.net";
+const baseUrl = "${arweaveUrl}";
 const query =
   \`query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
   transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -103,9 +105,9 @@ const query =
 
 const MAX_REQUEST = 100;
 
-async function nextPage(variables) {
+async function nextPage(variables, baseUrlCustom) {
   const response = await fetch(
-    new URL("/graphql", baseUrl).href,
+    new URL("/graphql", baseUrlCustom || baseUrl).href,
     {
       method: "POST",
       body: JSON.stringify({
@@ -122,7 +124,7 @@ async function nextPage(variables) {
   return resp.data.transactions;
 }
 
-async function loadInteractions(contractId, height, after) {
+async function loadInteractions(contractId, height, after, baseUrlCustom) {
   let variables = {
     tags: [
       {
@@ -144,7 +146,7 @@ async function loadInteractions(contractId, height, after) {
     variables.after = after;
   }
 
-  let tx = await nextPage(variables);
+  let tx = await nextPage(variables, baseUrlCustom);
   const txs = tx.edges;
   let lastOfMax = txs[MAX_REQUEST - 1];
   
@@ -157,19 +159,19 @@ async function loadInteractions(contractId, height, after) {
     }
     
     variables.after = getLastTxInArray().cursor;
-    tx = await nextPage(variables);
+    tx = await nextPage(variables, baseUrlCustom);
     txs.push(...tx.edges);
   }
   return txs;
 }
 
 self.addEventListener("message", async (event) => {
-  const { tx, height, last, key } = event.data;
+  const { tx, height, last, key, baseUrlCustom } = event.data;
   let interactions;
   if (!last) {
-    interactions = await loadInteractions(tx, height)
+    interactions = await loadInteractions(tx, height, undefined, baseUrlCustom)
   } else {    
-    interactions = await loadInteractions(tx, height, last);
+    interactions = await loadInteractions(tx, height, last, baseUrlCustom);
   }
   self.postMessage({ key, result: interactions });
 });
@@ -195,9 +197,14 @@ loadContractWorker.onerror = (error) => {
   throw error;
 };
 
-export async function loadContract(tx) {
+const processGateway = (gateway) => {
+  return `${gateway?.protocol || (globalThis || window).ARWEAVE_PROTOCOL || "https"}://${gateway?.host || (globalThis || window).ARWEAVE_HOST || "arweave.net"}:${gateway?.port || (globalThis || window).ARWEAVE_PORT || 443}`;
+}
+
+export async function loadContract(tx, gateway) {
   const key = k++;
   const args = { tx, key };
+  args.baseUrlCustom = processGateway(gateway);
   return new Promise((r) => {
     loadContractWorker.postMessage(args);
     contractProcessingQueue[key] = r;
@@ -214,13 +221,14 @@ loadInteractionsWorker.onerror = (error) => {
   throw error;
 };
 
-export function loadInteractions(tx, height) {
-  return updateInteractions(tx, height, false);
+export function loadInteractions(tx, height, gateway) {
+  return updateInteractions(tx, height, false, gateway);
 }
 
-export function updateInteractions(tx, height, last) {
+export function updateInteractions(tx, height, last, gateway) {
   const key = k++;
   const args = { tx, height, last, key };
+  args.baseUrlCustom = processGateway(gateway);
 
   return new Promise((r) => {
     loadInteractionsWorker.postMessage(args);
@@ -232,6 +240,7 @@ export async function executeContract(
   contractId,
   height,
   clearCache,
+  gateway
 ) {
   if (clearCache) {
     localStorage.clear();
@@ -240,10 +249,10 @@ export async function executeContract(
   const cachedInteractions = localStorage.getItem(`${contractId}-interactions`);
 
   let [contract, interactions] = await Promise.all([
-    cachedContract ? JSON.parse(cachedContract) : loadContract(contractId),
+    cachedContract ? JSON.parse(cachedContract) : loadContract(contractId, gateway),
     cachedInteractions
       ? JSON.parse(cachedInteractions)
-      : loadInteractions(contractId, height),
+      : loadInteractions(contractId, height, gateway),
   ]);
   let updatePromise = [];
   if (cachedInteractions) {
@@ -251,7 +260,7 @@ export async function executeContract(
     // but we still need to ensure that the cached interactions are up to date.
     const lastEdge = interactions[interactions.length - 1];
     if (lastEdge) {
-      updatePromise = updateInteractions(contractId, height, lastEdge.cursor);
+      updatePromise = updateInteractions(contractId, height, lastEdge.cursor, gateway);
     }
   }
 

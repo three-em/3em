@@ -34,6 +34,7 @@ Read the current state of all kinds of contracts.
 export function executeContract<T extends unknown>(
   contractTx: string,
   blockHeight?: number,
+  gatewayConfig?: ExecuteConfig
 ): Promise<{
   state: T;
   validity: Record<string, bool>;
@@ -46,6 +47,27 @@ import { executeContract } from "./index.js";
 const { state, validity } = await executeContract(
   "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y",
 );
+```
+
+```javascript
+import { executeContract } from "./index.js";
+
+const { state, validity } = await executeContract(
+  "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y",
+  undefined, 
+  {
+     host: "www.arweave.run",
+     port: 443,
+     protocol: "https" 
+  }  
+);
+```
+
+## Global Variables (Deno & Browser)
+```javascript
+globalThis.ARWEAVE_HOST = "www.arweave.run";
+globalThis.ARWEAVE_PROTOCOL = "https";
+globalThis.ARWEAVE_PORT = 443;
 ```
 
 ## Runtimes
