@@ -13,4 +13,9 @@ export interface ExecuteContractResult {
   state: any
   validity: Record<string, any>
 }
-export function executeContract(tx: string, maybeHeight?: number | undefined | null): Promise<ExecuteContractResult>
+export interface ExecuteConfig {
+  host: string
+  port: number
+  protocol: string
+}
+export function executeContract(tx: string, maybeHeight?: number | undefined | null, maybeConfig?: ExecuteConfig | undefined | null): Promise<ExecuteContractResult>
