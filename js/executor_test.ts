@@ -12,3 +12,13 @@ Deno.test("execute_js_test", async function () {
   );
   assertEquals(Object.values(validity).filter((r) => !!r).length, 93);
 });
+
+Deno.test("execute_js_test", async function () {
+  // @ts-ignore
+  globalThis.ARWEAVE_HOST = "www.arweave.run";
+  const { state } = await executeContract(
+      "xRkYokQfFHLh2K9slmghlXNptKrqQdDZoy75JGsv89M",
+      undefined,
+  );
+  assertEquals(state.ticker, "VRT");
+});
