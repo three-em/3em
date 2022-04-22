@@ -16,14 +16,14 @@ import { executeContract } from "@three-em/node";
 
 ```html
 <script type="module">
-    import { executeContract } from "https://unpkg.com/@three-em/js@0.2.7/index.js";
+    import { executeContract } from "https://unpkg.com/@three-em/js@0.2.8/index.js";
 </script>
 ```
 
 ## Deno
 
 ```typescript
-import { executeContract } from "https://deno.land/x/three_em@0.2.7/index.js";
+import { executeContract } from "https://deno.land/x/three_em@0.2.8/index.js";
 ```
 
 ## `executeContract`
