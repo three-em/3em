@@ -2,7 +2,7 @@ const Arweave = require("arweave");
 const { readContract } = require("smartweave");
 
 const arweave = Arweave.init({
-  host: "arweave.net",
+  host: "www.arweave.run",
   port: 443,
   protocol: "https",
 });
@@ -11,8 +11,7 @@ const arweave = Arweave.init({
   console.log(
     await readContract(
       arweave,
-      "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE",
-        749180,
+      "tC4k2NpJoXNDbnBMhQw02o7lmKLqHfsOQcQ9u8wF3a4",
     ),
   );
 })();
