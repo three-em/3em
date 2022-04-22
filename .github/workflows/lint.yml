@@ -17,12 +17,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-
+      - uses: dtolnay/rust-toolchain@stable
+      
       - name: Use Cache
         uses: Swatinem/rust-cache@v1
 
@@ -40,12 +36,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-
+      - uses: dtolnay/rust-toolchain@stable
+      
       - name: Check Formatting
         uses: actions-rs/cargo@v1
         with:

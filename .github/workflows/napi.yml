@@ -47,14 +47,9 @@ jobs:
           architecture: ${{ matrix.arch }}
           cache: 'yarn'
           cache-dependency-path: js/napi/yarn.lock
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          target: ${{ matrix.target }}
-          default: true
 
+      - uses: dtolnay/rust-toolchain@stable
+      
       - name: Use Rust Cache
         uses: Swatinem/rust-cache@v1
       

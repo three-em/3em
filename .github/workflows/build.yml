@@ -43,14 +43,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          default: true
-          override: true
-
+      - uses: dtolnay/rust-toolchain@stable
+      
       - name: Use Rust Cache
         uses: Swatinem/rust-cache@v1
 
