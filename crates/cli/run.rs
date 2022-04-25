@@ -5,6 +5,7 @@ use three_em_arweave::cache::ArweaveCache;
 use three_em_arweave::cache::CacheExt;
 use three_em_executor::execute_contract;
 use three_em_executor::executor::ExecuteResult;
+use three_em_executor::util::process_execution;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn run(
@@ -34,57 +35,28 @@ pub async fn run(
     println!("Took {}ms to execute contract", elapsed.as_millis());
   }
 
-  match execution {
-    ExecuteResult::V8(value, validity_table) => {
-      let value = if show_validity {
-        serde_json::json!({
-            "state": value,
-            "validity": validity_table
-        })
-      } else {
-        value
-      };
+  let process_execution_val = process_execution(execution, show_validity);
 
-      if !no_print {
-        if pretty_print {
-          println!("{}", serde_json::to_string_pretty(&value).unwrap());
-        } else {
-          println!("{}", value);
-        }
-      }
-
-      if save {
-        let mut file = std::fs::File::create(save_path).unwrap();
-        file
-          .write_all(serde_json::to_vec(&value).unwrap().as_slice())
-          .unwrap();
-      }
+  if !no_print {
+    if pretty_print {
+      println!(
+        "{}",
+        serde_json::to_string_pretty(&process_execution_val).unwrap()
+      );
+    } else {
+      println!("{}", process_execution_val);
     }
-    ExecuteResult::Evm(store, result, validity_table) => {
-      let store = hex::encode(store.raw());
-      let result = hex::encode(result);
+  }
 
-      let value = if show_validity {
-        serde_json::json!({
-          "result": result,
-          "store": store,
-          "validity": validity_table
-        })
-      } else {
-        serde_json::json!({
-          "result": result,
-          "store": store,
-        })
-      };
-
-      if !no_print {
-        if pretty_print {
-          println!("{}", serde_json::to_string_pretty(&value).unwrap());
-        } else {
-          println!("{}", value);
-        }
-      }
-    }
+  if save {
+    let mut file = std::fs::File::create(save_path).unwrap();
+    file
+      .write_all(
+        serde_json::to_vec(&process_execution_val)
+          .unwrap()
+          .as_slice(),
+      )
+      .unwrap();
   }
 
   Ok(())

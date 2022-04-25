@@ -14,6 +14,8 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
+use tokio::macros::support::Future;
+use deno_core::serde_json::ser::State;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -73,11 +75,18 @@ pub struct Runtime {
   contract_state: v8::Global<v8::Value>,
 }
 
+// Future State
+pub type ReadContractState<FS> =
+  dyn Fn(String, Option<usize>, Option<bool>) -> FS;
+
+pub type ReadContractStateBox = Box<ReadContractState<impl Future<Output = State>>>;
+
 impl Runtime {
   pub async fn new<T>(
     source: &str,
     init: T,
     arweave: (i32, String, String),
+    read_contract: ReadContractStateBox,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
@@ -105,7 +114,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(arweave),
+        three_em_smartweave::init(arweave, Some(read_contract)),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
