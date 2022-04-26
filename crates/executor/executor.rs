@@ -1,9 +1,11 @@
 use crate::{get_input_from_interaction, nop_cost_fn};
+use deno_core::error::AnyError;
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
+use deno_core::OpState;
 use indexmap::map::IndexMap;
-use std::collections::HashMap;
-use std::env;
+use std::cell::RefCell;
+use std::rc::Rc;
 use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
@@ -19,7 +21,6 @@ use three_em_smartweave::{
   InteractionBlock, InteractionContext, InteractionTx,
 };
 use three_em_wasm::WasmRuntime;
-
 pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
 
@@ -30,6 +31,53 @@ pub enum ExecuteResult {
 }
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
+
+pub fn process_execution(
+  execute_result: ExecuteResult,
+  show_validity: bool,
+) -> Value {
+  match execute_result {
+    ExecuteResult::V8(value, validity_table) => {
+      if show_validity {
+        serde_json::json!({
+            "state": value,
+            "validity": validity_table
+        })
+      } else {
+        value
+      }
+    }
+    ExecuteResult::Evm(store, result, validity_table) => {
+      let store = hex::encode(store.raw());
+      let result = hex::encode(result);
+
+      if show_validity {
+        serde_json::json!({
+            "result": result,
+            "store": store,
+            "validity": validity_table
+        })
+      } else {
+        serde_json::json!({
+            "result": result,
+            "store": store,
+        })
+      }
+    }
+  }
+}
+pub async fn op_smartweave_read_state(
+  state: Rc<RefCell<OpState>>,
+  (contract_id, height, show_validity): (String, Option<usize>, Option<bool>),
+  _: (),
+) -> Result<Value, AnyError> {
+  let op_state = state.borrow();
+  let cl = op_state.borrow::<Arweave>();
+  let state =
+    crate::execute_contract(&cl, contract_id, None, None, height, true, false)
+      .await?;
+  Ok(process_execution(state, show_validity.unwrap_or(false)))
+}
 
 pub fn generate_interaction_context(
   tx: &GQLNodeInterface,
@@ -106,6 +154,7 @@ pub async fn raw_execute_contract<
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
           arweave_info.to_owned(),
+          op_smartweave_read_state,
         )
         .await
         .unwrap();
@@ -140,6 +189,7 @@ pub async fn raw_execute_contract<
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 arweave_info.to_owned(),
+                op_smartweave_read_state,
               )
               .await
               .unwrap();

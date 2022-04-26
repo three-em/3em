@@ -8,13 +8,14 @@ use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
+use deno_core::OpState;
 use deno_core::RuntimeOptions;
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::fmt::Debug;
+use std::future::Future;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
-
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
   /// Ok, the heap limit is not exceeded.
@@ -74,13 +75,18 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T>(
+  pub async fn new<T, F, R>(
     source: &str,
     init: T,
     arweave: (i32, String, String),
+    op_smartweave_read_state: F,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
+    F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
+      + 'static,
+    R:
+      Future<Output = Result<deno_core::serde_json::Value, AnyError>> + 'static,
   {
     let specifier = "file:///main.js".to_string();
     let module_loader =
@@ -105,7 +111,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(arweave),
+        three_em_smartweave::init(arweave, op_smartweave_read_state),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
