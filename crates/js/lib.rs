@@ -200,7 +200,7 @@ impl Runtime {
       let module_obj = self.module.open(scope).to_object(scope).unwrap();
       let key = v8::String::new(scope, "handle").unwrap().into();
       let func_obj = module_obj.get(scope, key).unwrap();
-      let func = v8::Local::<v8::Function>::try_from(func_obj)?;
+      let func = v8::Local::<v8::Function>::try_from(func_obj).unwrap();
 
       let state =
         v8::Local::<v8::Value>::new(scope, self.contract_state.clone());

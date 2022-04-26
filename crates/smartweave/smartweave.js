@@ -272,6 +272,12 @@
     }
   }
 
+  class Contracts {
+    readContractState(contractId) {
+      return Deno.core.opAsync("op_smartweave_contract_state", [contractId, null, null]);
+    }
+  }
+
   class Arweave {
     /** @deprecated */
     get crypto() {
@@ -305,8 +311,9 @@
       return new Arweave();
     }
 
-    // TODO
-    get contracts() {}
+    get contracts() {
+      return new Contracts;
+    }
 
     get unsafeClient() {
       return {
