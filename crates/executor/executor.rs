@@ -1,3 +1,4 @@
+use crate::util::process_execution;
 use crate::{execute_contract, get_input_from_interaction, nop_cost_fn};
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
@@ -19,7 +20,6 @@ use three_em_smartweave::{
   InteractionBlock, InteractionContext, InteractionTx,
 };
 use three_em_wasm::WasmRuntime;
-use crate::util::process_execution;
 
 pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
@@ -74,7 +74,6 @@ pub fn generate_interaction_context(
 #[allow(clippy::too_many_arguments)]
 pub async fn raw_execute_contract<
   CachedCallBack: FnOnce(ValidityTable, CachedState) -> ExecuteResult,
-  ReadContractState: ReadContractState,
 >(
   contract_id: String,
   loaded_contract: LoadedContract,
@@ -84,7 +83,6 @@ pub async fn raw_execute_contract<
   needs_processing: bool,
   show_errors: bool,
   on_cached: CachedCallBack,
-  read_contract: ReadContractState,
   shared_client: &Arweave,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
@@ -104,23 +102,25 @@ pub async fn raw_execute_contract<
         let state: Value = cache_state.unwrap_or_else(|| {
           deno_core::serde_json::from_str(&loaded_contract.init_state).unwrap()
         });
-
         let mut rt = Runtime::new(
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
           arweave_info.to_owned(),
-          Box::new(async |contract_id, height, show_validity| {
-            let state = execute_contract(
-              &shared_client,
-              contract_id,
-              None,
-              None,
-              height,
-              true,
-              false
-            ).await?;
+          Box::new(move |contract_id, height, show_validity| {
+            Box::new(async move {
+              let state = execute_contract(
+                &cl,
+                contract_id,
+                None,
+                None,
+                height,
+                true,
+                false,
+              )
+              .await?;
 
-            process_execution(state, show_validity.unwrap_or(false))
+              Ok(process_execution(state, show_validity.unwrap_or(false)))
+            })
           }),
         )
         .await
@@ -152,10 +152,27 @@ pub async fn raw_execute_contract<
                 .unwrap();
 
               let state: Value = rt.get_contract_state().unwrap();
+              let cl = shared_client.clone();
               rt = Runtime::new(
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 arweave_info.to_owned(),
+                Box::new(|contract_id, height, show_validity| {
+                  Box::new(async move {
+                    let state = execute_contract(
+                      &cl,
+                      contract_id,
+                      None,
+                      None,
+                      height,
+                      true,
+                      false,
+                    )
+                    .await?;
+
+                    Ok(process_execution(state, show_validity.unwrap_or(false)))
+                  })
+                }),
               )
               .await
               .unwrap();

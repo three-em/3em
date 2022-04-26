@@ -4,6 +4,7 @@ use deno_core::op_async;
 use deno_core::op_sync;
 
 use deno_core::serde::Serialize;
+use deno_core::serde_json::ser::State;
 use deno_core::serde_json::Value;
 use deno_core::Extension;
 use deno_core::OpState;
@@ -13,7 +14,6 @@ use std::rc::Rc;
 use std::{env, thread};
 use three_em_arweave::gql_result::GQLTagInterface;
 use tokio::macros::support::Future;
-use deno_core::serde_json::ser::State;
 
 pub struct ArweaveInfo {
   port: i32,
@@ -45,9 +45,17 @@ pub struct InteractionContext {
 }
 
 // Future State
-pub type ReadContractState<FS> = dyn Fn(String, Option<usize>, Option<bool>) -> FS;
+pub type ReadContractState =
+  dyn Fn(
+    String,
+    Option<usize>,
+    Option<bool>,
+  ) -> Box<dyn Future<Output = Result<Value, AnyError>>>;
 
-pub fn init(arweave: (i32, String, String), read_contract_state: Option<Box<ReadContractState<impl Future<Output = State>>>>) -> Extension {
+pub fn init(
+  arweave: (i32, String, String),
+  read_contract_state: Option<Box<ReadContractState>>,
+) -> Extension {
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",

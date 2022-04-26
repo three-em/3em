@@ -5,6 +5,7 @@ use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
+use deno_core::serde_json::ser::State;
 use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
@@ -15,7 +16,6 @@ use std::fmt::Debug;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
 use tokio::macros::support::Future;
-use deno_core::serde_json::ser::State;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -76,17 +76,19 @@ pub struct Runtime {
 }
 
 // Future State
-pub type ReadContractState<FS> =
-  dyn Fn(String, Option<usize>, Option<bool>) -> FS;
-
-pub type ReadContractStateBox = Box<ReadContractState<impl Future<Output = State>>>;
+pub type ReadContractState =
+  dyn Fn(
+    String,
+    Option<usize>,
+    Option<bool>,
+  ) -> Box<dyn Future<Output = Result<Value, AnyError>>>;
 
 impl Runtime {
   pub async fn new<T>(
     source: &str,
     init: T,
     arweave: (i32, String, String),
-    read_contract: ReadContractStateBox,
+    read_contract: Box<ReadContractState>,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
