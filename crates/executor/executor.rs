@@ -448,6 +448,83 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn test_js_read_contract() {
+    let init_state = serde_json::json!({});
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/read_contact.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1123123123123123123213213123",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+      Some(String::from("SUPERMAN1293120")),
+      Some(String::from("RECIPIENT1234")),
+      Some(GQLTagInterface {
+        name: String::from("MyTag"),
+        value: String::from("Christpoher Nolan is awesome"),
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(12301239),
+    );
+
+    let fake_interactions = vec![transaction1];
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract,
+      fake_interactions,
+      IndexMap::new(),
+      None,
+      true,
+      true,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+    )
+        .await;
+
+    if let ExecuteResult::V8(value, validity) = result {
+      let x = serde_json::json!({
+            "state": value,
+            "validity": validity
+      });
+      println!("{}", x.to_string());
+      assert_eq!(
+        value["people"][2],
+        serde_json::json!({
+          "username": "aftrTest",
+          "name": "AFTR-Test",
+          "addresses": [
+            "Fof_-BNkZN_nQp0VsD_A9iGb-Y4zOeFKHA8_GK2ZZ-I"
+          ],
+          "bio": "",
+          "links": ""
+        })
+      );
+    } else {
+      panic!("Unexpected entry");
+    }
+  }
+
+  #[tokio::test]
   pub async fn test_executor_js() {
     let init_state = serde_json::json!({
       "users": []

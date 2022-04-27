@@ -273,8 +273,8 @@
   }
 
   class Contracts {
-    readContractState(contractId) {
-      return Deno.core.opAsync("op_smartweave_contract_state", [contractId, null, null]);
+    readContractState(contractId, height, showValidity) {
+      return Deno.core.opAsync("op_smartweave_read_contract", [contractId, height || null, showValidity || null]);
     }
   }
 
@@ -312,7 +312,7 @@
     }
 
     get contracts() {
-      return new Contracts;
+      return new Contracts();
     }
 
     get unsafeClient() {
