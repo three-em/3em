@@ -9,6 +9,8 @@ use std::rc::Rc;
 use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
+use three_em_arweave::cache::ArweaveCache;
+use three_em_arweave::cache::CacheExt;
 use three_em_arweave::cache::StateResult;
 use three_em_arweave::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
@@ -21,6 +23,7 @@ use three_em_smartweave::{
   InteractionBlock, InteractionContext, InteractionTx,
 };
 use three_em_wasm::WasmRuntime;
+
 pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
 
@@ -72,7 +75,13 @@ pub async fn op_smartweave_read_state(
   _: (),
 ) -> Result<Value, AnyError> {
   let op_state = state.borrow();
-  let cl = op_state.borrow::<Arweave>();
+  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
+  let cl = Arweave::new(
+    info.port,
+    info.host.clone(),
+    info.protocol.clone(),
+    ArweaveCache::new(),
+  );
   let state =
     crate::execute_contract(&cl, contract_id, None, None, height, true, false)
       .await?;
@@ -499,7 +508,7 @@ mod tests {
         ArweaveCache::new(),
       ),
     )
-        .await;
+    .await;
 
     if let ExecuteResult::V8(value, validity) = result {
       let x = serde_json::json!({

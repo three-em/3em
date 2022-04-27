@@ -15,9 +15,9 @@ use std::{env, thread};
 use three_em_arweave::gql_result::GQLTagInterface;
 
 pub struct ArweaveInfo {
-  port: i32,
-  host: String,
-  protocol: String,
+  pub port: i32,
+  pub host: String,
+  pub protocol: String,
 }
 
 #[derive(Serialize, Default, Clone)]
