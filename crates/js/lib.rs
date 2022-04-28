@@ -8,13 +8,14 @@ use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
+use deno_core::OpState;
 use deno_core::RuntimeOptions;
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::fmt::Debug;
+use std::future::Future;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
-
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
   /// Ok, the heap limit is not exceeded.
@@ -74,13 +75,18 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T>(
+  pub async fn new<T, F, R>(
     source: &str,
     init: T,
     arweave: (i32, String, String),
+    op_smartweave_read_state: F,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
+    F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
+      + 'static,
+    R:
+      Future<Output = Result<deno_core::serde_json::Value, AnyError>> + 'static,
   {
     let specifier = "file:///main.js".to_string();
     let module_loader =
@@ -105,7 +111,7 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(arweave),
+        three_em_smartweave::init(arweave, op_smartweave_read_state),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -194,7 +200,7 @@ impl Runtime {
       let module_obj = self.module.open(scope).to_object(scope).unwrap();
       let key = v8::String::new(scope, "handle").unwrap().into();
       let func_obj = module_obj.get(scope, key).unwrap();
-      let func = v8::Local::<v8::Function>::try_from(func_obj)?;
+      let func = v8::Local::<v8::Function>::try_from(func_obj).unwrap();
 
       let state =
         v8::Local::<v8::Value>::new(scope, self.contract_state.clone());
@@ -267,11 +273,23 @@ mod test {
   use crate::Error;
   use crate::HeapLimitState;
   use crate::Runtime;
+  use deno_core::error::AnyError;
   use deno_core::serde::Deserialize;
   use deno_core::serde::Serialize;
   use deno_core::serde_json::Value;
+  use deno_core::OpState;
   use deno_core::ZeroCopyBuf;
+  use std::cell::RefCell;
+  use std::rc::Rc;
   use three_em_smartweave::InteractionContext;
+
+  pub async fn never_op(
+    _: Rc<RefCell<OpState>>,
+    _: (String, Option<usize>, Option<bool>),
+    _: (),
+  ) -> Result<Value, AnyError> {
+    unreachable!()
+  }
 
   #[tokio::test]
   async fn test_runtime() {
@@ -279,6 +297,7 @@ mod test {
       "export async function handle() { return { state: -69 } }",
       (),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -302,6 +321,7 @@ export async function handle(slice) {
 "#,
       ZeroCopyBuf::from(buf),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -327,6 +347,7 @@ export async function handle() {
 "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -352,6 +373,7 @@ export async function handle() {
   "#,
       8,
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -383,6 +405,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -407,6 +430,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -425,7 +449,8 @@ export async function handle() {
   }
   "#,
   (),
-        (80, String::from("arweave.net"), String::from("https"))
+        (80, String::from("arweave.net"), String::from("https")),
+      never_op
       )
       .await
       .unwrap();
@@ -453,6 +478,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();
@@ -471,6 +497,7 @@ export async function handle() {
 "#,
       (),
       (12345, String::from("arweave.net"), String::from("http")),
+      never_op,
     )
     .await
     .unwrap();
@@ -502,6 +529,7 @@ try {
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
+      never_op
     )
         .await
         .unwrap();
@@ -531,6 +559,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
+      never_op,
     )
     .await
     .unwrap();

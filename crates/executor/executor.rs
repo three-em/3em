@@ -1,12 +1,16 @@
 use crate::{get_input_from_interaction, nop_cost_fn};
+use deno_core::error::AnyError;
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
+use deno_core::OpState;
 use indexmap::map::IndexMap;
-use std::collections::HashMap;
-use std::env;
+use std::cell::RefCell;
+use std::rc::Rc;
 use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::LoadedContract;
 use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
+use three_em_arweave::cache::ArweaveCache;
+use three_em_arweave::cache::CacheExt;
 use three_em_arweave::cache::StateResult;
 use three_em_arweave::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
@@ -30,6 +34,59 @@ pub enum ExecuteResult {
 }
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
+
+pub fn process_execution(
+  execute_result: ExecuteResult,
+  show_validity: bool,
+) -> Value {
+  match execute_result {
+    ExecuteResult::V8(value, validity_table) => {
+      if show_validity {
+        serde_json::json!({
+            "state": value,
+            "validity": validity_table
+        })
+      } else {
+        value
+      }
+    }
+    ExecuteResult::Evm(store, result, validity_table) => {
+      let store = hex::encode(store.raw());
+      let result = hex::encode(result);
+
+      if show_validity {
+        serde_json::json!({
+            "result": result,
+            "store": store,
+            "validity": validity_table
+        })
+      } else {
+        serde_json::json!({
+            "result": result,
+            "store": store,
+        })
+      }
+    }
+  }
+}
+pub async fn op_smartweave_read_state(
+  state: Rc<RefCell<OpState>>,
+  (contract_id, height, show_validity): (String, Option<usize>, Option<bool>),
+  _: (),
+) -> Result<Value, AnyError> {
+  let op_state = state.borrow();
+  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
+  let cl = Arweave::new(
+    info.port,
+    info.host.clone(),
+    info.protocol.clone(),
+    ArweaveCache::new(),
+  );
+  let state =
+    crate::execute_contract(&cl, contract_id, None, None, height, true, false)
+      .await?;
+  Ok(process_execution(state, show_validity.unwrap_or(false)))
+}
 
 pub fn generate_interaction_context(
   tx: &GQLNodeInterface,
@@ -106,6 +163,7 @@ pub async fn raw_execute_contract<
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
           arweave_info.to_owned(),
+          op_smartweave_read_state,
         )
         .await
         .unwrap();
@@ -140,6 +198,7 @@ pub async fn raw_execute_contract<
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 arweave_info.to_owned(),
+                op_smartweave_read_state,
               )
               .await
               .unwrap();
@@ -392,6 +451,71 @@ mod tests {
         value,
         serde_json::json!({"txId":"tx1123123123123123123213213123","txOwner":"SUPERMAN1293120","txTarget":"RECIPIENT1234","txQuantity":"100","txReward":"100","txTags":[{"name":"Input","value":"{}"},{"name":"MyTag","value":"Christpoher Nolan is awesome"}],"txHeight":2,"txIndepHash":"ABCD-EFG","txTimestamp":12301239,"winstonToAr":true,"arToWinston":true,"compareArWinston":1})
       );
+    } else {
+      panic!("Unexpected entry");
+    }
+  }
+
+  #[tokio::test]
+  async fn test_js_read_contract() {
+    let init_state = serde_json::json!({});
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/read_contact.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1123123123123123123213213123",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+      Some(String::from("SUPERMAN1293120")),
+      Some(String::from("RECIPIENT1234")),
+      Some(GQLTagInterface {
+        name: String::from("MyTag"),
+        value: String::from("Christpoher Nolan is awesome"),
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(12301239),
+    );
+
+    let fake_interactions = vec![transaction1];
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract,
+      fake_interactions,
+      IndexMap::new(),
+      None,
+      true,
+      true,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+    )
+    .await;
+
+    if let ExecuteResult::V8(value, validity) = result {
+      let x = serde_json::json!({
+            "state": value,
+            "validity": validity
+      });
+      assert_eq!(value["ticker"], serde_json::json!("ARCONFT67"));
     } else {
       panic!("Unexpected entry");
     }

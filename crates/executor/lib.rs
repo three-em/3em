@@ -24,6 +24,7 @@ use three_em_evm::U256;
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));
 
+#[async_recursion::async_recursion(?Send)]
 pub async fn execute_contract(
   arweave: &Arweave,
   contract_id: String,

@@ -9,14 +9,15 @@ use deno_core::Extension;
 use deno_core::OpState;
 use deno_core::ZeroCopyBuf;
 use std::cell::RefCell;
+use std::future::Future;
 use std::rc::Rc;
 use std::{env, thread};
 use three_em_arweave::gql_result::GQLTagInterface;
 
 pub struct ArweaveInfo {
-  port: i32,
-  host: String,
-  protocol: String,
+  pub port: i32,
+  pub host: String,
+  pub protocol: String,
 }
 
 #[derive(Serialize, Default, Clone)]
@@ -42,7 +43,15 @@ pub struct InteractionContext {
   pub block: InteractionBlock,
 }
 
-pub fn init(arweave: (i32, String, String)) -> Extension {
+pub fn init<F, R>(
+  arweave: (i32, String, String),
+  op_smartweave_read_contract: F,
+) -> Extension
+where
+  F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
+    + 'static,
+  R: Future<Output = Result<deno_core::serde_json::Value, AnyError>> + 'static,
+{
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
@@ -67,6 +76,10 @@ pub fn init(arweave: (i32, String, String)) -> Extension {
       (
         "op_smartweave_unsafe_exit_process",
         op_sync(op_smartweave_unsafe_exit_process),
+      ),
+      (
+        "op_smartweave_read_contract",
+        op_async(op_smartweave_read_contract),
       ),
     ])
     .state(move |state| {
