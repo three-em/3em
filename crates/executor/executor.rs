@@ -515,18 +515,9 @@ mod tests {
             "state": value,
             "validity": validity
       });
-      println!("{}", x.to_string());
       assert_eq!(
-        value["people"][2],
-        serde_json::json!({
-          "username": "aftrTest",
-          "name": "AFTR-Test",
-          "addresses": [
-            "Fof_-BNkZN_nQp0VsD_A9iGb-Y4zOeFKHA8_GK2ZZ-I"
-          ],
-          "bio": "",
-          "links": ""
-        })
+        value["ticker"],
+        serde_json::json!("ARCONFT67")
       );
     } else {
       panic!("Unexpected entry");
