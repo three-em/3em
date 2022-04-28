@@ -273,12 +273,12 @@ mod test {
   use crate::Error;
   use crate::HeapLimitState;
   use crate::Runtime;
+  use deno_core::error::AnyError;
   use deno_core::serde::Deserialize;
   use deno_core::serde::Serialize;
   use deno_core::serde_json::Value;
-  use deno_core::ZeroCopyBuf;
-  use deno_core::error::AnyError;
   use deno_core::OpState;
+  use deno_core::ZeroCopyBuf;
   use std::cell::RefCell;
   use std::rc::Rc;
   use three_em_smartweave::InteractionContext;
@@ -297,7 +297,7 @@ mod test {
       "export async function handle() { return { state: -69 } }",
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -321,7 +321,7 @@ export async function handle(slice) {
 "#,
       ZeroCopyBuf::from(buf),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -347,7 +347,7 @@ export async function handle() {
 "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -373,7 +373,7 @@ export async function handle() {
   "#,
       8,
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -405,7 +405,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -430,7 +430,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -478,7 +478,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -497,7 +497,7 @@ export async function handle() {
 "#,
       (),
       (12345, String::from("arweave.net"), String::from("http")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();
@@ -559,7 +559,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
     )
     .await
     .unwrap();

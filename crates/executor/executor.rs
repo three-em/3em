@@ -515,10 +515,7 @@ mod tests {
             "state": value,
             "validity": validity
       });
-      assert_eq!(
-        value["ticker"],
-        serde_json::json!("ARCONFT67")
-      );
+      assert_eq!(value["ticker"], serde_json::json!("ARCONFT67"));
     } else {
       panic!("Unexpected entry");
     }
