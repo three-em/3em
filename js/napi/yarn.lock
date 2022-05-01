@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@napi-rs/cli/-/cli-2.4.2.tgz#89b32c7d8776004bc9617915605aea769339cf6f"
   integrity sha512-+yCOuPqernvD8BMphbadF87ElaJ0rjanOZrbnauaEdR07YyoalGw3FTk15HHyflIwQKlYd69gkG5EM4WFkICKw==
 
-"@three-em/node-darwin-arm64@0.2.9":
-  version "0.2.9"
-  resolved "https://registry.yarnpkg.com/@three-em/node-darwin-arm64/-/node-darwin-arm64-0.2.9.tgz#20e5db84a45831e0ae56923b344ce50e7b8e945a"
-  integrity sha512-G8K1IQxmWBqTDRG2zYJfRhceJo9HeaRVfmgjazcfsUU3w2SuMRsYE6/0zT53tsMe3tFPERxl6w+mBGD9pGGe8g==
+"@three-em/node-darwin-arm64@0.2.11":
+  version "0.2.11"
+  resolved "https://registry.yarnpkg.com/@three-em/node-darwin-arm64/-/node-darwin-arm64-0.2.11.tgz#33d59e7c1c836d8e720f66d2f189473bf55df97d"
+  integrity sha512-b40F82dNdF5vpwzO4KP0KeAIfaVOLHsitHjDHNsaluit451ObuHubYc+Iu3F0jEclKnKlLW9CFUyr1qJd+/SZw==
 
 detect-libc@^1.0.3:
   version "1.0.3"
