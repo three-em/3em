@@ -19,12 +19,3 @@ const { executeContract } = require("./");
   console.log(state2);
   console.log(`[WASM] Execution time: ${(end2 - start2)}ms.`);
 })();
-
-(async () => {
-  const arLocalState = await executeContract("xRkYokQfFHLh2K9slmghlXNptKrqQdDZoy75JGsv89M", undefined, {
-    host: "www.arweave.run",
-    port: 443,
-    protocol: "https"
-  });
-  console.log(arLocalState);
-})();
