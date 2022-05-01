@@ -74,7 +74,7 @@ jobs:
         run: echo "::set-output name=name::three_em-${{ matrix.target }}-${{ github.ref == 'refs/heads/main' && 'canary' || 'dev' }}-$(git rev-parse --short HEAD)"
 
       - name: Upload ${{ github.ref == 'refs/heads/main' && 'Canary' || 'Dev' }} Builds
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.zip.outputs.name }}
           path: |
