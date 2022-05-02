@@ -138,10 +138,30 @@ const WORKER = `{
     get block() {
       const block = globalThis.interactionContext.block;
       return {...block, indep_hash: block.id };
-    }    
+    }
+    
+    get contract() { 
+      return {
+        id: globalThis.interactionContext.contract.id,
+        owner: globalThis.interactionContext.contract.owner
+      };
+    }
+    
+    get contracts() {
+      return { 
+        readContractState: async (contractId) => {
+        try {
+          const requireItself = await import('https://raw.githubusercontent.com/three-em/3em/main/js/index.js');
+          const state = await requireItself.executeContract(contractId);
+          return state.state;
+          } catch(ex) {
+          console.log(ex);}
+        }
+      }
+    }   
   }
   
-  function handleInteractionGlobals(tx) { 
+  function handleInteractionGlobals(tx, contract) { 
     globalThis.interactionContext = { 
       transaction: {
         id: tx.id,
@@ -155,7 +175,8 @@ const WORKER = `{
         height: tx.block.height,
         id: tx.block.id,
         timestamp: tx.block.timestamp
-      }
+      },
+      contract
     }
   }
   
@@ -182,7 +203,7 @@ const WORKER = `{
       const validity = {};
       for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
-        handleInteractionGlobals(tx);
+        handleInteractionGlobals(tx, e.data.contract);
         const input = tx.tags.find(data => data.name === "Input");
 
         try {
@@ -231,22 +252,24 @@ export class Runtime {
   }
 
   // Fast path for the most common case.
-  async executeInteractions(interactions) {
+  async executeInteractions(interactions, contract) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       interactions,
+      contract
     });
 
     await this.resolveState();
   }
 
-  async execute(action = {}) {
+  async execute(action = {}, contract) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       action,
       interactions: [],
+      contract
     });
 
     await this.resolveState();
