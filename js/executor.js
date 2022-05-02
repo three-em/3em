@@ -14,6 +14,9 @@ const loadContractSource = `
 const baseUrl = "${arweaveUrl}";
 async function loadContract(contractId, baseUrlCustom) {
   const response = await fetch(new URL(\`/tx/\${contractId}\`, baseUrlCustom || baseUrl).href);
+  if (!response.ok) {
+    throw new Error(\`Failed to load contract \${contractId}\`);
+  }
   const tx = await response.json();
 
   const contractSrcTxID = getTag(tx, "Contract-Src");
@@ -236,15 +239,19 @@ export function updateInteractions(tx, height, last, gateway) {
   });
 }
 
-export async function executeContract(
+let padding = 0;
+
+async function loadContractInteractions(
   contractId,
   height,
   clearCache,
-  gateway
+  gateway,
 ) {
   if (clearCache) {
     localStorage.clear();
   }
+
+  console.log(" ".repeat(padding) + `${contractId}`);
   const cachedContract = localStorage.getItem(contractId);
   const cachedInteractions = localStorage.getItem(`${contractId}-interactions`);
 
@@ -260,7 +267,7 @@ export async function executeContract(
     // but we still need to ensure that the cached interactions are up to date.
     const lastEdge = interactions[interactions.length - 1];
     if (lastEdge) {
-      updatePromise = updateInteractions(contractId, height, lastEdge.cursor, gateway);
+      updatePromise = await updateInteractions(contractId, height, lastEdge.cursor, gateway);
     }
   }
 
@@ -274,10 +281,25 @@ export async function executeContract(
     );
   }
 
+  return [contract, interactions, updatePromise];
+}
+
+export async function executeContract(
+  contractId,
+  height,
+  clearCache,
+  gateway
+) {
+  const [contract, interactions, updatePromise] = await loadContractInteractions(
+    contractId,
+    height,
+    clearCache,
+    gateway
+  );
   const { source, state, type } = contract;
   switch (type) {
     case "application/javascript":
-      const rt = new Runtime(source, state, {});
+      const rt = new Runtime(source, state, {}, (contractId, height, showValidity) => loadContractInteractions(contractId, height, clearCache, gateway));
 
       // Slower than `rt.executeInteractions` but more readable
       // 100 interactions in ~30.06ms.
@@ -288,6 +310,7 @@ export async function executeContract(
       // }
 
       // Faster. At 100 interactions in about 3.68ms.
+      console.log(`Replaying ${interactions.length} interactions`);
       await rt.executeInteractions(interactions);
 
       const updatedInteractions = await updatePromise;

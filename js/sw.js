@@ -129,8 +129,31 @@ const WORKER = `{
   function ContractAssert(cond, message) {
     if (!cond) throw new ContractError(message);
   }
-  
+
+  const promises = [];
+  class Contracts {
+    readContractState(contractId, height, showValidity) {
+      return new Promise((resolve, reject) => {
+        self.postMessage({
+          type: "fcp",
+          contractId,
+          height,
+          showValidity,
+          promiseId: promises.length,
+        });
+        promises.push({
+          resolve,
+          reject
+        });
+      });
+    }
+  }
+
   class SmartWeave {
+    get contracts() {
+      return new Contracts;
+    }
+
     get transaction() {
       return globalThis.interactionContext.transaction;
     }
@@ -139,6 +162,16 @@ const WORKER = `{
       const block = globalThis.interactionContext.block;
       return {...block, indep_hash: block.id };
     }    
+
+    get unsafeClient() {
+      return {
+        transactions: {
+          getData: async (txId, opts) => {
+            // TODO
+          },
+        }
+      }
+    }
   }
   
   function handleInteractionGlobals(tx) { 
@@ -164,9 +197,11 @@ const WORKER = `{
   globalThis.SmartWeave = new SmartWeave();
   self.addEventListener("message", async function(e) {
     if(e.data.type === "execute") {
-      let currentState = JSON.parse(e.data.state);
+      const { state: s, source, promiseId } = e.data;
+      let currentState = typeof s == "string" ? JSON.parse(s) : s;
       const interactions = e.data.interactions ?? [];
-      
+      console.log("Executing", interactions.length, "interactions");
+      if (source) eval(source); // Setup FCP handler.
       if (interactions.length == 0) {
         const input = e.data.action;
         try {
@@ -202,6 +237,14 @@ const WORKER = `{
         }
       }
 
+      if (promiseId) {
+        promises[promiseId].resolve({
+          state: currentState,
+          validity
+        });
+        promises.splice(promiseId, 1);
+        return;
+      }
       self.postMessage({ state: currentState, validity });
     }
   });
@@ -210,8 +253,9 @@ const WORKER = `{
 export class Runtime {
   #state;
   #module;
+  #fcpHandler;
 
-  constructor(source, state = {}, info = {}) {
+  constructor(source, state = {}, info = {}, fcpHandler) {
     this.#state = state;
     const sources = [WORKER, source];
     const blob = new Blob(sources, { type: "application/javascript" });
@@ -219,11 +263,25 @@ export class Runtime {
       URL.createObjectURL(blob),
       { eval: true, type: "module" },
     );
+    this.#fcpHandler = fcpHandler;
   }
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
-      this.#module.onmessage = (e) => {
+      this.#module.onmessage = async (e) => {
+        if (e.data.type === "fcp") {
+          const { promiseId, contractId, height, showValidity } = e.data;
+          const [contract, interactions, updatePromise] = await this.#fcpHandler(contractId, height, showValidity);
+          const { source, state } = contract;
+          this.#module.postMessage({
+            type: "execute",
+            promiseId,
+            source,
+            state,
+            interactions: [...interactions, ...updatePromise],
+          });
+          return;
+        }
         resolve(e.data);
         this.#module.terminate();
       };

@@ -12,6 +12,13 @@
 <script type="module">
   import { executeContract } from "./executor.js";
 
+  // @ts-ignore
+  globalThis.ARWEAVE_HOST = "www.arweave.run";
+  const { state } = await executeContract(
+      "Vjt13JlvOzaOs4St_Iy2jmanxa7dc-Z3pDk3ktwEQNA",
+      undefined,
+  );
+  console.log(state)
   const start = performance.now();
   await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE", 749180);
   const end = performance.now();
