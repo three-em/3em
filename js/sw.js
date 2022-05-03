@@ -221,18 +221,12 @@ class ArweaveUtils {
     }
   }
   
-  class Transaction {
-    constructor(obj) {
+  class BaseObject {
+    constructor() {
       this.arweaveUtils = new ArweaveUtils();
     }
-    
-    get(field, opts) {
-      if (!Object.getOwnPropertyNames(this).includes(field)) {
-        throw new Error(
-          \`Field "${field}" is not a property of the Arweave Transaction class.\`
-        );
-      }
-      
+
+    get(field, options) {
       // Handle fields that are Uint8Arrays.
       // To maintain compat we encode them to b64url
       // if decode option is not specificed.
@@ -247,39 +241,58 @@ class ArweaveUtils {
       }
     }
   }
-  
+
+  class Tag extends BaseObject {
+    constructor(name, value) {
+      super();
+      this.name = name;
+      this.value = value;
+    }
+  }
+
+  class Transaction extends BaseObject {
+    constructor(obj) {
+      super();
+      Object.assign(this, obj);
+
+      if (typeof this.data === "string") {
+        this.data = this.arweaveUtils.b64UrlToString(this.data);
+      }
+
+      if (obj.tags) {
+        this.tags = obj.tags.map(t => new Tag(t.name, t.value));
+      }
+    }
+  }
+
   class UnsafeClientTransactions {
-  
     constructor(obj) {
       this.arweaveUtils = new ArweaveUtils();
     }
     
     async get(txId, opts) {
-       const data = await fetch(\`${globalThis.URL_GATEWAY || 'https://arweave.net'}/tx/${txId}\`);
-            
-       if(data.status === 200) {
+       const resp = await fetch("${globalThis.URL_GATEWAY || 'https://arweave.net'}" + "/tx/" + txId);
+       const json = await resp.json();
+       if (data.status === 200) {
          const data = await this.getData(id);
          return new Transaction({
-              ...response.data,
+              ...json,
               data,
          });
        }
     }
     
     async getData(txId) {
-       const data = await fetch(\`${globalThis.URL_GATEWAY || 'https://arweave.net'}/${txId}\`);
-       
+       const resp = await fetch("${globalThis.URL_GATEWAY || 'https://arweave.net'}" + "/tx/" + txId);
+       const data = new Uint8Array(await resp.arrayBuffer());
        if (opts && opts.decode && !opts.string) {
-            return data;
+          return data;
        }
-       
        if (opts && opts.decode && opts.string) {
-             return this.arweaveUtils.bufferToString(data);
+          return this.arweaveUtils.bufferToString(data);
        }
-
        return this.arweaveUtils.bufferTob64Url(data);
     }
-    
   }
 
   class SmartWeave {
