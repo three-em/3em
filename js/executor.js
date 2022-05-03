@@ -56,6 +56,7 @@ async function loadContract(contractId, baseUrlCustom) {
     source,
     state,
     type,
+    tx
   };
 }
 
@@ -296,7 +297,7 @@ export async function executeContract(
     clearCache,
     gateway
   );
-  const { source, state, type } = contract;
+  const { source, state, type, tx } = contract;
   const urlGateway = processGateway(gateway);
   switch (type) {
     case "application/javascript":
@@ -312,11 +313,11 @@ export async function executeContract(
 
       // Faster. At 100 interactions in about 3.68ms.
       console.log(`Replaying ${interactions.length} interactions`);
-      await rt.executeInteractions(interactions);
+      await rt.executeInteractions(interactions, tx);
 
       const updatedInteractions = await updatePromise;
       if (updatedInteractions.length > 0) {
-        await rt.executeInteractions(updatedInteractions);
+        await rt.executeInteractions(updatedInteractions, tx);
       }
 
       rt.destroy();

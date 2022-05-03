@@ -296,28 +296,42 @@ class ArweaveUtils {
   }
 
   class SmartWeave {
+    constructor(contractId) {
+      this.contractId = contractId;
+    }
     get contracts() {
       return new Contracts();
     }
 
     get transaction() {
-      return globalThis.interactionContext.transaction;
+      return this.interactionContext.transaction;
     }
     
     get block() {
-      const block = globalThis.interactionContext.block;
+      const block = this.interactionContext.block;
       return {...block, indep_hash: block.id };
-    }    
+    }   
+    
+    get contract() { 
+      return {
+        id: this.interactionContext.contract.id,
+        owner: this.interactionContext.contract.owner
+      };
+    } 
 
     get unsafeClient() {
       return {
         transactions: new UnsafeClientTransactions()
       }
     }
+    
+    get interactionContext() { 
+      return globalThis[globalThis.isFcp ? {this.contractId}-fcp-context : "interactionContext"];
+    }
   }
   
-  function handleInteractionGlobals(tx) { 
-    globalThis.interactionContext = { 
+  function handleInteractionGlobals(tx, contract) { 
+    globalThis[globalThis.isFcp ? \`${contract.id}-fcp-context\` : "interactionContext"] = { 
       transaction: {
         id: tx.id,
         owner: tx.owner.address,
@@ -330,7 +344,8 @@ class ArweaveUtils {
         height: tx.block.height,
         id: tx.block.id,
         timestamp: tx.block.timestamp
-      }
+      },
+      contract
     }
   }
   
@@ -338,7 +353,7 @@ class ArweaveUtils {
   globalThis.ContractAssert = ContractAssert;
   globalThis.fcpCalls = {};
   globalThis.SmartWeave = new SmartWeave();
-  globalThis.evaluateInteractions = async (currentState, interactions, input) => {
+  globalThis.evaluateInteractions = async (currentState, interactions, input, contract) => {
     const validity = {};
     if (interactions.length == 0) {
         try {
@@ -352,7 +367,7 @@ class ArweaveUtils {
     }
     for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
-        handleInteractionGlobals(tx);
+        handleInteractionGlobals(tx, contract);
         const input = tx.tags.find(data => data.name === "Input");
         try {
           const inp = JSON.parse(input.value);
@@ -374,20 +389,22 @@ class ArweaveUtils {
     return { state: currentState, validity };
   };
   self.addEventListener("message", async function(e) {
-    if(e.data.type === "fcp") {
+    globalThis.isFcp = e.data.type === "fcp";
+    if(globalThis.isFcp) {
         await ((async function() {
           const { state: s, source, promiseId } = e.data;
           let currentState = typeof s == "string" ? JSON.parse(s) : s;
           const interactions = e.data.interactions ?? [];
           if(source) eval(source);
-          const fcpState = await globalThis.evaluateInteractions(currentState, interactions, e.data.action);
+          globalThis.SmartWeave = new SmartWeave(e.data.contract.id);
+          const fcpState = await globalThis.evaluateInteractions(currentState, interactions, e.data.action, e.data.contract);
           globalThis.fcpCalls[promiseId].resolve(fcpState);
         })());
     }
     if(e.data.type === "execute") {
       let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
-      const contractState = await globalThis.evaluateInteractions(currentState, interactions, e.data.action);
+      const contractState = await globalThis.evaluateInteractions(currentState, interactions, e.data.action, e.data.contract);
       self.postMessage(contractState);
     }
   });
@@ -418,12 +435,13 @@ export class Runtime {
         if (e.data?.type === "fcp") {
           const { promiseId, contractId, height, showValidity } = e.data;
           const [contract, interactions, updatePromise] = await this.#fcpHandler(contractId, height, showValidity);
-          const { source, state } = contract;
+          const { source, state, tx } = contract;
           this.#module.postMessage({
             type: "fcp",
             promiseId,
             source,
             state,
+            contract: tx,
             interactions: [...interactions, ...updatePromise],
           });
           return;
@@ -435,22 +453,24 @@ export class Runtime {
   }
 
   // Fast path for the most common case.
-  async executeInteractions(interactions) {
+  async executeInteractions(interactions, contract) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       interactions,
+      contract,
     });
 
     await this.resolveState();
   }
 
-  async execute(action = {}) {
+  async execute(action = {}, contract) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       action,
       interactions: [],
+      contract
     });
 
     await this.resolveState();
