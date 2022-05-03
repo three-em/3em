@@ -261,10 +261,10 @@ export class Runtime {
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
-      this.#module.onmessage = (e) => {
+      this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
           const { contractId, key } = e.data;
-          const { state } = this.executor.executeContract(contractId, undefined, undefined, this.gateway);
+          const { state } = await this.executor.executeContract(contractId, undefined, undefined, this.gateway);
           this.#module.postMessage({
             type: "readContractState",
             state,

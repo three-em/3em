@@ -46,7 +46,7 @@ export class ExecutorV2 {
     }
 
     #getLoadInteractionsBlob() {
-        const sources = [getTagSource, loadInteractionsSource];
+        const sources = [getTagSource, loadInteractionsSource(this.#getArweaveGlobalUrl())];
         return new Blob(sources, {
             type: "application/javascript",
         });
@@ -60,7 +60,6 @@ export class ExecutorV2 {
     }
 
     async loadContract(tx, gateway) {
-        console.log(this);
         const key = this.k++;
         const args = { tx, key };
         args.baseUrlCustom = this.#getArweaveGlobalUrl(gateway);
@@ -105,7 +104,7 @@ export class ExecutorV2 {
                 : this.loadInteractions(contractId, height, gateway),
         ]);
 
-        let updatePromise = undefined;
+        let updatePromise = [];
         if (cachedInteractions) {
             // So now we have the cached interactions
             // but we still need to ensure that the cached interactions are up to date.
