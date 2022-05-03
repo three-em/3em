@@ -266,7 +266,6 @@ export class Runtime {
       this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
           const { contractId, key, returnValidity, height } = e.data;
-          console.log("cross called");
           const { state } = await this.executor.executeContract(contractId, height, false, this.gateway, returnValidity);
           this.#module.postMessage({
             type: "readContractState",
