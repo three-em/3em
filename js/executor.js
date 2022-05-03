@@ -88,7 +88,8 @@ export class ExecutorV2 {
         contractId,
         height,
         clearCache,
-        gateway
+        gateway,
+        returnValidity
     ) {
         if (clearCache) {
             localStorage.clear();
@@ -142,7 +143,7 @@ export class ExecutorV2 {
                 await rt.executeInteractions(interactions, tx);
 
                 const updatedInteractions = await updatePromise;
-                if (updatedInteractions.length > 0) {
+                if (updatedInteractions?.length > 0) {
                     await rt.executeInteractions(updatedInteractions, tx);
                 }
 
@@ -196,7 +197,7 @@ export class ExecutorV2 {
                 throw new Error(`Unsupported contract type: ${type}`);
         }
 
-        return result;
+        return returnValidity ? result : result.state;
     }
 
 }

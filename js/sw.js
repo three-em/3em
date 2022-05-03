@@ -155,12 +155,14 @@ const WORKER = `{
     
     get contracts() {
       return { 
-        readContractState: async (contractId) => {
+        readContractState: async (contractId, height, returnValidity) => {
           const key = this.k++;
           self.postMessage({
             readContractState: true,
             contractId,
-            key
+            key,
+            height,
+            returnValidity
           });
           
           return new Promise((r) => {
@@ -263,8 +265,9 @@ export class Runtime {
     this.#state = await new Promise((resolve) => {
       this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
-          const { contractId, key } = e.data;
-          const { state } = await this.executor.executeContract(contractId, undefined, undefined, this.gateway);
+          const { contractId, key, returnValidity, height } = e.data;
+          console.log("cross called");
+          const { state } = await this.executor.executeContract(contractId, height, false, this.gateway, returnValidity);
           this.#module.postMessage({
             type: "readContractState",
             state,
