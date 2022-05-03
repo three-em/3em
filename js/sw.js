@@ -149,6 +149,138 @@ const WORKER = `{
       });
     }
   }
+  
+class ArweaveUtils {
+    concatBuffers(
+      buffers,
+    ) {
+      let total_length = 0;
+
+      for (let i = 0; i < buffers.length; i++) {
+        total_length += buffers[i].byteLength;
+      }
+
+      let temp = new Uint8Array(total_length);
+      let offset = 0;
+
+      temp.set(new Uint8Array(buffers[0]), offset);
+      offset += buffers[0].byteLength;
+
+      for (let i = 1; i < buffers.length; i++) {
+        temp.set(new Uint8Array(buffers[i]), offset);
+        offset += buffers[i].byteLength;
+      }
+
+      return temp;
+    }
+
+    b64UrlToString(b64UrlString) {
+      let buffer = b64UrlToBuffer(b64UrlString);
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+
+    bufferToString(buffer) {
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+
+    stringToBuffer(string) {
+      return new TextEncoder().encode(string);
+    }
+
+    stringToB64Url(string) {
+      return this.bufferTob64Url(stringToBuffer(string));
+    }
+
+    b64UrlToBuffer(b64UrlString) {
+      return Uint8Array.from(atob(b64UrlString), (c) => c.charCodeAt(0));
+    }
+
+    bufferTob64(buffer) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+    }
+
+    bufferTob64Url(buffer) {
+      return this.b64UrlEncode(this.bufferTob64(buffer));
+    }
+
+    b64UrlEncode(b64UrlString) {
+      return b64UrlString
+        .replace(/\\+/g, "-")
+        .replace(/\\//g, "_")
+        .replace(/\\=/g, "");
+    }
+
+    b64UrlDecode(b64UrlString) {
+      b64UrlString = b64UrlString.replace(/\\-/g, "+").replace(/\\_/g, "/");
+      let padding = 0;
+      if (b64UrlString.length % 4 !== 0) {
+        padding = 4 - (b64UrlString.length % 4);
+      }
+
+      return b64UrlString.concat("=".repeat(padding));
+    }
+  }
+  
+  class Transaction {
+    constructor(obj) {
+      this.arweaveUtils = new ArweaveUtils();
+    }
+    
+    get(field, opts) {
+      if (!Object.getOwnPropertyNames(this).includes(field)) {
+        throw new Error(
+          \`Field "${field}" is not a property of the Arweave Transaction class.\`
+        );
+      }
+      
+      // Handle fields that are Uint8Arrays.
+      // To maintain compat we encode them to b64url
+      // if decode option is not specificed.
+      if (this[field] instanceof Uint8Array) {
+          if (options && options.decode && options.string) {
+            return new TextDecoder().decode(this[field]);
+          }
+          if (options && options.decode && !options.string) {
+            return this[field];
+          }
+          return this.arweaveUtils.bufferTob64Url(this[field]);
+      }
+    }
+  }
+  
+  class UnsafeClientTransactions {
+  
+    constructor(obj) {
+      this.arweaveUtils = new ArweaveUtils();
+    }
+    
+    async get(txId, opts) {
+       const data = await fetch(\`${globalThis.URL_GATEWAY || 'https://arweave.net'}/tx/${txId}\`);
+            
+       if(data.status === 200) {
+         const data = await this.getData(id);
+         return new Transaction({
+              ...response.data,
+              data,
+         });
+       }
+    }
+    
+    async getData(txId) {
+       const data = await fetch(\`${globalThis.URL_GATEWAY || 'https://arweave.net'}/${txId}\`);
+       
+       if (opts && opts.decode && !opts.string) {
+            return data;
+       }
+       
+       if (opts && opts.decode && opts.string) {
+             return this.arweaveUtils.bufferToString(data);
+       }
+
+       return this.arweaveUtils.bufferTob64Url(data);
+    }
+    
+  }
 
   class SmartWeave {
     get contracts() {
@@ -166,11 +298,7 @@ const WORKER = `{
 
     get unsafeClient() {
       return {
-        transactions: {
-          getData: async (txId, opts) => {
-            // TODO
-          },
-        }
+        transactions: new UnsafeClientTransactions()
       }
     }
   }
@@ -257,9 +385,12 @@ export class Runtime {
   #module;
   #fcpHandler;
 
-  constructor(source, state = {}, info = {}, fcpHandler) {
+  constructor(source, state = {}, info = {}, fcpHandler, urlGateway) {
     this.#state = state;
-    const sources = [WORKER, source];
+    const setUrlGateway = `
+      globalThis.URL_GATEWAY = "${urlGateway}";
+    `
+    const sources = [WORKER, source, setUrlGateway];
     const blob = new Blob(sources, { type: "application/javascript" });
     this.#module = new Worker(
       URL.createObjectURL(blob),

@@ -297,9 +297,10 @@ export async function executeContract(
     gateway
   );
   const { source, state, type } = contract;
+  const urlGateway = processGateway(gateway);
   switch (type) {
     case "application/javascript":
-      const rt = new Runtime(source, state, {}, (contractId, height, showValidity) => loadContractInteractions(contractId, height, clearCache, gateway));
+      const rt = new Runtime(source, state, {}, (contractId, height, showValidity) => loadContractInteractions(contractId, height, clearCache, gateway), urlGateway);
 
       // Slower than `rt.executeInteractions` but more readable
       // 100 interactions in ~30.06ms.
