@@ -130,6 +130,134 @@ const WORKER = `{
     if (!cond) throw new ContractError(message);
   }
   
+  class ArweaveUtils {
+    concatBuffers(
+      buffers,
+    ) {
+      let total_length = 0;
+      for (let i = 0; i < buffers.length; i++) {
+        total_length += buffers[i].byteLength;
+      }
+      let temp = new Uint8Array(total_length);
+      let offset = 0;
+      temp.set(new Uint8Array(buffers[0]), offset);
+      offset += buffers[0].byteLength;
+      for (let i = 1; i < buffers.length; i++) {
+        temp.set(new Uint8Array(buffers[i]), offset);
+        offset += buffers[i].byteLength;
+      }
+      return temp;
+    }
+    b64UrlToString(b64UrlString) {
+      let buffer = b64UrlToBuffer(b64UrlString);
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+    bufferToString(buffer) {
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+    stringToBuffer(string) {
+      return new TextEncoder().encode(string);
+    }
+    stringToB64Url(string) {
+      return this.bufferTob64Url(stringToBuffer(string));
+    }
+    b64UrlToBuffer(b64UrlString) {
+      return Uint8Array.from(atob(b64UrlString), (c) => c.charCodeAt(0));
+    }
+    bufferTob64(buffer) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+    }
+    bufferTob64Url(buffer) {
+      return this.b64UrlEncode(this.bufferTob64(buffer));
+    }
+    b64UrlEncode(b64UrlString) {
+      return b64UrlString
+        .replace(/\\\\+/g, "-")
+        .replace(/\\\\//g, "_")
+        .replace(/\\\\=/g, "");
+    }
+    b64UrlDecode(b64UrlString) {
+      b64UrlString = b64UrlString.replace(/\\\\-/g, "+").replace(/\\\\_/g, "/");
+      let padding = 0;
+      if (b64UrlString.length % 4 !== 0) {
+        padding = 4 - (b64UrlString.length % 4);
+      }
+      return b64UrlString.concat("=".repeat(padding));
+    }
+  }
+  
+  class BaseObject {
+    constructor() {
+      this.arweaveUtils = new ArweaveUtils();
+    }
+    get(field, options) {
+      // Handle fields that are Uint8Arrays.
+      // To maintain compat we encode them to b64url
+      // if decode option is not specificed.
+      if (this[field] instanceof Uint8Array) {
+          if (options && options.decode && options.string) {
+            return new TextDecoder().decode(this[field]);
+          }
+          if (options && options.decode && !options.string) {
+            return this[field];
+          }
+          return this.arweaveUtils.bufferTob64Url(this[field]);
+      }
+    }
+  }
+  globalThis.BaseObject = BaseObject;
+  class Tag extends BaseObject {
+    constructor(name, value) {
+      super();
+      this.name = name;
+      this.value = value;
+    }
+  }
+  class Transaction extends BaseObject {
+    constructor(obj) {
+      super();
+      Object.assign(this, obj);
+      if (typeof this.data === "string") {
+        this.data = this.arweaveUtils.b64UrlToString(this.data);
+      }
+      if (obj.tags) {
+        this.tags = obj.tags.map(t => new Tag(t.name, t.value));
+      }
+    }
+  }
+  globalThis.Transaction = Transaction;
+  
+  class UnsafeClientTransactions {
+    constructor(obj) {
+      this.arweaveUtils = new ArweaveUtils();
+    }
+    
+    async get(txId, opts) {
+       const resp = await fetch("${globalThis.URL_GATEWAY || 'https://arweave.net'}" + "/tx/" + txId);
+       const json = await resp.json();
+       if (data.status === 200) {
+         const data = await this.getData(id);
+         return new Transaction({
+              ...json,
+              data,
+         });
+       }
+    }
+    
+    async getData(txId) {
+       const resp = await fetch("${globalThis.URL_GATEWAY || 'https://arweave.net'}" + "/" + txId);
+       const data = new Uint8Array(await resp.arrayBuffer());
+       if (opts && opts.decode && !opts.string) {
+          return data;
+       }
+       if (opts && opts.decode && opts.string) {
+          return this.arweaveUtils.bufferToString(data);
+       }
+       return this.arweaveUtils.bufferTob64Url(data);
+    }
+  }
+  globalThis.UnsafeClientTransactions = UnsafeClientTransactions;
+  
   class SmartWeave {
     
     constructor() {
@@ -153,16 +281,26 @@ const WORKER = `{
       };
     }
     
+    get unsafeClient() {
+      return {
+        transactions: new UnsafeClientTransactions()
+      }
+    }
+    
     get contracts() {
       return { 
         readContractState: async (contractId, height, returnValidity) => {
+          if(contractId === globalThis.SmartWeave.contract.id) {
+            throw new Error("A contract cannot read itself");
+          }
           const key = this.k++;
           self.postMessage({
             readContractState: true,
             contractId,
             key,
             height,
-            returnValidity
+            returnValidity,
+            from: globalThis.SmartWeave.contract.id
           });
           
           return new Promise((r) => {
@@ -209,7 +347,8 @@ const WORKER = `{
           );
   
           currentState = state.state;
-        } catch(e) {}
+        } catch(e) {
+        }
       }
 
       const validity = {};
@@ -265,6 +404,7 @@ export class Runtime {
     this.#state = await new Promise((resolve) => {
       this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
+          console.log("fcp", e.data);
           const { contractId, key, returnValidity, height } = e.data;
           const { state } = await this.executor.executeContract(contractId, height, false, this.gateway, returnValidity);
           this.#module.postMessage({

@@ -34,6 +34,7 @@ Deno.test("execute_js_test readContractState", async () => {
   const { state } = await executeContract(
       "Vjt13JlvOzaOs4St_Iy2jmanxa7dc-Z3pDk3ktwEQNA",
       undefined,
+      true
   );
 
   console.log(state);
