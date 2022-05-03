@@ -134,16 +134,17 @@ const WORKER = `{
   class Contracts {
     readContractState(contractId, height, showValidity) {
       return new Promise((resolve, reject) => {
+        const promiseId = Object.keys(globalThis.fcpCalls).length;
+        globalThis.fcpCalls[promiseId] = {
+          resolve,
+          reject
+        };
         self.postMessage({
           type: "fcp",
           contractId,
           height,
           showValidity,
-          promiseId: promises.length,
-        });
-        promises.push({
-          resolve,
-          reject
+          promiseId,
         });
       });
     }
@@ -151,7 +152,7 @@ const WORKER = `{
 
   class SmartWeave {
     get contracts() {
-      return new Contracts;
+      return new Contracts();
     }
 
     get transaction() {
@@ -194,16 +195,11 @@ const WORKER = `{
   
   globalThis.ContractError = ContractError;
   globalThis.ContractAssert = ContractAssert;
+  globalThis.fcpCalls = {};
   globalThis.SmartWeave = new SmartWeave();
-  self.addEventListener("message", async function(e) {
-    if(e.data.type === "execute") {
-      const { state: s, source, promiseId } = e.data;
-      let currentState = typeof s == "string" ? JSON.parse(s) : s;
-      const interactions = e.data.interactions ?? [];
-      console.log("Executing", interactions.length, "interactions");
-      if (source) eval(source); // Setup FCP handler.
-      if (interactions.length == 0) {
-        const input = e.data.action;
+  globalThis.evaluateInteractions = async (currentState, interactions, input) => {
+    const validity = {};
+    if (interactions.length == 0) {
         try {
           const state = await handle(
             currentState,
@@ -212,14 +208,11 @@ const WORKER = `{
   
           currentState = state.state;
         } catch(e) {}
-      }
-
-      const validity = {};
-      for (let i = 0; i < interactions.length; i++) {
+    }
+    for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
         handleInteractionGlobals(tx);
         const input = tx.tags.find(data => data.name === "Input");
-
         try {
           const inp = JSON.parse(input.value);
           const state = await handle(
@@ -235,17 +228,26 @@ const WORKER = `{
         } catch(e) {
           validity[tx.id] = false;
         }
-      }
+    }
 
-      if (promiseId) {
-        promises[promiseId].resolve({
-          state: currentState,
-          validity
-        });
-        promises.splice(promiseId, 1);
-        return;
-      }
-      self.postMessage({ state: currentState, validity });
+    return { state: currentState, validity };
+  };
+  self.addEventListener("message", async function(e) {
+    if(e.data.type === "fcp") {
+        await ((async function() {
+          const { state: s, source, promiseId } = e.data;
+          let currentState = typeof s == "string" ? JSON.parse(s) : s;
+          const interactions = e.data.interactions ?? [];
+          if(source) eval(source);
+          const fcpState = await globalThis.evaluateInteractions(currentState, interactions, e.data.action);
+          globalThis.fcpCalls[promiseId].resolve(fcpState);
+        })());
+    }
+    if(e.data.type === "execute") {
+      let currentState = JSON.parse(e.data.state);
+      const interactions = e.data.interactions ?? [];
+      const contractState = await globalThis.evaluateInteractions(currentState, interactions, e.data.action);
+      self.postMessage(contractState);
     }
   });
 }`;
@@ -269,12 +271,12 @@ export class Runtime {
   async resolveState() {
     this.#state = await new Promise((resolve) => {
       this.#module.onmessage = async (e) => {
-        if (e.data.type === "fcp") {
+        if (e.data?.type === "fcp") {
           const { promiseId, contractId, height, showValidity } = e.data;
           const [contract, interactions, updatePromise] = await this.#fcpHandler(contractId, height, showValidity);
           const { source, state } = contract;
           this.#module.postMessage({
-            type: "execute",
+            type: "fcp",
             promiseId,
             source,
             state,
