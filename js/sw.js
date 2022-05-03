@@ -131,6 +131,12 @@ const WORKER = `{
   }
   
   class SmartWeave {
+    
+    constructor() {
+      this.readContractCalls = {};
+      this.k = 0;
+    }
+  
     get transaction() {
       return globalThis.interactionContext.transaction;
     }
@@ -150,12 +156,16 @@ const WORKER = `{
     get contracts() {
       return { 
         readContractState: async (contractId) => {
-        try {
-          const requireItself = await import('https://raw.githubusercontent.com/three-em/3em/main/js/index.js');
-          const state = await requireItself.executeContract(contractId);
-          return state.state;
-          } catch(ex) {
-          console.log(ex);}
+          const key = this.k++;
+          self.postMessage({
+            readContractState: true,
+            contractId,
+            key
+          });
+          
+          return new Promise((r) => {
+            this.readContractCalls[key] = r;
+          });
         }
       }
     }   
@@ -225,6 +235,11 @@ const WORKER = `{
 
       self.postMessage({ state: currentState, validity });
     }
+    
+    if(e.data.type === "readContractState") {
+      const { state, key, contractId } = e.data;
+      globalThis.SmartWeave.readContractCalls[key](state);
+    }
   });
 }`;
 
@@ -232,7 +247,7 @@ export class Runtime {
   #state;
   #module;
 
-  constructor(source, state = {}, info = {}) {
+  constructor(source, state = {}, info = {}, executor, gateway) {
     this.#state = state;
     const sources = [WORKER, source];
     const blob = new Blob(sources, { type: "application/javascript" });
@@ -240,13 +255,26 @@ export class Runtime {
       URL.createObjectURL(blob),
       { eval: true, type: "module" },
     );
+    this.executor = executor;
+    this.gateway = gateway;
   }
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
       this.#module.onmessage = (e) => {
-        resolve(e.data);
-        this.#module.terminate();
+        if(e.data.readContractState) {
+          const { contractId, key } = e.data;
+          const { state } = this.executor.executeContract(contractId, undefined, undefined, this.gateway);
+          this.#module.postMessage({
+            type: "readContractState",
+            state,
+            key,
+            contractId
+          })
+        } else {
+          resolve(e.data);
+          this.#module.terminate();
+        }
       };
     });
   }
