@@ -1,6 +1,6 @@
 const WORKER = `{
   const selfCloned = globalThis;
-  const allowed = ["Reflect", "Event", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
+  const allowed = ["Reflect", "Event", "fetch", "btoa", "atob", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
   const keys = Object.keys(globalThis).filter(key => !allowed.includes(key));
   for (const key of keys) {
     Reflect.deleteProperty(globalThis, key);
@@ -130,7 +130,159 @@ const WORKER = `{
     if (!cond) throw new ContractError(message);
   }
   
+  class ArweaveUtils {
+    concatBuffers(
+      buffers,
+    ) {
+      let total_length = 0;
+      for (let i = 0; i < buffers.length; i++) {
+        total_length += buffers[i].byteLength;
+      }
+      let temp = new Uint8Array(total_length);
+      let offset = 0;
+      temp.set(new Uint8Array(buffers[0]), offset);
+      offset += buffers[0].byteLength;
+      for (let i = 1; i < buffers.length; i++) {
+        temp.set(new Uint8Array(buffers[i]), offset);
+        offset += buffers[i].byteLength;
+      }
+      return temp;
+    }
+    b64UrlToString(b64UrlString) {
+      let buffer = this.b64UrlToBuffer(b64UrlString);
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+    bufferToString(buffer) {
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    }
+    stringToBuffer(string) {
+      return new TextEncoder().encode(string);
+    }
+    stringToB64Url(string) {
+      return this.bufferTob64Url(this.stringToBuffer(string));
+    }
+    b64UrlToBuffer(b64UrlString) {
+      return Uint8Array.from(atob(b64UrlString), (c) => c.charCodeAt(0));
+    }
+    bufferTob64(buffer) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+    }
+    bufferTob64Url(buffer) {
+      return this.b64UrlEncode(this.bufferTob64(buffer));
+    }
+    b64UrlEncode(b64UrlString) {
+      return b64UrlString
+        .replace(/\\+/g, "-")
+        .replace(/\\//g, "_")
+        .replace(/\\=/g, "");
+    }
+    b64UrlDecode(b64UrlString) {
+      b64UrlString = b64UrlString.replace(/\\-/g, "+").replace(/\\_/g, "/");
+      let padding = 0;
+      if (b64UrlString.length % 4 !== 0) {
+        padding = 4 - (b64UrlString.length % 4);
+      }
+      return b64UrlString.concat("=".repeat(padding));
+    }
+  }
+  
+  class BaseObject {
+    constructor() {
+      this.arweaveUtils = new ArweaveUtils();
+    }
+    get(field, options) {
+        if (!Object.getOwnPropertyNames(this).includes(field)) {
+          throw new Error("Field " + field + " is not a property of the Arweave Transaction class.");
+        }
+
+      // Handle fields that are Uint8Arrays.
+      // To maintain compat we encode them to b64url
+      // if decode option is not specificed.
+      if (this[field] instanceof Uint8Array) {
+          if (options && options.decode && options.string) {
+            return new TextDecoder().decode(this[field]);
+          }
+          if (options && options.decode && !options.string) {
+            return this[field];
+          }
+          return this.arweaveUtils.bufferTob64Url(this[field]);
+      }
+      
+      if (options && options.decode == true) {
+        if (options && options.string) {
+          return this.arweaveUtils.b64UrlToString(this[field]);
+        }
+  
+        return this.arweaveUtils.b64UrlToBuffer(this[field]);
+      }
+      
+      return this[field];
+    }
+  }
+  globalThis.BaseObject = BaseObject;
+  class Tag extends BaseObject {
+    constructor(name, value) {
+      super();
+      this.name = name;
+      this.value = value;
+    }
+  }
+  class Transaction extends BaseObject {
+    constructor(obj) {
+      super();
+      Object.assign(this, obj);
+      if (typeof this.data === "string") {
+        this.data = this.arweaveUtils.b64UrlToString(this.data);
+      }
+      if (obj.tags) {
+        this.tags = obj.tags.map(t => new Tag(t.name, t.value));
+      }
+    }
+  }
+  globalThis.Transaction = Transaction;
+  
+  class UnsafeClientTransactions {
+    constructor(obj) {
+      this.arweaveUtils = new ArweaveUtils();
+    }
+    
+    async get(txId) {
+       const baseUrl = globalThis.URL_GATEWAY || "https://arweave.net";
+       const url = baseUrl + "/tx/" + txId;
+       const resp = await globalThis.fetch(url);
+       const json = await resp.json();
+       if (resp.status === 200) {
+         const data = await this.getData(txId);
+         return new Transaction({
+              ...json,
+              data,
+         });
+       }
+    }
+    
+    async getData(txId, opts) {
+       const baseUrl = globalThis.URL_GATEWAY || "https://arweave.net";
+       const url = baseUrl + "/" + txId;
+       const resp = await globalThis.fetch(url);
+       const data = new Uint8Array(await resp.arrayBuffer());
+       if (opts && opts.decode && !opts.string) {
+          return data;
+       }
+       if (opts && opts.decode && opts.string) {
+          return this.arweaveUtils.bufferToString(data);
+       }
+       return this.arweaveUtils.bufferTob64Url(data);
+    }
+  }
+  globalThis.UnsafeClientTransactions = UnsafeClientTransactions;
+  
   class SmartWeave {
+    
+    constructor() {
+      this.readContractCalls = {};
+      this.k = 0;
+    }
+  
     get transaction() {
       return globalThis.interactionContext.transaction;
     }
@@ -138,10 +290,47 @@ const WORKER = `{
     get block() {
       const block = globalThis.interactionContext.block;
       return {...block, indep_hash: block.id };
-    }    
+    }
+    
+    get contract() { 
+      return {
+        id: globalThis.interactionContext.contract.id,
+        owner: globalThis.interactionContext.contract.owner
+      };
+    }
+    
+    get unsafeClient() {
+      return {
+        transactions: new UnsafeClientTransactions()
+      }
+    }
+    
+    get contracts() {
+      return { 
+        readContractState: async (contractId, height, returnValidity) => {
+          if(contractId === globalThis.SmartWeave.contract.id) {
+            throw new Error("A contract cannot read itself");
+          }
+          const key = this.k++;
+          self.postMessage({
+            readContractState: true,
+            contractId,
+            key,
+            height,
+            returnValidity,
+            from: globalThis.SmartWeave.contract.id,
+            currentHeight: globalThis.SmartWeave.block.height
+          });
+          
+          return new Promise((r) => {
+            this.readContractCalls[key] = r;
+          });
+        }
+      }
+    }   
   }
   
-  function handleInteractionGlobals(tx) { 
+  function handleInteractionGlobals(tx, contract) { 
     globalThis.interactionContext = { 
       transaction: {
         id: tx.id,
@@ -155,7 +344,8 @@ const WORKER = `{
         height: tx.block.height,
         id: tx.block.id,
         timestamp: tx.block.timestamp
-      }
+      },
+      contract
     }
   }
   
@@ -163,6 +353,7 @@ const WORKER = `{
   globalThis.ContractAssert = ContractAssert;
   globalThis.SmartWeave = new SmartWeave();
   self.addEventListener("message", async function(e) {
+    globalThis.URL_GATEWAY = e.data.URL_GATEWAY;
     if(e.data.type === "execute") {
       let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
@@ -176,13 +367,14 @@ const WORKER = `{
           );
   
           currentState = state.state;
-        } catch(e) {}
+        } catch(e) {
+        }
       }
 
       const validity = {};
       for (let i = 0; i < interactions.length; i++) {
         const tx = interactions[i].node;
-        handleInteractionGlobals(tx);
+        handleInteractionGlobals(tx, e.data.contract);
         const input = tx.tags.find(data => data.name === "Input");
 
         try {
@@ -204,6 +396,13 @@ const WORKER = `{
 
       self.postMessage({ state: currentState, validity });
     }
+    
+    if(e.data.type === "readContractState") {
+      const { state, key, contractId, validity, returnValidity } = e.data;
+      let stateValidity = { state, validity };
+      await globalThis.SmartWeave.readContractCalls[key](returnValidity ? stateValidity : state);
+      delete globalThis.SmartWeave.readContractCalls[key];
+    }
   });
 }`;
 
@@ -211,7 +410,7 @@ export class Runtime {
   #state;
   #module;
 
-  constructor(source, state = {}, info = {}) {
+  constructor(source, state = {}, info = {}, executor, gateway) {
     this.#state = state;
     const sources = [WORKER, source];
     const blob = new Blob(sources, { type: "application/javascript" });
@@ -219,34 +418,54 @@ export class Runtime {
       URL.createObjectURL(blob),
       { eval: true, type: "module" },
     );
+    this.executor = executor;
+    this.gateway = gateway;
   }
 
   async resolveState() {
     this.#state = await new Promise((resolve) => {
-      this.#module.onmessage = (e) => {
-        resolve(e.data);
-        this.#module.terminate();
+      this.#module.onmessage = async (e) => {
+        if(e.data.readContractState) {
+          const { contractId, key, returnValidity, height, currentHeight } = e.data;
+          const { state, validity } = await this.executor.executeContract(contractId, height || currentHeight, true, this.gateway, returnValidity);
+          this.#module.postMessage({
+            type: "readContractState",
+            state,
+            validity,
+            returnValidity,
+            key,
+            contractId,
+            URL_GATEWAY: this.executor.getArweaveGlobalUrl(this.gateway)
+          })
+        } else {
+          resolve(e.data);
+          this.#module.terminate();
+        }
       };
     });
   }
 
   // Fast path for the most common case.
-  async executeInteractions(interactions) {
+  async executeInteractions(interactions, contract) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       interactions,
+      contract,
+      URL_GATEWAY: this.gateway
     });
 
     await this.resolveState();
   }
 
-  async execute(action = {}) {
+  async execute(action = {}, contract) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       action,
       interactions: [],
+      contract,
+      URL_GATEWAY: this.gateway
     });
 
     await this.resolveState();
