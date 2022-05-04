@@ -34,19 +34,19 @@ export class ExecutorV2 {
         this.interactionsWorker.onerror = (error) =>  { throw error };
     }
 
-    #getArweaveGlobalUrl(gateway) {
+    getArweaveGlobalUrl(gateway) {
         return `${((gateway || globalThis || window).ARWEAVE_PROTOCOL) || "https"}://${((gateway || globalThis || window).ARWEAVE_HOST) || "arweave.net"}:${((gateway || globalThis || window).ARWEAVE_PORT) || 443}`;
     }
 
     #getLoadContractBlob() {
-        const loadContractSources = [getTagSource, loadContractSource(this.#getArweaveGlobalUrl())];
+        const loadContractSources = [getTagSource, loadContractSource(this.getArweaveGlobalUrl())];
         return new Blob(loadContractSources, {
             type: "application/javascript",
         });
     }
 
     #getLoadInteractionsBlob() {
-        const sources = [getTagSource, loadInteractionsSource(this.#getArweaveGlobalUrl())];
+        const sources = [getTagSource, loadInteractionsSource(this.getArweaveGlobalUrl())];
         return new Blob(sources, {
             type: "application/javascript",
         });
@@ -62,7 +62,7 @@ export class ExecutorV2 {
     async loadContract(tx, gateway) {
         const key = this.k++;
         const args = { tx, key };
-        args.baseUrlCustom = this.#getArweaveGlobalUrl(gateway);
+        args.baseUrlCustom = this.getArweaveGlobalUrl(gateway);
         return new Promise((r) => {
             this.loadContractWorker.postMessage(args);
             this.contractProcessingQueue[key] = r;
@@ -72,7 +72,7 @@ export class ExecutorV2 {
     async updateInteractions(tx, height, last, gateway) {
         const key = this.k++;
         const args = { tx, height, last, key };
-        args.baseUrlCustom = this.#getArweaveGlobalUrl(gateway);
+        args.baseUrlCustom = this.getArweaveGlobalUrl(gateway);
 
         return new Promise((r) => {
             this.interactionsWorker.postMessage(args);

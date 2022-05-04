@@ -1,6 +1,6 @@
 const WORKER = `{
   const selfCloned = globalThis;
-  const allowed = ["Reflect", "Event", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
+  const allowed = ["Reflect", "Event", "fetch", "btoa", "atob", "performance", "ErrorEvent", "self", "MessageEvent", "postMessage", "addEventListener"];
   const keys = Object.keys(globalThis).filter(key => !allowed.includes(key));
   for (const key of keys) {
     Reflect.deleteProperty(globalThis, key);
@@ -149,7 +149,7 @@ const WORKER = `{
       return temp;
     }
     b64UrlToString(b64UrlString) {
-      let buffer = b64UrlToBuffer(b64UrlString);
+      let buffer = this.b64UrlToBuffer(b64UrlString);
       return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
     }
     bufferToString(buffer) {
@@ -159,7 +159,7 @@ const WORKER = `{
       return new TextEncoder().encode(string);
     }
     stringToB64Url(string) {
-      return this.bufferTob64Url(stringToBuffer(string));
+      return this.bufferTob64Url(this.stringToBuffer(string));
     }
     b64UrlToBuffer(b64UrlString) {
       return Uint8Array.from(atob(b64UrlString), (c) => c.charCodeAt(0));
@@ -172,12 +172,12 @@ const WORKER = `{
     }
     b64UrlEncode(b64UrlString) {
       return b64UrlString
-        .replace(/\\\\+/g, "-")
-        .replace(/\\\\//g, "_")
-        .replace(/\\\\=/g, "");
+        .replace(/\\+/g, "-")
+        .replace(/\\//g, "_")
+        .replace(/\\=/g, "");
     }
     b64UrlDecode(b64UrlString) {
-      b64UrlString = b64UrlString.replace(/\\\\-/g, "+").replace(/\\\\_/g, "/");
+      b64UrlString = b64UrlString.replace(/\\-/g, "+").replace(/\\_/g, "/");
       let padding = 0;
       if (b64UrlString.length % 4 !== 0) {
         padding = 4 - (b64UrlString.length % 4);
@@ -232,11 +232,13 @@ const WORKER = `{
       this.arweaveUtils = new ArweaveUtils();
     }
     
-    async get(txId, opts) {
-       const resp = await fetch("${globalThis.URL_GATEWAY || 'https://arweave.net'}" + "/tx/" + txId);
+    async get(txId) {
+       const baseUrl = globalThis.URL_GATEWAY || "https://arweave.net";
+       const url = baseUrl + "/tx/" + txId;
+       const resp = await globalThis.fetch(url);
        const json = await resp.json();
-       if (data.status === 200) {
-         const data = await this.getData(id);
+       if (resp.status === 200) {
+         const data = await this.getData(txId);
          return new Transaction({
               ...json,
               data,
@@ -244,8 +246,10 @@ const WORKER = `{
        }
     }
     
-    async getData(txId) {
-       const resp = await fetch("${globalThis.URL_GATEWAY || 'https://arweave.net'}" + "/" + txId);
+    async getData(txId, opts) {
+       const baseUrl = globalThis.URL_GATEWAY || "https://arweave.net";
+       const url = baseUrl + "/" + txId;
+       const resp = await globalThis.fetch(url);
        const data = new Uint8Array(await resp.arrayBuffer());
        if (opts && opts.decode && !opts.string) {
           return data;
@@ -335,6 +339,7 @@ const WORKER = `{
   globalThis.ContractAssert = ContractAssert;
   globalThis.SmartWeave = new SmartWeave();
   self.addEventListener("message", async function(e) {
+    globalThis.URL_GATEWAY = e.data.URL_GATEWAY;
     if(e.data.type === "execute") {
       let currentState = JSON.parse(e.data.state);
       const interactions = e.data.interactions ?? [];
@@ -371,6 +376,7 @@ const WORKER = `{
           currentState = state.state;
           validity[tx.id] = true;
         } catch(e) {
+        console.log(e);
           validity[tx.id] = false;
         }
       }
@@ -381,7 +387,8 @@ const WORKER = `{
     if(e.data.type === "readContractState") {
       const { state, key, contractId, validity, returnValidity } = e.data;
       let stateValidity = { state, validity };
-      globalThis.SmartWeave.readContractCalls[key](returnValidity ? stateValidity : state);
+      await globalThis.SmartWeave.readContractCalls[key](returnValidity ? stateValidity : state);
+      delete globalThis.SmartWeave.readContractCalls[key];
     }
   });
 }`;
@@ -414,7 +421,8 @@ export class Runtime {
             validity,
             returnValidity,
             key,
-            contractId
+            contractId,
+            URL_GATEWAY: this.executor.getArweaveGlobalUrl(this.gateway)
           })
         } else {
           resolve(e.data);
@@ -430,7 +438,8 @@ export class Runtime {
       type: "execute",
       state: this.#state,
       interactions,
-      contract
+      contract,
+      URL_GATEWAY: this.gateway
     });
 
     await this.resolveState();
@@ -442,7 +451,8 @@ export class Runtime {
       state: this.#state,
       action,
       interactions: [],
-      contract
+      contract,
+      URL_GATEWAY: this.gateway
     });
 
     await this.resolveState();
