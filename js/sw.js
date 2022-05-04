@@ -191,6 +191,10 @@ const WORKER = `{
       this.arweaveUtils = new ArweaveUtils();
     }
     get(field, options) {
+        if (!Object.getOwnPropertyNames(this).includes(field)) {
+          throw new Error("Field " + field + " is not a property of the Arweave Transaction class.");
+        }
+
       // Handle fields that are Uint8Arrays.
       // To maintain compat we encode them to b64url
       // if decode option is not specificed.
@@ -203,6 +207,16 @@ const WORKER = `{
           }
           return this.arweaveUtils.bufferTob64Url(this[field]);
       }
+      
+      if (options && options.decode == true) {
+        if (options && options.string) {
+          return this.arweaveUtils.b64UrlToString(this[field]);
+        }
+  
+        return this.arweaveUtils.b64UrlToBuffer(this[field]);
+      }
+      
+      return this[field];
     }
   }
   globalThis.BaseObject = BaseObject;
