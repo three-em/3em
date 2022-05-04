@@ -407,7 +407,7 @@ export class Runtime {
       this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
           const { contractId, key, returnValidity, height, currentHeight } = e.data;
-          const { state, validity } = await this.executor.executeContract(contractId, height || currentHeight, false, this.gateway, returnValidity);
+          const { state, validity } = await this.executor.executeContract(contractId, height || currentHeight, true, this.gateway, returnValidity);
           this.#module.postMessage({
             type: "readContractState",
             state,

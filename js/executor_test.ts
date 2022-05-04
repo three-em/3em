@@ -31,13 +31,16 @@ Deno.test("execute_js_test readContractState", async () => {
   // @ts-ignore
   globalThis.ARWEAVE_HOST = "www.arweave.run";
   // @ts-ignore
-  const { state } = await executeContract(
+  let { state, validity } = await executeContract(
       "Vjt13JlvOzaOs4St_Iy2jmanxa7dc-Z3pDk3ktwEQNA",
+      undefined,
+      true,
       undefined,
       true
   );
+  console.log({ state, validity});
 
-  console.log(state);
+  // console.log(state);
 
 });
 
