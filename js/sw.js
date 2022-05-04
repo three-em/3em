@@ -379,8 +379,9 @@ const WORKER = `{
     }
     
     if(e.data.type === "readContractState") {
-      const { state, key, contractId } = e.data;
-      globalThis.SmartWeave.readContractCalls[key](state);
+      const { state, key, contractId, validity, returnValidity } = e.data;
+      let stateValidity = { state, validity };
+      globalThis.SmartWeave.readContractCalls[key](returnValidity ? stateValidity : state);
     }
   });
 }`;
@@ -406,10 +407,12 @@ export class Runtime {
       this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
           const { contractId, key, returnValidity, height, currentHeight } = e.data;
-          const { state } = await this.executor.executeContract(contractId, height || currentHeight, false, this.gateway, returnValidity);
+          const { state, validity } = await this.executor.executeContract(contractId, height || currentHeight, false, this.gateway, returnValidity);
           this.#module.postMessage({
             type: "readContractState",
             state,
+            validity,
+            returnValidity,
             key,
             contractId
           })
