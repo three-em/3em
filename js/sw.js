@@ -300,7 +300,8 @@ const WORKER = `{
             key,
             height,
             returnValidity,
-            from: globalThis.SmartWeave.contract.id
+            from: globalThis.SmartWeave.contract.id,
+            currentHeight: globalThis.SmartWeave.block.height
           });
           
           return new Promise((r) => {
@@ -404,9 +405,8 @@ export class Runtime {
     this.#state = await new Promise((resolve) => {
       this.#module.onmessage = async (e) => {
         if(e.data.readContractState) {
-          console.log("fcp", e.data);
-          const { contractId, key, returnValidity, height } = e.data;
-          const { state } = await this.executor.executeContract(contractId, height, false, this.gateway, returnValidity);
+          const { contractId, key, returnValidity, height, currentHeight } = e.data;
+          const { state } = await this.executor.executeContract(contractId, height || currentHeight, false, this.gateway, returnValidity);
           this.#module.postMessage({
             type: "readContractState",
             state,
