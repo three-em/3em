@@ -84,31 +84,3 @@ jobs:
             target/${{ matrix.target }}/release/three_em.exe
           if-no-files-found: error
           retention-days: 7
-
-      # Benchmarks
-
-      - name: Benchmark
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        working-directory: tools/benchmarks
-        env:
-          BUILDS: target/${{ matrix.target }}/release
-        run: |
-          wget https://github.com/sharkdp/hyperfine/releases/download/v1.12.0/hyperfine_1.12.0_amd64.deb --quiet
-          sudo dpkg -i hyperfine_1.12.0_amd64.deb > /dev/null
-          rm hyperfine_1.12.0_amd64.deb > /dev/null
-
-          pip install matplotlib numpy six --upgrade --quiet --quiet
-          yarn install --silent
-
-          ./benchmark.sh
-          ./mean.py results.json
-          ./times.py results.json
-
-          ./mdimages.sh bench_mean.png bench_times.png >> results.md
-
-      - name: Post Benchmark
-        if: matrix.target == 'x86_64-unknown-linux-gnu' && github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: benchmark
-          path: tools/benchmarks/results.md

@@ -406,13 +406,21 @@ const WORKER = `{
   });
 }`;
 
+const isFirefox = navigator.userAgent?.toLowerCase().indexOf('firefox') > -1;
+function unesm(source) {
+  source = source
+    .replace(/export\s+async\s+function\s+handle/gmu, 'async function handle')
+    .replace(/export\s+function\s+handle/gmu, 'function handle');
+  return source;
+}
+
 export class Runtime {
   #state;
   #module;
 
   constructor(source, state = {}, info = {}, executor, gateway) {
     this.#state = state;
-    const sources = [WORKER, source];
+    const sources = [WORKER, isFirefox ? unesm(source) : source];
     const blob = new Blob(sources, { type: "application/javascript" });
     this.#module = new Worker(
       URL.createObjectURL(blob),
