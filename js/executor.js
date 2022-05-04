@@ -89,7 +89,6 @@ export class ExecutorV2 {
         height,
         clearCache,
         gateway,
-        returnValidity
     ) {
         if (clearCache) {
             localStorage.clear();
@@ -197,7 +196,7 @@ export class ExecutorV2 {
                 throw new Error(`Unsupported contract type: ${type}`);
         }
 
-        return returnValidity ? result : result.state;
+        return result;
     }
 
 }
