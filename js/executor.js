@@ -1,4 +1,3 @@
-import {getTagSource} from "./getTagSource.js";
 import {loadContractSource} from "./loadContractSource.js";
 import {loadInteractionsSource} from "./loadInteractionsSource.js";
 import {Runtime} from "./sw.js";
@@ -39,14 +38,14 @@ export class ExecutorV2 {
     }
 
     #getLoadContractBlob() {
-        const loadContractSources = [getTagSource, loadContractSource(this.getArweaveGlobalUrl())];
+        const loadContractSources = [loadContractSource(this.getArweaveGlobalUrl())];
         return new Blob(loadContractSources, {
             type: "application/javascript",
         });
     }
 
     #getLoadInteractionsBlob() {
-        const sources = [getTagSource, loadInteractionsSource(this.getArweaveGlobalUrl())];
+        const sources = [loadInteractionsSource(this.getArweaveGlobalUrl())];
         return new Blob(sources, {
             type: "application/javascript",
         });
