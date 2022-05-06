@@ -83,6 +83,11 @@ export class ExecutorV2 {
         return this.updateInteractions(tx, height, false, gateway);
     }
 
+    async getNetworkInfo(gatewayUrl) {
+        const response = await fetch(new URL("/info", gatewayUrl).href);
+        return await response.json();
+    }
+
     async executeContract(
         contractId,
         height,
@@ -91,6 +96,11 @@ export class ExecutorV2 {
     ) {
         if (clearCache) {
             localStorage.clear();
+        }
+
+        if(!height) {
+            const { height: netHeight } = await this.getNetworkInfo(this.getArweaveGlobalUrl(gateway));
+            height = netHeight;
         }
 
         const cachedContract = localStorage.getItem(contractId);

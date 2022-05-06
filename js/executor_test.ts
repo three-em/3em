@@ -34,3 +34,14 @@ Deno.test("execute_js_test readContractState", async () => {
   );
   assertEquals(state.ticker, "CHILL");
 });
+
+Deno.test("execute_js_test DlsykD_fJ3m7yAzCvFgRdb0W1jgGWe4LcAHJzrRx99A", async () => {
+  globalThis.ARWEAVE_HOST = "www.arweave.run";
+  let { state, validity } = await executeContract(
+      "DlsykD_fJ3m7yAzCvFgRdb0W1jgGWe4LcAHJzrRx99A",
+      undefined,
+      false,
+      undefined,
+  );
+  assertEquals(state.ticker, "BLUE");
+});
