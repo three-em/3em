@@ -1,30 +1,30 @@
 export const queryGraphql = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
-  transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
-    pageInfo {
-      hasNextPage
-    }
-    edges {
-      node {
-        id
-        owner { address }
-        recipient
-        tags {
-          name
-          value
-        }
-        block {
-          height
-          id
-          timestamp
-        }
-        fee { winston }
-        quantity { winston }
-        parent { id }
+    transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
+      pageInfo {
+        hasNextPage
       }
-      cursor
+      edges {
+        node {
+          id
+          owner { address }
+          recipient
+          tags {
+            name
+            value
+          }
+          block {
+            height
+            id
+            timestamp
+          }
+          fee { winston }
+          quantity { winston }
+          parent { id }
+        }
+        cursor
+      }
     }
-  }
-}`;
+  }`;
 
 async function nextPage(query, variables, gatewayUrl) {
     const response = await fetch(
@@ -69,7 +69,7 @@ async function loadInteractions(opts) {
     }
 
     let tx = await nextPage(query, variables, gatewayUrl);
-    const txs = tx.edges;
+    let txs = tx.edges;
     let lastOfMax = txs[MAX_REQUEST - 1];
 
     let getLastTxInArray = () => txs[txs.length - 1];
@@ -84,6 +84,11 @@ async function loadInteractions(opts) {
         tx = await nextPage(query, variables, gatewayUrl);
         txs.push(...tx.edges);
     }
+
+    txs = txs.filter(
+        (tx) => !tx.node.bundledIn || !tx.node.bundledIn?.id || !tx.node.parent || !tx.node.parent?.id,
+    )
+
     return txs;
 }
 
