@@ -3,8 +3,9 @@ use deno_core::serde_json::Value;
 use deno_core::JsRuntime;
 use deno_core::RuntimeOptions;
 use std::cell::Cell;
-use three_em_js::{snapshot, Error};
-use three_em_smartweave::{read_contract_state, InteractionContext};
+use crate::snapshot;
+use crate::js::Error;
+use crate::smartweave::{read_contract_state, InteractionContext};
 
 macro_rules! wasm_alloc {
   ($scope: expr, $alloc: expr, $this: expr, $len: expr) => {

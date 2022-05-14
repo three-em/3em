@@ -27,10 +27,7 @@ fn create_snapshot(snapshot_path: &Path) {
       deno_url::init(),
       deno_web::init(BlobStore::default(), None),
       deno_crypto::init(None),
-      three_em_smartweave::init(
-        (443, String::from(""), String::from("")),
-        never_op,
-      ),
+
     ],
     will_snapshot: true,
     ..Default::default()

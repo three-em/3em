@@ -5,15 +5,15 @@ use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
 use std::path::Path;
-use three_em_arweave::arweave::Arweave;
-use three_em_arweave::cache::ArweaveCache;
-use three_em_arweave::cache::CacheExt;
-use three_em_arweave::gql_result::{
+use three_em::arweave::Arweave;
+use three_em::cache::ArweaveCache;
+use three_em::cache::CacheExt;
+use three_em::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLTagInterface,
 };
-use three_em_arweave::miscellaneous::ContractType;
-use three_em_executor::executor::{raw_execute_contract, ExecuteResult};
-use three_em_executor::test_util::{
+use three_em::miscellaneous::ContractType;
+use three_em::executor::{raw_execute_contract, ExecuteResult};
+use three_em::test_util::{
   generate_fake_interaction, generate_fake_loaded_contract_data,
 };
 
