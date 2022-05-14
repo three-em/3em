@@ -1,6 +1,3 @@
-mod loader;
-pub mod snapshot;
-
 use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
@@ -15,7 +12,8 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
-use three_em_smartweave::InteractionContext;
+use crate::smartweave::InteractionContext;
+
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
   /// Ok, the heap limit is not exceeded.
@@ -111,10 +109,10 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(arweave, op_smartweave_read_state),
+        crate::smartweave::init(arweave, op_smartweave_read_state),
       ],
       module_loader: Some(module_loader),
-      startup_snapshot: Some(snapshot::snapshot()),
+      startup_snapshot: Some(crate::snapshot::snapshot()),
       create_params: Some(params),
       ..Default::default()
     });

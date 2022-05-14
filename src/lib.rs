@@ -1,5 +1,20 @@
+pub mod arweave;
+pub mod cache;
+pub mod gql_result;
+pub mod lru_cache;
+pub mod miscellaneous;
+pub mod metering;
+pub mod evm;
+pub mod wasm;
+pub mod smartweave;
 pub mod executor;
-pub mod test_util;
+// js
+pub mod loader;
+pub mod snapshot;
+pub mod js;
+
+mod test_util;
+mod utils;
 
 use crate::executor::raw_execute_contract;
 pub use crate::executor::ExecuteResult;
@@ -12,14 +27,14 @@ use once_cell::sync::Lazy;
 use std::cmp::Ordering;
 use std::ffi::CString;
 use std::sync::Mutex;
-use three_em_arweave::arweave::get_cache;
-use three_em_arweave::arweave::Arweave;
-use three_em_arweave::arweave::LoadedContract;
-use three_em_arweave::gql_result::GQLEdgeInterface;
-use three_em_arweave::gql_result::GQLNodeInterface;
-use three_em_arweave::miscellaneous::get_sort_key;
-use three_em_evm::Instruction;
-use three_em_evm::U256;
+use crate::arweave::get_cache;
+use crate::arweave::Arweave;
+use crate::arweave::LoadedContract;
+use crate::gql_result::GQLEdgeInterface;
+use crate::gql_result::GQLNodeInterface;
+use crate::miscellaneous::get_sort_key;
+use crate::evm::Instruction;
+use crate::evm::U256;
 
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));

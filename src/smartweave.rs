@@ -12,7 +12,7 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::rc::Rc;
 use std::{env, thread};
-use three_em_arweave::gql_result::GQLTagInterface;
+use crate::gql_result::GQLTagInterface;
 
 pub struct ArweaveInfo {
   pub port: i32,

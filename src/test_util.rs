@@ -1,10 +1,10 @@
 use deno_core::serde_json::Value;
-use three_em_arweave::arweave::{LoadedContract, TransactionData};
-use three_em_arweave::gql_result::{
+use crate::arweave::{LoadedContract, TransactionData};
+use crate::gql_result::{
   GQLAmountInterface, GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface,
   GQLOwnerInterface, GQLTagInterface,
 };
-use three_em_arweave::miscellaneous::ContractType;
+use crate::miscellaneous::ContractType;
 
 pub fn generate_fake_interaction(
   input: Value,

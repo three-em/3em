@@ -1,14 +1,6 @@
 [workspace]
 members = [
-  "./crates/arweave",
-  "./crates/cli",
-  "./crates/evm",
-  "./crates/executor",
-  "./crates/js",
-  "./crates/metering",
-  "./crates/smartweave",
-  "./crates/wasm",
-  "./tools/benchmarks/3em",
+  "./src"
 ]
 exclude = [
   # Rust WASM proc_macro helper.

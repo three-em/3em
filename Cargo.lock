@@ -96,17 +96,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atty"
-version = "0.2.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
-dependencies = [
- "hermit-abi",
- "libc",
- "winapi",
-]
-
-[[package]]
 name = "autocfg"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -129,15 +118,6 @@ name = "base64ct"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6b4d9b1225d28d360ec6a231d65af1fd99a2a095154c8040689617290569c5c"
-
-[[package]]
-name = "bench"
-version = "0.1.0"
-dependencies = [
- "three_em_arweave",
- "three_em_executor",
- "tokio",
-]
 
 [[package]]
 name = "bitflags"
@@ -207,17 +187,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ee52072ec15386f770805afd189a01c8841be8696bed250fa2f13c4c0d6dfb7"
 dependencies = [
  "generic-array",
-]
-
-[[package]]
-name = "colored"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3616f750b84d8f0de8a58bda93e08e2a81ad3f523089b05f1dffecab48c6cbd"
-dependencies = [
- "atty",
- "lazy_static",
- "winapi",
 ]
 
 [[package]]
@@ -797,15 +766,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "indoc"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5a75aeaaef0ce18b58056d306c27b07436fbb34b8816c53094b76dd81803136"
-dependencies = [
- "unindent",
-]
-
-[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1091,12 +1051,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pico-args"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db8bcd96cb740d03149cbad5518db9fd87126a10ab519c011893b1754134c468"
-
-[[package]]
 name = "pin-project"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1135,7 +1089,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "116bee8279d783c0cf370efa1a94632f2108e5ef0bb32df31f051647810a4e2c"
 dependencies = [
  "der",
- "pem-rfc7468",
  "zeroize",
 ]
 
@@ -1335,19 +1288,6 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
-]
-
-[[package]]
-name = "routerify"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "496c1d3718081c45ba9c31fbfc07417900aa96f4070ff90dc29961836b7a9945"
-dependencies = [
- "http",
- "hyper",
- "lazy_static",
- "percent-encoding",
- "regex",
 ]
 
 [[package]]
@@ -1625,138 +1565,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "three_em_arweave"
-version = "0.2.0"
-dependencies = [
- "base64",
- "bytes",
- "deno_core",
- "dirs",
- "hex",
- "indexmap",
- "local_ipaddress",
- "lru",
- "once_cell",
- "reqwest",
- "serde",
- "sha2",
- "tokio",
-]
-
-[[package]]
-name = "three_em_cli"
-version = "0.2.0"
-dependencies = [
- "async-trait",
- "base64",
- "colored",
- "deno_core",
- "deno_crypto",
- "hex",
- "hyper",
- "indexmap",
- "indoc",
- "local_ipaddress",
- "pico-args",
- "reqwest",
- "routerify",
- "rsa",
- "serde",
- "serde_json",
- "sha2",
- "three_em_arweave",
- "three_em_executor",
- "tokio",
- "url",
- "v8",
-]
-
-[[package]]
-name = "three_em_evm"
-version = "0.2.0"
-dependencies = [
- "hex",
- "hex-literal",
- "primitive-types",
- "tiny-keccak",
-]
-
-[[package]]
-name = "three_em_executor"
+name = "three_em"
 version = "0.2.0"
 dependencies = [
  "async-recursion",
  "base64",
+ "bytes",
  "deno_core",
+ "deno_crypto",
+ "deno_url",
+ "deno_web",
+ "deno_webidl",
+ "dirs",
  "hex",
+ "hex-literal",
  "indexmap",
  "libc",
+ "local_ipaddress",
  "lru",
  "once_cell",
+ "primitive-types",
  "reqwest",
  "serde",
  "sha2",
- "three_em_arweave",
- "three_em_evm",
- "three_em_js",
- "three_em_smartweave",
- "three_em_wasm",
- "tokio",
-]
-
-[[package]]
-name = "three_em_js"
-version = "0.2.0"
-dependencies = [
- "deno_core",
- "deno_crypto",
- "deno_url",
- "deno_web",
- "deno_webidl",
- "serde",
- "three_em_smartweave",
+ "tiny-keccak",
  "tokio",
  "v8",
-]
-
-[[package]]
-name = "three_em_metering"
-version = "0.1.0"
-dependencies = [
- "deno_core",
- "three_em_wasm",
- "tokio",
  "wasm-encoder",
  "wasmparser",
-]
-
-[[package]]
-name = "three_em_smartweave"
-version = "0.2.0"
-dependencies = [
- "deno_core",
- "deno_crypto",
- "deno_url",
- "deno_web",
- "deno_webidl",
- "lazy_static",
- "reqwest",
- "serde",
- "three_em_arweave",
- "tokio",
- "v8",
-]
-
-[[package]]
-name = "three_em_wasm"
-version = "0.2.0"
-dependencies = [
- "deno_core",
- "serde",
- "three_em_js",
- "three_em_smartweave",
- "tokio",
- "v8",
 ]
 
 [[package]]
@@ -1956,12 +1792,6 @@ name = "unicode-xid"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
-
-[[package]]
-name = "unindent"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f14ee04d9415b52b3aeab06258a3f07093182b88ba0f9b8d203f211a7a7d41c7"
 
 [[package]]
 name = "universal-hash"

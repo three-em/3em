@@ -6,23 +6,23 @@ use deno_core::OpState;
 use indexmap::map::IndexMap;
 use std::cell::RefCell;
 use std::rc::Rc;
-use three_em_arweave::arweave::get_cache;
-use three_em_arweave::arweave::LoadedContract;
-use three_em_arweave::arweave::{Arweave, ArweaveProtocol};
-use three_em_arweave::cache::ArweaveCache;
-use three_em_arweave::cache::CacheExt;
-use three_em_arweave::cache::StateResult;
-use three_em_arweave::gql_result::{
+use crate::arweave::get_cache;
+use crate::arweave::LoadedContract;
+use crate::arweave::{Arweave, ArweaveProtocol};
+use crate::cache::ArweaveCache;
+use crate::cache::CacheExt;
+use crate::cache::StateResult;
+use crate::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
 };
-use three_em_arweave::miscellaneous::ContractType;
-use three_em_evm::{ExecutionState, Machine, Storage};
-use three_em_js::CallResult;
-use three_em_js::Runtime;
-use three_em_smartweave::{
+use crate::miscellaneous::ContractType;
+use crate::evm::{ExecutionState, Machine, Storage};
+use crate::js::CallResult;
+use crate::js::Runtime;
+use crate::smartweave::{
   InteractionBlock, InteractionContext, InteractionTx,
 };
-use three_em_wasm::WasmRuntime;
+use crate::wasm::WasmRuntime;
 
 pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
@@ -75,7 +75,7 @@ pub async fn op_smartweave_read_state(
   _: (),
 ) -> Result<Value, AnyError> {
   let op_state = state.borrow();
-  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
+  let info = op_state.borrow::<crate::smartweave::ArweaveInfo>();
   let cl = Arweave::new(
     info.port,
     info.host.clone(),
@@ -321,14 +321,14 @@ pub async fn raw_execute_contract<
         let block_info =
           shared_client.get_transaction_block(&tx.id).await.unwrap();
 
-        let block_info = three_em_evm::BlockInfo {
-          timestamp: three_em_evm::U256::from(block_info.timestamp),
-          difficulty: three_em_evm::U256::from_str_radix(&block_info.diff, 10)
+        let block_info = crate::evm::BlockInfo {
+          timestamp: crate::evm::U256::from(block_info.timestamp),
+          difficulty: crate::evm::U256::from_str_radix(&block_info.diff, 10)
             .unwrap(),
-          block_hash: three_em_evm::U256::from(
+          block_hash: crate::evm::U256::from(
             block_info.indep_hash.as_bytes(),
           ),
-          number: three_em_evm::U256::from(block_info.height),
+          number: crate::evm::U256::from(block_info.height),
         };
 
         let input = get_input_from_interaction(&tx);
@@ -337,7 +337,7 @@ pub async fn raw_execute_contract<
         let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
         machine.set_storage(account_store.clone());
 
-        machine.set_fetcher(Box::new(|address: &three_em_evm::U256| {
+        machine.set_fetcher(Box::new(|address: &crate::evm::U256| {
           let mut id = [0u8; 32];
           address.to_big_endian(&mut id);
           let id = String::from_utf8_lossy(&id).to_string();
@@ -353,7 +353,7 @@ pub async fn raw_execute_contract<
 
           let store = Storage::from_raw(&store);
 
-          Some(three_em_evm::ContractInfo { store, bytecode })
+          Some(crate::evm::ContractInfo { store, bytecode })
         }));
 
         match machine.execute(&bytecode, block_info) {
@@ -382,15 +382,15 @@ mod tests {
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
   use indexmap::map::IndexMap;
-  use three_em_arweave::arweave::Arweave;
-  use three_em_arweave::arweave::{LoadedContract, TransactionData};
-  use three_em_arweave::cache::ArweaveCache;
-  use three_em_arweave::cache::CacheExt;
-  use three_em_arweave::gql_result::{
+  use crate::arweave::Arweave;
+  use crate::arweave::{LoadedContract, TransactionData};
+  use crate::cache::ArweaveCache;
+  use crate::cache::CacheExt;
+  use crate::gql_result::{
     GQLAmountInterface, GQLBlockInterface, GQLEdgeInterface, GQLNodeInterface,
     GQLOwnerInterface, GQLTagInterface,
   };
-  use three_em_arweave::miscellaneous::ContractType;
+  use crate::miscellaneous::ContractType;
 
   #[tokio::test]
   async fn test_globals_js() {
