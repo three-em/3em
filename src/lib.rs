@@ -13,7 +13,7 @@ pub mod loader;
 pub mod snapshot;
 pub mod js;
 
-mod test_util;
+pub mod test_util;
 mod utils;
 
 use crate::executor::raw_execute_contract;

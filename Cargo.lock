@@ -96,6 +96,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "atty"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
+dependencies = [
+ "hermit-abi",
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "autocfg"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -187,6 +198,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ee52072ec15386f770805afd189a01c8841be8696bed250fa2f13c4c0d6dfb7"
 dependencies = [
  "generic-array",
+]
+
+[[package]]
+name = "colored"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3616f750b84d8f0de8a58bda93e08e2a81ad3f523089b05f1dffecab48c6cbd"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi",
 ]
 
 [[package]]
@@ -766,6 +788,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "indoc"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05a0bd019339e5d968b37855180087b7b9d512c5046fbd244cf8c95687927d6e"
+
+[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1051,6 +1079,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pico-args"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db8bcd96cb740d03149cbad5518db9fd87126a10ab519c011893b1754134c468"
+
+[[package]]
 name = "pin-project"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1089,6 +1123,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "116bee8279d783c0cf370efa1a94632f2108e5ef0bb32df31f051647810a4e2c"
 dependencies = [
  "der",
+ "pem-rfc7468",
  "zeroize",
 ]
 
@@ -1288,6 +1323,19 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
+]
+
+[[package]]
+name = "routerify"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "496c1d3718081c45ba9c31fbfc07417900aa96f4070ff90dc29961836b7a9945"
+dependencies = [
+ "http",
+ "hyper",
+ "lazy_static",
+ "percent-encoding",
+ "regex",
 ]
 
 [[package]]
@@ -1593,6 +1641,33 @@ dependencies = [
  "v8",
  "wasm-encoder",
  "wasmparser",
+]
+
+[[package]]
+name = "three_em_cli"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "colored",
+ "deno_core",
+ "deno_crypto",
+ "hex",
+ "hyper",
+ "indexmap",
+ "indoc",
+ "local_ipaddress",
+ "pico-args",
+ "reqwest",
+ "routerify",
+ "rsa",
+ "serde",
+ "serde_json",
+ "sha2",
+ "three_em",
+ "tokio",
+ "url",
+ "v8",
 ]
 
 [[package]]

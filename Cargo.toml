@@ -1,6 +1,7 @@
 [workspace]
 members = [
-  "./src"
+  "./src",
+  "./cli",
 ]
 exclude = [
   # Rust WASM proc_macro helper.
