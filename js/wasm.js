@@ -47,7 +47,7 @@ export class WasmRuntime {
     return this.#cost;
   }
 
-  call(state, action) {
+  call(state, action, showErrors) {
     const statePtr = this.#exports._alloc(state.byteLength);
     const actionPtr = this.#exports._alloc(action.byteLength);
 

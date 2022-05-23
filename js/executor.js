@@ -58,9 +58,9 @@ export class ExecutorV2 {
         );
     }
 
-    async loadContract(tx, gateway) {
+    async loadContract(tx, gateway, contractSrcTxId) {
         const key = this.k++;
-        const args = { tx, key };
+        const args = { tx, key, contractSrcTxId };
         args.baseUrlCustom = this.getArweaveGlobalUrl(gateway);
         return new Promise((r) => {
             this.loadContractWorker.postMessage(args);
@@ -89,12 +89,18 @@ export class ExecutorV2 {
     }
 
     async executeContract(
+        arweave,
         contractId,
+        contractSrcTxId,
+        contractContentType,
         height,
-        clearCache,
-        gateway,
+        cache,
+        showErrors,
     ) {
-        if (clearCache) {
+
+        const gateway = arweave;
+
+        if (!cache) {
             localStorage.clear();
         }
 
@@ -135,7 +141,7 @@ export class ExecutorV2 {
 
         const { source, state, type, tx } = contract;
         let result = undefined;
-        switch (type) {
+        switch (contractContentType || type) {
             case "application/javascript":
                 const rt = new Runtime(source, state, {}, this, gateway);
 
@@ -148,11 +154,11 @@ export class ExecutorV2 {
                 // }
 
                 // Faster. At 100 interactions in about 3.68ms.
-                await rt.executeInteractions(interactions, tx);
+                await rt.executeInteractions(interactions, tx, showErrors);
 
                 const updatedInteractions = await updatePromise;
                 if (updatedInteractions?.length > 0) {
-                    await rt.executeInteractions(updatedInteractions, tx);
+                    await rt.executeInteractions(updatedInteractions, tx, showErrors);
                 }
 
                 rt.destroy();
@@ -178,6 +184,7 @@ export class ExecutorV2 {
                             input,
                             caller: interaction.node.owner.address,
                         }),
+                        showErrors
                     );
                 }
 

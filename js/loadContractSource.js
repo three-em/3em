@@ -3,11 +3,11 @@ function getTag(tx, field) {
     return atob(tx.tags.find((data) => data.name === encodedName)?.value || "");
 }
 
-async function loadContract(contractId, gatewayUrl) {
+async function loadContract(contractId, gatewayUrl, contractSrcTxId) {
     const response = await fetch(new URL(`/tx/${contractId}`, gatewayUrl).href);
     const tx = await response.json();
 
-    const contractSrcTxID = getTag(tx, "Contract-Src");
+    const contractSrcTxID = contractSrcTxId || getTag(tx, "Contract-Src");
 
     const contractSrcResponse = await fetch(
         new URL(`/tx/${contractSrcTxID}/data`, gatewayUrl).href,
@@ -49,8 +49,8 @@ async function loadContract(contractId, gatewayUrl) {
 }
 
 const processEvent = (baseUrl) => async (event) => {
-    const { tx, key, baseUrlCustom } = event.data;
-    const r = await loadContract(tx, baseUrlCustom || baseUrl);
+    const { tx, key, baseUrlCustom, contractSrcTxId } = event.data;
+    const r = await loadContract(tx, baseUrlCustom || baseUrl, contractSrcTxId);
     self.postMessage({ key, result: r });
 };
 
