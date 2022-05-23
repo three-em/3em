@@ -89,18 +89,18 @@ export class ExecutorV2 {
     }
 
     async executeContract(
-        arweave,
         contractId,
-        contractSrcTxId,
-        contractContentType,
         height,
         cache,
         showErrors,
+        contractSrcTxId,
+        contractContentType,
+        arweave
     ) {
 
         const gateway = arweave;
 
-        if (!cache) {
+        if (cache === false) {
             localStorage.clear();
         }
 

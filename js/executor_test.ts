@@ -8,40 +8,24 @@ Deno.test("contract_load_test", async () => {
 });
 
 Deno.test("execute_js_test", async () => {
-  const { validity } = await executeContract(
-    "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE",
-    749180,
-  );
+  const { validity } = await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE", 749180);
   assertEquals(Object.values(validity).filter((r) => !!r).length, 93);
 });
 
 Deno.test("execute_js_test", async () => {
   globalThis.ARWEAVE_HOST = "www.arweave.run";
-  const { state } = await executeContract(
-      "xRkYokQfFHLh2K9slmghlXNptKrqQdDZoy75JGsv89M",
-      100,
-  );
+  const { state } = await executeContract("xRkYokQfFHLh2K9slmghlXNptKrqQdDZoy75JGsv89M", 100);
   assertEquals(state.ticker, "VRT");
 });
 
 Deno.test("execute_js_test readContractState", async () => {
   globalThis.ARWEAVE_HOST = "www.arweave.run";
-  let { state, validity } = await executeContract(
-      "Vjt13JlvOzaOs4St_Iy2jmanxa7dc-Z3pDk3ktwEQNA",
-      undefined,
-      false,
-      undefined,
-  );
+  let { state, validity } = await executeContract("Vjt13JlvOzaOs4St_Iy2jmanxa7dc-Z3pDk3ktwEQNA", undefined, true);
   assertEquals(state.ticker, "CHILL");
 });
 
 Deno.test("execute_js_test DlsykD_fJ3m7yAzCvFgRdb0W1jgGWe4LcAHJzrRx99A", async () => {
   globalThis.ARWEAVE_HOST = "www.arweave.run";
-  let { state, validity } = await executeContract(
-      "DlsykD_fJ3m7yAzCvFgRdb0W1jgGWe4LcAHJzrRx99A",
-      undefined,
-      false,
-      undefined,
-  );
+  let { state, validity } = await executeContract("DlsykD_fJ3m7yAzCvFgRdb0W1jgGWe4LcAHJzrRx99A", undefined);
   assertEquals(state.ticker, "BLUE");
 });
