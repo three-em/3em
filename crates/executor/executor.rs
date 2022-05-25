@@ -83,7 +83,7 @@ pub async fn op_smartweave_read_state(
     ArweaveCache::new(),
   );
   let state =
-    crate::execute_contract(&cl, contract_id, None, None, height, true, false)
+    crate::execute_contract(contract_id, height, true, false, None, None, &cl)
       .await?;
   Ok(process_execution(state, show_validity.unwrap_or(false)))
 }
