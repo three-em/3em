@@ -417,6 +417,7 @@ impl Arweave {
     contract_id: String,
     contract_src_tx_id: Option<String>,
     contract_type: Option<String>,
+    contract_init_state: Option<String>,
     cache: bool,
   ) -> Result<LoadedContract, AnyError> {
     let mut result: Option<LoadedContract> = None;
@@ -448,21 +449,26 @@ impl Arweave {
 
       let mut state: String;
 
-      if let Ok(init_state_tag) = contract_transaction.get_tag("Init-State") {
-        state = init_state_tag;
-      } else if let Ok(init_state_tag_txid) =
-        contract_transaction.get_tag("Init-State-TX")
-      {
-        let init_state_tx = self.get_transaction(&init_state_tag_txid).await?;
-        state = decode_base_64(init_state_tx.data);
+      if let Some(manual_init_state) = contract_init_state {
+        state = manual_init_state;
       } else {
-        state = decode_base_64(contract_transaction.data.to_owned());
+        if let Ok(init_state_tag) = contract_transaction.get_tag("Init-State") {
+          state = init_state_tag;
+        } else if let Ok(init_state_tag_txid) =
+          contract_transaction.get_tag("Init-State-TX")
+        {
+          let init_state_tx =
+            self.get_transaction(&init_state_tag_txid).await?;
+          state = decode_base_64(init_state_tx.data);
+        } else {
+          state = decode_base_64(contract_transaction.data.to_owned());
 
-        if state.is_empty() {
-          state = String::from_utf8(
-            self.get_transaction_data(&contract_transaction.id).await,
-          )
-          .unwrap();
+          if state.is_empty() {
+            state = String::from_utf8(
+              self.get_transaction_data(&contract_transaction.id).await,
+            )
+            .unwrap();
+          }
         }
       }
 
