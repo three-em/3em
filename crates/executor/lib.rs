@@ -26,13 +26,13 @@ static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
 
 #[async_recursion::async_recursion(?Send)]
 pub async fn execute_contract(
-  arweave: &Arweave,
   contract_id: String,
-  contract_src_tx: Option<String>,
-  contract_content_type: Option<String>,
   height: Option<usize>,
   cache: bool,
   show_errors: bool,
+  contract_src_tx: Option<String>,
+  contract_content_type: Option<String>,
+  arweave: &Arweave,
 ) -> Result<ExecuteResult, AnyError> {
   if let Some(result) = LRU_CACHE.lock().unwrap().get(&contract_id) {
     return Ok(result.clone());
@@ -362,13 +362,13 @@ mod test {
       ArweaveCache::new(),
     );
     let result = execute_contract(
-      &arweave,
       String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE"),
-      None,
-      None,
       Some(838269),
       false,
       false,
+      None,
+      None,
+      &arweave,
     )
     .await
     .unwrap();
@@ -407,13 +407,13 @@ mod test {
       ArweaveCache::new(),
     );
     let result = execute_contract(
-      &arweave,
       String::from("KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ"),
-      None,
-      None,
       Some(822062),
       false,
       false,
+      None,
+      None,
+      &arweave,
     )
     .await
     .unwrap();
@@ -442,13 +442,13 @@ mod test {
       ArweaveCache::new(),
     );
     let result = execute_contract(
-      &arweave,
       String::from("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE"),
       None,
-      None,
-      None,
       false,
       false,
+      None,
+      None,
+      &arweave,
     )
     .await
     .unwrap();

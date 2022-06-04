@@ -13,13 +13,13 @@ async fn main() {
   );
 
   execute_contract(
-    &arweave,
     "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE".to_string(),
-    None,
-    None,
     None,
     true,
     false,
+    None,
+    None,
+    &arweave,
   )
   .await
   .unwrap();

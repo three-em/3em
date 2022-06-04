@@ -57,14 +57,15 @@ async fn execute_contract(
         arweave_protocol,
         ArweaveCache::new(),
       );
+
       let result = execute(
-        &arweave,
         tx,
-        None,
-        None,
         maybe_height.map(|h| h as usize),
         true,
         false,
+        None,
+        None,
+        &arweave,
       )
       .await;
 

@@ -355,7 +355,8 @@ const WORKER = `{
   self.addEventListener("message", async function(e) {
     globalThis.URL_GATEWAY = e.data.URL_GATEWAY;
     if(e.data.type === "execute") {
-      let currentState = JSON.parse(e.data.state);
+      const state = e.data.state;
+      let currentState = typeof state === "string" ? JSON.parse(state) : state;
       const interactions = e.data.interactions ?? [];
       
       if (interactions.length == 0) {
@@ -389,8 +390,8 @@ const WORKER = `{
           }
           currentState = state.state;
           validity[tx.id] = true;
-        } catch(e) {
-          validity[tx.id] = false;
+        } catch(error) {
+          validity[tx.id] = e.data.showErrors ? error.toString() : false;
         }
       }
 
@@ -454,13 +455,14 @@ export class Runtime {
   }
 
   // Fast path for the most common case.
-  async executeInteractions(interactions, contract) {
+  async executeInteractions(interactions, contract, showErrors) {
     this.#module.postMessage({
       type: "execute",
       state: this.#state,
       interactions,
       contract,
-      URL_GATEWAY: this.gateway
+      URL_GATEWAY: this.gateway,
+      showErrors
     });
 
     await this.resolveState();

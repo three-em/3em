@@ -26,7 +26,7 @@ pub async fn run(
   let start = std::time::Instant::now();
 
   let execution =
-    execute_contract(&arweave, tx, None, None, height, !no_cache, show_errors)
+    execute_contract(tx, height, !no_cache, show_errors, None, None, &arweave)
       .await?;
 
   if benchmark {

@@ -19,13 +19,13 @@ async fn main() {
   for i in 0..NUM_ITERATIONS {
     let now = Instant::now();
     execute_contract(
-      &arweave,
       "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE".to_string(),
-      None,
-      None,
       Some(749180),
       true,
       false,
+      None,
+      None,
+      &arweave,
     )
     .await
     .unwrap();
