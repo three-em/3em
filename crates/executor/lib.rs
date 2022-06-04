@@ -38,7 +38,8 @@ pub async fn simulate_contract(
       .await;
 
     contract
-  }).0;
+  })
+  .0;
 
   if loaded_contract.is_ok() {
     let execute = raw_execute_contract(
@@ -54,7 +55,7 @@ pub async fn simulate_contract(
       },
       arweave,
     )
-        .await;
+    .await;
 
     Ok(execute)
   } else {
