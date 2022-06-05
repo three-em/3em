@@ -3,11 +3,16 @@
 
 
 "@napi-rs/cli@^2.0.0":
-  "integrity" "sha512-+yCOuPqernvD8BMphbadF87ElaJ0rjanOZrbnauaEdR07YyoalGw3FTk15HHyflIwQKlYd69gkG5EM4WFkICKw=="
-  "resolved" "https://registry.npmjs.org/@napi-rs/cli/-/cli-2.4.2.tgz"
-  "version" "2.4.2"
+  version "2.4.2"
+  resolved "https://registry.npmjs.org/@napi-rs/cli/-/cli-2.4.2.tgz"
+  integrity sha512-+yCOuPqernvD8BMphbadF87ElaJ0rjanOZrbnauaEdR07YyoalGw3FTk15HHyflIwQKlYd69gkG5EM4WFkICKw==
 
-"detect-libc@^1.0.3":
-  "integrity" "sha1-+hN8S9aY7fVc1c0CrFWfkaTEups="
-  "resolved" "https://registry.npmjs.org/detect-libc/-/detect-libc-1.0.3.tgz"
-  "version" "1.0.3"
+"@three-em/node-darwin-arm64@0.2.11":
+  version "0.2.11"
+  resolved "https://registry.yarnpkg.com/@three-em/node-darwin-arm64/-/node-darwin-arm64-0.2.11.tgz#33d59e7c1c836d8e720f66d2f189473bf55df97d"
+  integrity sha512-b40F82dNdF5vpwzO4KP0KeAIfaVOLHsitHjDHNsaluit451ObuHubYc+Iu3F0jEclKnKlLW9CFUyr1qJd+/SZw==
+
+detect-libc@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.npmjs.org/detect-libc/-/detect-libc-1.0.3.tgz"
+  integrity sha1-+hN8S9aY7fVc1c0CrFWfkaTEups=
