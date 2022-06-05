@@ -1,10 +1,11 @@
 pub mod executor;
+pub mod simulate_contract;
 pub mod test_util;
 
 use crate::executor::raw_execute_contract;
 pub use crate::executor::ExecuteResult;
 pub use crate::executor::ValidityTable;
-use deno_core::error::AnyError;
+use deno_core::error::{generic_error, AnyError};
 use deno_core::serde_json::Value;
 pub use indexmap::map::IndexMap;
 use lru::LruCache;
@@ -23,6 +24,44 @@ use three_em_evm::U256;
 
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));
+
+pub async fn simulate_contract(
+  contract_id: String,
+  contract_init_state: Option<String>,
+  interactions: Vec<GQLEdgeInterface>,
+  arweave: &Arweave,
+) -> Result<ExecuteResult, AnyError> {
+  let shared_id = contract_id.clone();
+  let loaded_contract = tokio::join!(async move {
+    let contract: Result<LoadedContract, AnyError> = arweave
+      .load_contract(shared_id, None, None, contract_init_state, true)
+      .await;
+
+    contract
+  })
+  .0;
+
+  if loaded_contract.is_ok() {
+    let execute = raw_execute_contract(
+      contract_id,
+      loaded_contract.unwrap(),
+      interactions,
+      IndexMap::new(),
+      None,
+      true,
+      false,
+      |validity_table, cache_state| {
+        ExecuteResult::V8(cache_state.unwrap(), validity_table)
+      },
+      arweave,
+    )
+    .await;
+
+    Ok(execute)
+  } else {
+    Err(generic_error("Contract could not be loaded"))
+  }
+}
 
 #[async_recursion::async_recursion(?Send)]
 pub async fn execute_contract(
@@ -44,7 +83,13 @@ pub async fn execute_contract(
   let (loaded_contract, interactions) = tokio::join!(
     async move {
       let contract: Result<LoadedContract, AnyError> = arweave
-        .load_contract(shared_id, contract_src_tx, contract_content_type, cache)
+        .load_contract(
+          shared_id,
+          contract_src_tx,
+          contract_content_type,
+          None,
+          cache,
+        )
         .await;
 
       contract

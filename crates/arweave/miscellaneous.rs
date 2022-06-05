@@ -4,6 +4,8 @@ use deno_core::error::AnyError;
 use serde::Deserialize;
 use serde::Serialize;
 
+pub type CommonError = AnyError;
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub enum ContractType {
   JAVASCRIPT,
