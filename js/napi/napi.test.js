@@ -4,7 +4,7 @@ describe("NAPI test", () => {
 
   test("Test contract", async () => {
     const run = await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE");
-    console.log(run);
+    expect(run.state.tokens).not.toBeUndefined();
   })
 
   test("Simulate contract", async () => {
