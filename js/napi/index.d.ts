@@ -12,5 +12,24 @@ export interface ExecuteConfig {
   port: number
   protocol: string
 }
-export function simulateContract(contractId: string, contractInitState?: string | undefined | null, interactions: any, maybeConfig?: ExecuteConfig | undefined | null): Promise<ExecuteContractResult>
+export interface Tag {
+  name: string
+  value: string
+}
+export interface Block {
+  height: string
+  indepHash: string
+  timestamp: string
+}
+export interface SimulateInput {
+  id: string
+  owner: string
+  quantity: string
+  reward: string
+  target?: string | undefined | null
+  tags: Array<Tag>
+  block?: Block | undefined | null
+  input: any
+}
+export function simulateContract(contractId: string, interactions: Array<SimulateInput>, contractInitState?: string | undefined | null, maybeConfig?: ExecuteConfig | undefined | null): Promise<ExecuteContractResult>
 export function executeContract(tx: string, maybeHeight?: number | undefined | null, maybeConfig?: ExecuteConfig | undefined | null): Promise<ExecuteContractResult>

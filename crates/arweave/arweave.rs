@@ -430,7 +430,12 @@ impl Arweave {
     }
 
     if result.is_some() {
-      Ok(result.unwrap())
+      let mut cached_result = result.unwrap();
+      if let Some(init_state) = contract_init_state {
+        cached_result.init_state = init_state;
+      }
+
+      Ok(cached_result)
     } else {
       let contract_transaction = self.get_transaction(&contract_id).await?;
 
