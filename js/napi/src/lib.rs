@@ -6,9 +6,10 @@ use std::collections::HashMap;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::cache::ArweaveCache;
 use three_em_arweave::cache::CacheExt;
-use three_em_arweave::gql_result::GQLEdgeInterface;
+use three_em_arweave::gql_result::{GQLEdgeInterface, GQLTagInterface};
 use three_em_executor::execute_contract as execute;
 use three_em_executor::simulate_contract as simulate;
+use three_em_executor::utils::create_simulated_transaction;
 use three_em_executor::ExecuteResult;
 use three_em_executor::ValidityTable;
 use tokio::runtime::Handle;
@@ -28,6 +29,31 @@ pub struct ExecuteConfig {
   pub host: String,
   pub port: i32,
   pub protocol: String,
+}
+
+#[napi(object)]
+pub struct Tag {
+  pub name: String,
+  pub value: String,
+}
+
+#[napi(object)]
+pub struct Block {
+  pub height: String,
+  pub indep_hash: String,
+  pub timestamp: String,
+}
+
+#[napi(object)]
+pub struct SimulateInput {
+  pub id: String,
+  pub owner: String,
+  pub quantity: String,
+  pub reward: String,
+  pub target: Option<String>,
+  pub tags: Vec<Tag>,
+  pub block: Option<Block>,
+  pub input: Value,
 }
 
 // Convert the ValidityTable from an IndexMap to HashMap
@@ -84,21 +110,56 @@ fn get_result(
   }
 }
 
-/// TODO: Type `interactions` to GQLEdgeInterface (figure out how to make a napi object for it without re-coding existent struct)
-
 #[napi]
 async fn simulate_contract(
   contract_id: String,
+  interactions: Vec<SimulateInput>,
   contract_init_state: Option<String>,
-  interactions: Value,
   maybe_config: Option<ExecuteConfig>,
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     Handle::current().block_on(async move {
       let arweave = get_gateway(maybe_config);
 
-      let real_interactions: Vec<GQLEdgeInterface> =
-        serde_json::from_value(interactions).unwrap();
+      let real_interactions: Vec<GQLEdgeInterface> = interactions
+        .into_iter()
+        .map(|data| {
+          let tags: Vec<GQLTagInterface> = data
+            .tags
+            .into_iter()
+            .map(|tag| GQLTagInterface {
+              name: tag.name.to_string(),
+              value: tag.value.to_string(),
+            })
+            .collect::<Vec<GQLTagInterface>>();
+
+          let (height, timestamp, indep_hash) =
+            if let Some(block_data) = data.block {
+              (
+                Some(block_data.height),
+                Some(block_data.timestamp),
+                Some(block_data.indep_hash),
+              )
+            } else {
+              (None, None, None)
+            };
+
+          let transaction = create_simulated_transaction(
+            data.id,
+            data.owner,
+            data.quantity,
+            data.reward,
+            data.target,
+            tags,
+            height,
+            indep_hash,
+            timestamp,
+            data.input.to_string(),
+          );
+
+          transaction
+        })
+        .collect();
 
       let result = simulate(
         contract_id,
@@ -163,7 +224,9 @@ async fn execute_contract(
 
 #[cfg(test)]
 mod tests {
-  use crate::{execute_contract, simulate_contract, ExecuteConfig};
+  use crate::{
+    execute_contract, simulate_contract, ExecuteConfig, SimulateInput,
+  };
 
   #[tokio::test]
   pub async fn test_execute_contract() {
@@ -189,25 +252,17 @@ mod tests {
   pub async fn simulate_contract_test() {
     let contract = simulate_contract(
       "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ".into(),
+      vec![SimulateInput {
+        id: String::from("abcd"),
+        owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+        quantity: String::from("12301"),
+        reward: String::from("12931293"),
+        target: None,
+        tags: vec![],
+        block: None,
+        input: serde_json::json!({}),
+      }],
       Some(r#"{"counter": 2481}"#.into()),
-      serde_json::json!([{
-        "cursor": "",
-        "node": {
-          "id": "abcd",
-          "owner": {
-            "address": "paykB5SUNHFBIL3V6HLfUIL9n_X3Anp1JSf7bXMsTRQ"
-          },
-          "tags": [{
-            "name": "Input",
-            "value": "{}"
-          }],
-          "block": {
-            "id": "kaskdlasfl",
-            "timestamp": 1239019230,
-            "height": 1
-          }
-        }
-      }]),
       None,
     )
     .await
