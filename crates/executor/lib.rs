@@ -1,5 +1,4 @@
 pub mod executor;
-pub mod simulate_contract;
 pub mod test_util;
 pub mod utils;
 
@@ -35,7 +34,7 @@ pub async fn simulate_contract(
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
     let contract: Result<LoadedContract, AnyError> = arweave
-      .load_contract(shared_id, None, None, contract_init_state, true)
+      .load_contract(shared_id, None, None, contract_init_state, true, true)
       .await;
 
     contract
@@ -90,6 +89,7 @@ pub async fn execute_contract(
           contract_content_type,
           None,
           cache,
+          false,
         )
         .await;
 

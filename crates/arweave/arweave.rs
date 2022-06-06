@@ -419,6 +419,7 @@ impl Arweave {
     contract_type: Option<String>,
     contract_init_state: Option<String>,
     cache: bool,
+    simulated: bool,
   ) -> Result<LoadedContract, AnyError> {
     let mut result: Option<LoadedContract> = None;
 
@@ -431,8 +432,11 @@ impl Arweave {
 
     if result.is_some() {
       let mut cached_result = result.unwrap();
-      if let Some(init_state) = contract_init_state {
-        cached_result.init_state = init_state;
+
+      if simulated {
+        if let Some(init_state) = contract_init_state {
+          cached_result.init_state = init_state;
+        }
       }
 
       Ok(cached_result)
