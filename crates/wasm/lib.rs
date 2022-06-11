@@ -12,6 +12,42 @@ macro_rules! wasm_alloc {
   };
 }
 
+fn get_string(scope: &mut v8::HandleScope, memory: v8::Local<v8::ArrayBuffer>, ptr: v8::Local<v8::Value>) -> String {
+  const ID_OFFSET: i64 = -8;
+  let ptr = v8::Local::<v8::Integer>::try_from(ptr).value() as i64;
+  let idx: i64 = ptr + ID_OFFSET >>> 2;
+  let view = v8::Uint32Array::new(scope, memory, 0, memory.byte_length());
+  let id = view.get_index(scope, idx as u32);
+}
+
+fn assemblyscript_abort(
+  scope: &mut v8::HandleScope,
+  _: v8::FunctionCallbackArguments,
+  _rv: v8::ReturnValue,
+) {
+  // abort(msgPtr, filePtr, line, column)
+  let msg_ptr =  
+  let ctx = scope.get_current_context();
+  let global = ctx.global(scope);
+  
+  // Grab WebAssembly memory.
+  let exports_str = v8::String::new(scope, "exports").unwrap();
+  let exports = global.get(scope, exports_str.into()).unwrap();
+  let exports = v8::Local::<v8::Object>::try_from(exports).unwrap();
+
+  let mem_str = v8::String::new(scope, "memory").unwrap();
+  let mem_obj = exports.get(scope, mem_str.into()).unwrap();
+  let mem_obj = v8::Local::<v8::Object>::try_from(mem_obj).unwrap();
+
+  let buffer_str = v8::String::new(scope, "buffer").unwrap();
+  let buffer_obj = mem_obj.get(scope, buffer_str.into()).unwrap();
+  
+  // ArrayBuffer to the WASM linear memory.
+  let mem_buf = v8::Local::<v8::ArrayBuffer>::try_from(buffer_obj).unwrap();
+  
+}
+
+
 pub struct WasmRuntime {
   rt: JsRuntime,
   /// The contract handler.
@@ -65,14 +101,8 @@ impl WasmRuntime {
       // AssemblyScript needs `abort` to be defined.
       let env = v8::Object::new(scope);
       let abort_str = v8::String::new(scope, "abort").unwrap();
-      let function_callback =
-        |_: &mut v8::HandleScope,
-         _: v8::FunctionCallbackArguments,
-         _: v8::ReturnValue| {
-          // No-op.
-        };
-
-      let abort_callback = v8::Function::new(scope, function_callback).unwrap();
+      let abort_callback =
+        v8::Function::new(scope, assemblyscript_abort).unwrap();
       env.set(scope, abort_str.into(), abort_callback.into());
 
       let env_str = v8::String::new(scope, "env").unwrap();
