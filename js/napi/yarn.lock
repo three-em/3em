@@ -556,10 +556,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@three-em/node-darwin-arm64@0.2.11":
-  version "0.2.11"
-  resolved "https://registry.yarnpkg.com/@three-em/node-darwin-arm64/-/node-darwin-arm64-0.2.11.tgz#33d59e7c1c836d8e720f66d2f189473bf55df97d"
-  integrity sha512-b40F82dNdF5vpwzO4KP0KeAIfaVOLHsitHjDHNsaluit451ObuHubYc+Iu3F0jEclKnKlLW9CFUyr1qJd+/SZw==
+"@three-em/node-darwin-arm64@0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@three-em/node-darwin-arm64/-/node-darwin-arm64-0.3.1.tgz#401996f754e396bb976f99d7f21c54f4ad250eec"
+  integrity sha512-EROsXAsLexa89OJAesy9oVmo2DEV+qj2w5DTtnHaD+9T4xsZysNf+gINKZfqRdPnFLhITQ/wH5Cb1ERc1clHew==
 
 "@types/babel__core@^7.1.14":
   version "7.1.19"
