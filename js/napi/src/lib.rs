@@ -289,7 +289,7 @@ mod tests {
       }],
       Some(r#"{"counter": 2481}"#.into()),
       None,
-      None,
+      Some(false),
     )
     .await
     .unwrap();
