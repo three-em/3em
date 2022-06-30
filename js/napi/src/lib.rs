@@ -116,6 +116,7 @@ async fn simulate_contract(
   interactions: Vec<SimulateInput>,
   contract_init_state: Option<String>,
   maybe_config: Option<ExecuteConfig>,
+  maybe_cache: Option<bool>
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     Handle::current().block_on(async move {
@@ -166,6 +167,7 @@ async fn simulate_contract(
         contract_init_state,
         real_interactions,
         &arweave,
+        maybe_cache
       )
       .await;
 
@@ -231,7 +233,7 @@ mod tests {
   #[tokio::test]
   pub async fn test_execute_contract() {
     let contract = execute_contract(
-      String::from("xRkYokQfFHLh2K9slmghlXNptKrqQdDZoy75JGsv89M"),
+      String::from("yAovBvlYWiIBx6i7hPSo2f5hNJpG6Wdq4eDyiudm1_M"),
       None,
       Some(ExecuteConfig {
         host: String::from("www.arweave.run"),
@@ -244,7 +246,7 @@ mod tests {
     println!("{}", contract_result);
     assert_eq!(
       contract_result.get("name").unwrap().as_str().unwrap(),
-      "VERTO #0"
+      "VERTO"
     );
   }
 
@@ -264,6 +266,7 @@ mod tests {
       }],
       Some(r#"{"counter": 2481}"#.into()),
       None,
+      None
     )
     .await
     .unwrap();
