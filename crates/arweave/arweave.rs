@@ -164,6 +164,18 @@ impl Arweave {
     }
   }
 
+  pub fn new_no_cache(port: i32, host: String, protocol: String) -> Arweave {
+    Arweave {
+      port,
+      host,
+      protocol: match &protocol[..] {
+        "http" => ArweaveProtocol::HTTP,
+        "https" | _ => ArweaveProtocol::HTTPS,
+      },
+      client: Client::new(),
+    }
+  }
+
   pub async fn get_transaction(
     &self,
     transaction_id: &str,

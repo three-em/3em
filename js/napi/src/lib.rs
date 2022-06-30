@@ -68,7 +68,10 @@ fn validity_to_hashmap(
   map
 }
 
-fn get_gateway(maybe_config: Option<ExecuteConfig>) -> Arweave {
+fn get_gateway(
+  maybe_config: Option<ExecuteConfig>,
+  use_cache: Option<bool>,
+) -> Arweave {
   let arweave_gateway = maybe_config
     .as_ref()
     .map(|item| item.host.to_owned())
@@ -82,12 +85,17 @@ fn get_gateway(maybe_config: Option<ExecuteConfig>) -> Arweave {
     .map(|item| item.port)
     .unwrap_or(443 as i32);
 
-  Arweave::new(
-    arweave_port,
-    arweave_gateway,
-    arweave_protocol,
-    ArweaveCache::new(),
-  )
+  let use_cache_bool = use_cache.unwrap_or(true);
+  if use_cache_bool {
+    Arweave::new(
+      arweave_port,
+      arweave_gateway,
+      arweave_protocol,
+      ArweaveCache::new(),
+    )
+  } else {
+    Arweave::new_no_cache(arweave_port, arweave_gateway, arweave_protocol)
+  }
 }
 
 fn get_result(
@@ -116,11 +124,11 @@ async fn simulate_contract(
   interactions: Vec<SimulateInput>,
   contract_init_state: Option<String>,
   maybe_config: Option<ExecuteConfig>,
-  maybe_cache: Option<bool>
+  maybe_cache: Option<bool>,
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     Handle::current().block_on(async move {
-      let arweave = get_gateway(maybe_config);
+      let arweave = get_gateway(maybe_config, maybe_cache.clone());
 
       let real_interactions: Vec<GQLEdgeInterface> = interactions
         .into_iter()
@@ -167,7 +175,7 @@ async fn simulate_contract(
         contract_init_state,
         real_interactions,
         &arweave,
-        maybe_cache
+        maybe_cache,
       )
       .await;
 
@@ -195,7 +203,7 @@ async fn execute_contract(
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     Handle::current().block_on(async move {
-      let arweave = get_gateway(maybe_config);
+      let arweave = get_gateway(maybe_config, None);
 
       let result = execute(
         tx,
@@ -227,8 +235,23 @@ async fn execute_contract(
 #[cfg(test)]
 mod tests {
   use crate::{
-    execute_contract, simulate_contract, ExecuteConfig, SimulateInput,
+    execute_contract, get_gateway, simulate_contract, ExecuteConfig,
+    SimulateInput,
   };
+  use three_em_arweave::arweave::get_cache;
+
+  // #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+  // #[should_panic]
+  // pub async fn no_cache_test() {
+  //   get_gateway(None, Some(false));
+  //   get_cache();
+  // }
+
+  #[tokio::test]
+  pub async fn with_cache_test() {
+    get_gateway(None, None);
+    get_cache();
+  }
 
   #[tokio::test]
   pub async fn test_execute_contract() {
@@ -266,7 +289,7 @@ mod tests {
       }],
       Some(r#"{"counter": 2481}"#.into()),
       None,
-      None
+      Some(false),
     )
     .await
     .unwrap();
