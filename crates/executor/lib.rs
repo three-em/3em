@@ -30,11 +30,12 @@ pub async fn simulate_contract(
   contract_init_state: Option<String>,
   interactions: Vec<GQLEdgeInterface>,
   arweave: &Arweave,
+  maybe_cache: Option<bool>
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
     let contract: Result<LoadedContract, AnyError> = arweave
-      .load_contract(shared_id, None, None, contract_init_state, true, true)
+      .load_contract(shared_id, None, None, contract_init_state, maybe_cache.unwrap_or(false), true)
       .await;
 
     contract
