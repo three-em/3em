@@ -123,7 +123,7 @@
     }
 
     b64UrlToString(b64UrlString) {
-      let buffer = b64UrlToBuffer(b64UrlString);
+      let buffer = this.b64UrlToBuffer(b64UrlString);
       return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
     }
 
@@ -136,7 +136,7 @@
     }
 
     stringToB64Url(string) {
-      return this.bufferTob64Url(stringToBuffer(string));
+      return this.bufferTob64Url(this.stringToBuffer(string));
     }
 
     b64UrlToBuffer(b64UrlString) {
@@ -343,7 +343,7 @@
             if(jsonData.id) {
               const data_size = parseInt(jsonData.data_size);
               if (jsonData.format >= 2 && data_size > 0 && data_size <= 1024 * 1024 * 12) {
-                const data = await txGetData(id);
+                const data = await txGetData(txId);
                 return new Transaction({
                   ...jsonData,
                   data,
@@ -357,9 +357,9 @@
             }
           }
 
-          throw new Error(`${txId} Transaction not found or operation is invalid`);
+          throw new Error(`0: ${txId} Transaction not found or operation is invalid`);
         } catch(e) {
-          throw new Error(`${txId} Transaction not found or operation is invalid`);
+          throw new Error(`1: ${txId} Transaction not found or operation is invalid ${e.toString()}`);
         }
       };
 
@@ -499,5 +499,5 @@
   window.atob = atob;
   window.TextEncoder = TextEncoder;
   window.TextDecoder = TextDecoder;
-  window.ArweaveUtils = ArweaveUtils;
+  window.ArweaveUtils = new ArweaveUtils();
 })(this);

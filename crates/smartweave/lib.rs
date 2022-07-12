@@ -82,10 +82,7 @@ where
         "op_smartweave_read_contract",
         op_async(op_smartweave_read_contract),
       ),
-      (
-          "op_smartweave_get_tx",
-          op_async(op_smartweave_get_tx)
-      ),
+      ("op_smartweave_get_tx", op_async(op_smartweave_get_tx)),
     ])
     .state(move |state| {
       let (port, host, protocol) = arweave.clone();
@@ -167,9 +164,9 @@ pub async fn op_smartweave_get_tx(
   let arweave = s.borrow::<ArweaveInfo>();
 
   let req = reqwest::get(format!("{}/tx/{}", get_host(arweave), tx_id))
-      .await?
-      .text()
-      .await?;
+    .await?
+    .text()
+    .await?;
 
   Ok(req)
 }
