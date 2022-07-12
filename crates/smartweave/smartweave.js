@@ -123,7 +123,7 @@
     }
 
     b64UrlToString(b64UrlString) {
-      let buffer = b64UrlToBuffer(b64UrlString);
+      let buffer = this.b64UrlToBuffer(b64UrlString);
       return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
     }
 
@@ -136,7 +136,7 @@
     }
 
     stringToB64Url(string) {
-      return this.bufferTob64Url(stringToBuffer(string));
+      return this.bufferTob64Url(this.stringToBuffer(string));
     }
 
     b64UrlToBuffer(b64UrlString) {
@@ -316,26 +316,57 @@
     }
 
     get unsafeClient() {
-      return {
-        transactions: {
-          getData: async (txId, opts) => {
-            if(this.transaction && this.transaction.id === txId) {
-              const arweave = this.arweave;
-              const data = await Deno.core.opAsync("op_smartweave_get_tx_data", txId);
+      const txGetData = async (txId, opts) => {
+        try {
+          const arweave = this.arweave;
+          const data = await Deno.core.opAsync("op_smartweave_get_tx_data", txId);
 
-              if (opts && opts.decode && !opts.string) {
-                return data;
+          if (opts && opts.decode && !opts.string) {
+            return data;
+          }
+
+          if (opts && opts.decode && opts.string) {
+            return arweave.utils.bufferToString(data);
+          }
+
+          return arweave.utils.bufferTob64Url(data);
+        } catch(e) {
+          throw new Error(`${txId} was not found`);
+        }
+      };
+
+      const txGet = async (txId) => {
+        try {
+          const data = await Deno.core.opAsync("op_smartweave_get_tx", txId);
+          if(data) {
+            let jsonData = JSON.parse(data);
+            if(jsonData.id) {
+              const data_size = parseInt(jsonData.data_size);
+              if (jsonData.format >= 2 && data_size > 0 && data_size <= 1024 * 1024 * 12) {
+                const data = await txGetData(txId);
+                return new Transaction({
+                  ...jsonData,
+                  data,
+                });
               }
 
-              if (opts && opts.decode && opts.string) {
-                return arweave.utils.bufferToString(data);
-              }
-
-              return arweave.utils.bufferTob64Url(data);
-            } else {
-              Deno.core.opSync("op_smartweave_unsafe_exit_process");
+              return new Transaction({
+                ...jsonData,
+                format: jsonData.format || 1,
+              });
             }
           }
+
+          throw new Error(`0: ${txId} Transaction not found or operation is invalid`);
+        } catch(e) {
+          throw new Error(`1: ${txId} Transaction not found or operation is invalid ${e.toString()}`);
+        }
+      };
+
+      return {
+        transactions: {
+          get: txGet,
+          getData: txGetData
         }
       }
     }
@@ -468,4 +499,5 @@
   window.atob = atob;
   window.TextEncoder = TextEncoder;
   window.TextDecoder = TextDecoder;
+  window.ArweaveUtils = new ArweaveUtils();
 })(this);

@@ -507,6 +507,43 @@ export async function handle() {
     assert_eq!(host, "http://arweave.net:12345");
   }
 
+  #[tokio::test]
+  async fn test_smartweave_get_tx() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  try {
+  const tx = await SmartWeave.unsafeClient.transactions.get("1OLypVtx3fIh-zq6iAihS0I1HBMwDp-fm_3kuGLDOTY");
+  const currTag = tx.get("tags")[0];
+    return {
+      state: [
+        currTag.get("name", { decode: true, string: true }),
+        currTag.get("value", { decode: true, string: true }),
+        tx.get("id")
+      ]
+    };
+  } catch(e) {
+    return { state: [e.stack.toString(), "", ""] }
+  }
+}
+"#,
+      (),
+      (443, String::from("arweave.net"), String::from("https")),
+      never_op,
+    )
+        .await
+        .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let data = rt.get_contract_state::<Vec<String>>().unwrap();
+    assert_eq!(data.get(0).unwrap(), "App-Name");
+    assert_eq!(data.get(1).unwrap(), "SmartWeaveContract");
+    assert_eq!(
+      data.get(2).unwrap(),
+      "1OLypVtx3fIh-zq6iAihS0I1HBMwDp-fm_3kuGLDOTY"
+    );
+  }
+
   #[derive(Serialize, Deserialize)]
   struct GetDataTest {
     data: String,

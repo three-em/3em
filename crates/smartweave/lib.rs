@@ -55,6 +55,7 @@ where
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
+      "arweave.js",
       "bignumber.js",
       "smartweave.js",
       "contract-assert.js",
@@ -81,6 +82,7 @@ where
         "op_smartweave_read_contract",
         op_async(op_smartweave_read_contract),
       ),
+      ("op_smartweave_get_tx", op_async(op_smartweave_get_tx)),
     ])
     .state(move |state| {
       let (port, host, protocol) = arweave.clone();
@@ -151,6 +153,22 @@ pub async fn op_smartweave_get_tx_data(
     .await?;
 
   Ok(req.to_vec().into())
+}
+
+pub async fn op_smartweave_get_tx(
+  _state: Rc<RefCell<OpState>>,
+  tx_id: String,
+  _: (),
+) -> Result<String, AnyError> {
+  let s = _state.borrow();
+  let arweave = s.borrow::<ArweaveInfo>();
+
+  let req = reqwest::get(format!("{}/tx/{}", get_host(arweave), tx_id))
+    .await?
+    .text()
+    .await?;
+
+  Ok(req)
 }
 
 pub fn read_contract_state(id: String) -> Value {
