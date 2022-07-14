@@ -315,8 +315,17 @@ mod tests {
         tags: vec![],
         block: None,
         input: serde_json::json!({}),
+      }, SimulateInput {
+        id: String::from("abcd"),
+        owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+        quantity: String::from("12301"),
+        reward: String::from("12931293"),
+        target: None,
+        tags: vec![],
+        block: None,
+        input: serde_json::json!({}),
       }],
-      Some(r#"1"#.into()),
+      Some(r#"2"#.into()),
       None,
       Some(false),
       Some(true)
@@ -324,6 +333,6 @@ mod tests {
 
     let contract_result = contract.state;
     println!("{}", contract_result);
-    assert_eq!(contract_result, 2);
+    assert_eq!(contract_result, 4);
   }
 }

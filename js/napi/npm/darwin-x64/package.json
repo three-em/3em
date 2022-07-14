@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node-darwin-x64",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "os": [
     "darwin"
   ],

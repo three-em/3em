@@ -474,9 +474,16 @@ impl Arweave {
         let content_type = bundle_tx_search
           .contentType
           .unwrap_or_else(|| String::new());
-        let init_state =
+        let mut init_state =
           bundle_tx_search.initState.unwrap_or_else(|| String::new());
         let contract_data = bundle_tx_search.contractSrc;
+
+        if simulated {
+          if let Some(user_init_state) = contract_init_state {
+            init_state = user_init_state;
+          }
+        }
+
         return Ok(LoadedContract {
           id: contract_id.clone(),
           contract_src_tx_id: contract_id.clone(),
