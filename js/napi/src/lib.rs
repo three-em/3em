@@ -301,4 +301,29 @@ mod tests {
     println!("{}", contract_result);
     assert_eq!(contract_result.get("counter").unwrap(), 2482);
   }
+
+  #[tokio::test]
+  pub async fn simulate_contract_test_bundled() {
+    let contract = simulate_contract(
+      "RadpzdYtVrQiS25JR1hGxZppwCXVCel_nfXk-noyFmc".into(),
+      vec![SimulateInput {
+        id: String::from("abcd"),
+        owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+        quantity: String::from("12301"),
+        reward: String::from("12931293"),
+        target: None,
+        tags: vec![],
+        block: None,
+        input: serde_json::json!({}),
+      }],
+      Some(r#"1"#.into()),
+      None,
+      Some(false),
+      Some(true)
+    ).await.unwrap();
+
+    let contract_result = contract.state;
+    println!("{}", contract_result);
+    assert_eq!(contract_result, 2);
+  }
 }

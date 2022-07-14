@@ -17,6 +17,20 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+#[derive(Deserialize, Serialize, Default, Clone)]
+pub struct BundledContract {
+  pub contractSrc: Vec<u8>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub contentType: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub initState: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub contractOwner: Option<String>,
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NetworkInfo {
   pub network: String,
@@ -187,6 +201,20 @@ impl Arweave {
       .await
       .unwrap();
     let transaction = request.json::<TransactionData>().await;
+    transaction
+  }
+
+  pub async fn get_bundled_contract(
+    &self,
+    transaction_id: &str,
+  ) -> reqwest::Result<BundledContract> {
+    let request = self
+      .client
+      .get(format!("{}/{}", self.get_host(), transaction_id))
+      .send()
+      .await
+      .unwrap();
+    let transaction = request.json::<BundledContract>().await;
     transaction
   }
 
@@ -367,56 +395,6 @@ impl Arweave {
     ))
   }
 
-  async fn get_bundled_contract(
-    &self,
-    contract_id: String,
-  ) -> Result<GQLTransactionsResultInterface, AnyError> {
-    let mut query = String::from(
-      r#"query {
-    transactions(
-      ids: ["$TX_ID"]
-    ) {
-        edges {
-            node {
-                id,
-              	owner {
-                  address
-                },
-              	tags {
-                  name,
-                  value
-                },
-              	block {
-                  height,
-                  id,
-                  timestamp
-                }
-            },
-            cursor
-        },
-        pageInfo {
-		    hasNextPage
-    	}
-    }
-}"#,
-    );
-
-    query = query.replace("$TX_ID", &contract_id);
-
-    let req_url = format!("{}/graphql", self.get_host());
-    let result = self
-      .client
-      .post(req_url)
-      .json(&(deno_core::serde_json::json!({ "query": query })))
-      .send()
-      .await
-      .unwrap();
-
-    let data = result.json::<GQLResultInterface>().await.unwrap();
-
-    Ok(data.data.transactions)
-  }
-
   async fn get_next_interaction_page(
     &self,
     mut variables: InteractionVariables,
@@ -488,43 +466,39 @@ impl Arweave {
 
     if is_contract_in_bundled {
       if let Ok(bundle_tx_search) =
-        self.get_bundled_contract(contract_id.clone()).await
+        self.get_bundled_contract(&contract_id.clone()).await
       {
-        let contract_tx_maybe = bundle_tx_search.edges.get(0);
-        if let Some(contract_tx_item) = contract_tx_maybe {
-          let owner = get_tags(&contract_tx_item.node, "Owner")
-            .unwrap_or_else(|| String::new());
-          let content_type = get_tags(&contract_tx_item.node, "Content-Type")
-            .unwrap_or_else(|| String::new());
-          let init_state = get_tags(&contract_tx_item.node, "Init-State")
-            .unwrap_or_else(|| String::new());
-          let contract_data =
-            self.get_transaction_data(&contract_id.clone()).await;
-          return Ok(LoadedContract {
-            id: contract_id.clone(),
-            contract_src_tx_id: contract_id.clone(),
-            contract_src: contract_data,
-            contract_type: get_contract_type_raw(content_type),
-            init_state,
-            min_fee: None,
-            contract_transaction: TransactionData {
-              format: 2,
-              id: contract_id,
-              last_tx: String::new(),
-              owner,
-              tags: vec![],
-              target: String::new(),
-              quantity: String::new(),
-              data: String::new(),
-              reward: String::new(),
-              signature: String::new(),
-              data_size: String::new(),
-              data_root: String::new(),
-            },
-          });
-        } else {
-          panic!("Bundled contract was not found")
-        }
+        let owner = bundle_tx_search
+          .contractOwner
+          .unwrap_or_else(|| String::new());
+        let content_type = bundle_tx_search
+          .contentType
+          .unwrap_or_else(|| String::new());
+        let init_state =
+          bundle_tx_search.initState.unwrap_or_else(|| String::new());
+        let contract_data = bundle_tx_search.contractSrc;
+        return Ok(LoadedContract {
+          id: contract_id.clone(),
+          contract_src_tx_id: contract_id.clone(),
+          contract_src: contract_data,
+          contract_type: get_contract_type_raw(content_type),
+          init_state,
+          min_fee: None,
+          contract_transaction: TransactionData {
+            format: 2,
+            id: contract_id,
+            last_tx: String::new(),
+            owner,
+            tags: vec![],
+            target: String::new(),
+            quantity: String::new(),
+            data: String::new(),
+            reward: String::new(),
+            signature: String::new(),
+            data_size: String::new(),
+            data_root: String::new(),
+          },
+        });
       } else {
         panic!("Bundled contract was not found during query")
       }

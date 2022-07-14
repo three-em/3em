@@ -256,7 +256,7 @@ mod test {
     );
     let load_contract_maybe = ar
       .load_contract(
-        String::from("0LS6btSEftlOpgDhSUSsFH89l2w9SZRLn7vc8Vn7W7Q"),
+        String::from("RadpzdYtVrQiS25JR1hGxZppwCXVCel_nfXk-noyFmc"),
         None,
         None,
         None,
@@ -268,7 +268,7 @@ mod test {
     let loaded_contract = load_contract_maybe.unwrap();
     assert_eq!(
       loaded_contract.id,
-      "0LS6btSEftlOpgDhSUSsFH89l2w9SZRLn7vc8Vn7W7Q"
+      "RadpzdYtVrQiS25JR1hGxZppwCXVCel_nfXk-noyFmc"
     );
     assert_eq!(loaded_contract.contract_transaction.format, 2);
   }
