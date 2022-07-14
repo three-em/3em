@@ -13,6 +13,15 @@ pub enum ContractType {
   EVM,
 }
 
+pub fn get_contract_type_raw(contract_type: String) -> ContractType {
+  match &(contract_type.to_lowercase())[..] {
+    "application/javascript" => ContractType::JAVASCRIPT,
+    "application/wasm" => ContractType::WASM,
+    "application/octet-stream" => ContractType::EVM,
+    _ => ContractType::JAVASCRIPT,
+  }
+}
+
 pub fn get_contract_type(
   maybe_content_type: Option<String>,
   contract_transaction: &TransactionData,
@@ -25,12 +34,7 @@ pub fn get_contract_type(
       AnyError::msg("Contract-Src tag not found in transaction")
     })?;
 
-  let ty = match &(contract_type.to_lowercase())[..] {
-    "application/javascript" => ContractType::JAVASCRIPT,
-    "application/wasm" => ContractType::WASM,
-    "application/octet-stream" => ContractType::EVM,
-    _ => ContractType::JAVASCRIPT,
-  };
+  let ty = get_contract_type_raw(contract_type);
 
   Ok(ty)
 }

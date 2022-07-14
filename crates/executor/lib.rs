@@ -31,6 +31,7 @@ pub async fn simulate_contract(
   interactions: Vec<GQLEdgeInterface>,
   arweave: &Arweave,
   maybe_cache: Option<bool>,
+  maybe_bundled_contract: Option<bool>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
@@ -42,6 +43,7 @@ pub async fn simulate_contract(
         contract_init_state,
         maybe_cache.unwrap_or(false),
         true,
+        maybe_bundled_contract.unwrap_or(false),
       )
       .await;
 
@@ -97,6 +99,7 @@ pub async fn execute_contract(
           contract_content_type,
           None,
           cache,
+          false,
           false,
         )
         .await;
@@ -242,6 +245,32 @@ mod test {
   #[derive(Deserialize, Serialize)]
   struct People {
     username: String,
+  }
+
+  #[tokio::test]
+  async fn load_contract_test() {
+    let ar = Arweave::new_no_cache(
+      443,
+      String::from("arweave.net"),
+      String::from("https"),
+    );
+    let load_contract_maybe = ar
+      .load_contract(
+        String::from("0LS6btSEftlOpgDhSUSsFH89l2w9SZRLn7vc8Vn7W7Q"),
+        None,
+        None,
+        None,
+        false,
+        true,
+        true,
+      )
+      .await;
+    let loaded_contract = load_contract_maybe.unwrap();
+    assert_eq!(
+      loaded_contract.id,
+      "0LS6btSEftlOpgDhSUSsFH89l2w9SZRLn7vc8Vn7W7Q"
+    );
+    assert_eq!(loaded_contract.contract_transaction.format, 2);
   }
 
   #[tokio::test]

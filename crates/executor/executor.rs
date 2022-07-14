@@ -196,6 +196,7 @@ pub async fn raw_execute_contract<
                   None,
                   true,
                   false,
+                  false,
                 )
                 .await
                 .unwrap();
@@ -349,7 +350,8 @@ pub async fn raw_execute_contract<
           address.to_big_endian(&mut id);
           let id = String::from_utf8_lossy(&id).to_string();
           let contract = deno_core::futures::executor::block_on(
-            shared_client.load_contract(id, None, None, None, cache, false),
+            shared_client
+              .load_contract(id, None, None, None, cache, false, false),
           )
           .expect("evm call: Failed to load contract");
 
