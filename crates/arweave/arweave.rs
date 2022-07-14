@@ -492,7 +492,7 @@ impl Arweave {
       {
         let contract_tx_maybe = bundle_tx_search.edges.get(0);
         if let Some(contract_tx_item) = contract_tx_maybe {
-          let owner = get_tags(&contract_tx_item.node, "owner")
+          let owner = get_tags(&contract_tx_item.node, "Owner")
             .unwrap_or_else(|| String::new());
           let content_type = get_tags(&contract_tx_item.node, "Content-Type")
             .unwrap_or_else(|| String::new());
