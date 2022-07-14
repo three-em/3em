@@ -125,6 +125,7 @@ async fn simulate_contract(
   contract_init_state: Option<String>,
   maybe_config: Option<ExecuteConfig>,
   maybe_cache: Option<bool>,
+  maybe_bundled_contract: Option<bool>
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     Handle::current().block_on(async move {
@@ -176,6 +177,7 @@ async fn simulate_contract(
         real_interactions,
         &arweave,
         maybe_cache,
+        maybe_bundled_contract
       )
       .await;
 
@@ -290,6 +292,7 @@ mod tests {
       Some(r#"{"counter": 2481}"#.into()),
       None,
       Some(false),
+      None
     )
     .await
     .unwrap();

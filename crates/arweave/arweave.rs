@@ -3,9 +3,9 @@ use crate::gql_result::GQLNodeParent;
 use crate::gql_result::GQLResultInterface;
 use crate::gql_result::GQLTransactionsResultInterface;
 use crate::gql_result::{GQLBundled, GQLEdgeInterface};
-use crate::miscellaneous::get_contract_type;
 use crate::miscellaneous::ContractType;
-use crate::utils::decode_base_64;
+use crate::miscellaneous::{get_contract_type, get_contract_type_raw};
+use crate::utils::{decode_base_64, get_tags};
 use deno_core::error::AnyError;
 use deno_core::futures::stream;
 use deno_core::futures::StreamExt;
@@ -367,6 +367,56 @@ impl Arweave {
     ))
   }
 
+  async fn get_bundled_contract(
+    &self,
+    contract_id: String,
+  ) -> Result<GQLTransactionsResultInterface, AnyError> {
+    let mut query = String::from(
+      r#"query {
+    transactions(
+      ids: ["$TX_ID"]
+    ) {
+        edges {
+            node {
+                id,
+              	owner {
+                  address
+                },
+              	tags {
+                  name,
+                  value
+                },
+              	block {
+                  height,
+                  id,
+                  timestamp
+                }
+            },
+            cursor
+        },
+        pageInfo {
+		    hasNextPage
+    	}
+    }
+}"#,
+    );
+
+    query = query.replace("$TX_ID", &contract_id);
+
+    let req_url = format!("{}/graphql", self.get_host());
+    let result = self
+      .client
+      .post(req_url)
+      .json(&(deno_core::serde_json::json!({ "query": query })))
+      .send()
+      .await
+      .unwrap();
+
+    let data = result.json::<GQLResultInterface>().await.unwrap();
+
+    Ok(data.data.transactions)
+  }
+
   async fn get_next_interaction_page(
     &self,
     mut variables: InteractionVariables,
@@ -432,8 +482,53 @@ impl Arweave {
     contract_init_state: Option<String>,
     cache: bool,
     simulated: bool,
+    is_contract_in_bundled: bool,
   ) -> Result<LoadedContract, AnyError> {
     let mut result: Option<LoadedContract> = None;
+
+    if is_contract_in_bundled {
+      if let Ok(bundle_tx_search) =
+        self.get_bundled_contract(contract_id.clone()).await
+      {
+        let contract_tx_maybe = bundle_tx_search.edges.get(0);
+        if let Some(contract_tx_item) = contract_tx_maybe {
+          let owner = get_tags(&contract_tx_item.node, "owner")
+            .unwrap_or_else(|| String::new());
+          let content_type = get_tags(&contract_tx_item.node, "Content-Type")
+            .unwrap_or_else(|| String::new());
+          let init_state = get_tags(&contract_tx_item.node, "Init-State")
+            .unwrap_or_else(|| String::new());
+          let contract_data =
+            self.get_transaction_data(&contract_id.clone()).await;
+          return Ok(LoadedContract {
+            id: contract_id.clone(),
+            contract_src_tx_id: contract_id.clone(),
+            contract_src: contract_data,
+            contract_type: get_contract_type_raw(content_type),
+            init_state,
+            min_fee: None,
+            contract_transaction: TransactionData {
+              format: 2,
+              id: contract_id,
+              last_tx: String::new(),
+              owner,
+              tags: vec![],
+              target: String::new(),
+              quantity: String::new(),
+              data: String::new(),
+              reward: String::new(),
+              signature: String::new(),
+              data_size: String::new(),
+              data_root: String::new(),
+            },
+          });
+        } else {
+          panic!("Bundled contract was not found")
+        }
+      } else {
+        panic!("Bundled contract was not found during query")
+      }
+    }
 
     if cache {
       result = get_cache()
