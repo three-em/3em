@@ -273,8 +273,13 @@
   }
 
   class Contracts {
-    readContractState(contractId, height, showValidity) {
-      return Deno.core.opAsync("op_smartweave_read_contract", [contractId, height || null, showValidity || null]);
+    async readContractState(contractId, height, showValidity) {
+      const isSimulated = await Deno.core.opAsync("op_executor_settings", "Simulated");
+      if(!isSimulated) {
+        return Deno.core.opAsync("op_smartweave_read_contract", [contractId, height || null, showValidity || null]);
+      } else {
+        throw new Error("readContractState not available");
+      }
     }
   }
 

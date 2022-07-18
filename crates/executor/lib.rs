@@ -11,6 +11,7 @@ pub use indexmap::map::IndexMap;
 use lru::LruCache;
 use once_cell::sync::Lazy;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::sync::Mutex;
 use three_em_arweave::arweave::get_cache;
@@ -51,6 +52,13 @@ pub async fn simulate_contract(
   })
   .0;
 
+  let mut settings: HashMap<String, deno_core::serde_json::Value> =
+    HashMap::new();
+  settings.insert(
+    String::from("Simulated"),
+    deno_core::serde_json::Value::Bool(true),
+  );
+
   if loaded_contract.is_ok() {
     let execute = raw_execute_contract(
       contract_id,
@@ -64,6 +72,7 @@ pub async fn simulate_contract(
         ExecuteResult::V8(cache_state.unwrap(), validity_table)
       },
       arweave,
+      settings,
     )
     .await;
 
@@ -171,6 +180,7 @@ pub async fn execute_contract(
       ExecuteResult::V8(cache_state.unwrap(), validity_table)
     },
     arweave,
+    HashMap::new(),
   )
   .await;
 

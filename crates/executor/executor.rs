@@ -5,6 +5,7 @@ use deno_core::serde_json::Value;
 use deno_core::OpState;
 use indexmap::map::IndexMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::LoadedContract;
@@ -140,6 +141,7 @@ pub async fn raw_execute_contract<
   show_errors: bool,
   on_cached: CachedCallBack,
   shared_client: &Arweave,
+  settings: HashMap<String, deno_core::serde_json::Value>,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
   let cache = cache_state.is_some();
@@ -164,6 +166,7 @@ pub async fn raw_execute_contract<
           state,
           arweave_info.to_owned(),
           op_smartweave_read_state,
+          settings.clone(),
         )
         .await
         .unwrap();
@@ -207,6 +210,7 @@ pub async fn raw_execute_contract<
                 state,
                 arweave_info.to_owned(),
                 op_smartweave_read_state,
+                settings.clone(),
               )
               .await
               .unwrap();
@@ -391,6 +395,7 @@ mod tests {
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
   use indexmap::map::IndexMap;
+  use std::collections::HashMap;
   use three_em_arweave::arweave::Arweave;
   use three_em_arweave::arweave::{LoadedContract, TransactionData};
   use three_em_arweave::cache::ArweaveCache;
@@ -452,6 +457,7 @@ mod tests {
         String::from("https"),
         ArweaveCache::new(),
       ),
+      HashMap::new(),
     )
     .await;
 
@@ -516,6 +522,7 @@ mod tests {
         String::from("https"),
         ArweaveCache::new(),
       ),
+      HashMap::new(),
     )
     .await;
 
@@ -607,6 +614,7 @@ mod tests {
           String::from("https"),
           ArweaveCache::new(),
         ),
+        HashMap::new(),
       )
       .await;
 
@@ -710,6 +718,7 @@ mod tests {
         String::from("https"),
         ArweaveCache::new(),
       ),
+      HashMap::new(),
     )
     .await;
 
@@ -787,6 +796,7 @@ mod tests {
         String::from("https"),
         ArweaveCache::new(),
       ),
+      HashMap::new(),
     )
     .await;
 

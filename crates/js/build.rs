@@ -5,6 +5,7 @@ use deno_core::OpState;
 use deno_core::RuntimeOptions;
 use deno_web::BlobStore;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
@@ -30,6 +31,7 @@ fn create_snapshot(snapshot_path: &Path) {
       three_em_smartweave::init(
         (443, String::from(""), String::from("")),
         never_op,
+        HashMap::new(),
       ),
     ],
     will_snapshot: true,
