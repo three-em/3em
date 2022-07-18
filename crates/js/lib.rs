@@ -12,6 +12,7 @@ use deno_core::OpState;
 use deno_core::RuntimeOptions;
 use deno_web::BlobStore;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
@@ -80,6 +81,7 @@ impl Runtime {
     init: T,
     arweave: (i32, String, String),
     op_smartweave_read_state: F,
+    executor_settings: HashMap<String, deno_core::serde_json::Value>,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
@@ -111,7 +113,11 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(arweave, op_smartweave_read_state),
+        three_em_smartweave::init(
+          arweave,
+          op_smartweave_read_state,
+          executor_settings,
+        ),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -280,6 +286,7 @@ mod test {
   use deno_core::OpState;
   use deno_core::ZeroCopyBuf;
   use std::cell::RefCell;
+  use std::collections::HashMap;
   use std::rc::Rc;
   use three_em_smartweave::InteractionContext;
 
@@ -298,6 +305,7 @@ mod test {
       (),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -322,6 +330,7 @@ export async function handle(slice) {
       ZeroCopyBuf::from(buf),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -348,6 +357,7 @@ export async function handle() {
       (),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -374,6 +384,7 @@ export async function handle() {
       8,
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -406,6 +417,7 @@ export async function handle() {
       (),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -431,6 +443,7 @@ export async function handle() {
       (),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -450,7 +463,8 @@ export async function handle() {
   "#,
   (),
         (80, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
+        HashMap::new()
       )
       .await
       .unwrap();
@@ -479,6 +493,7 @@ export async function handle() {
       (),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -498,6 +513,7 @@ export async function handle() {
       (),
       (12345, String::from("arweave.net"), String::from("http")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();
@@ -530,6 +546,7 @@ export async function handle() {
       (),
       (443, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new()
     )
         .await
         .unwrap();
@@ -542,6 +559,40 @@ export async function handle() {
       data.get(2).unwrap(),
       "1OLypVtx3fIh-zq6iAihS0I1HBMwDp-fm_3kuGLDOTY"
     );
+  }
+
+  #[tokio::test]
+  async fn test_op_settings() {
+    let mut settings: HashMap<String, deno_core::serde_json::Value> =
+      HashMap::new();
+    settings.insert(
+      String::from("Country"),
+      deno_core::serde_json::Value::String("United States".to_string()),
+    );
+    settings.insert(
+      String::from("Simulated"),
+      deno_core::serde_json::Value::Bool(true),
+    );
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return {
+    state: [await Deno.core.opAsync("op_executor_settings", "Country"), await Deno.core.opAsync("op_executor_settings", "Simulated")]
+  }
+}
+"#,
+      (),
+      (443, String::from("arweave.net"), String::from("https")),
+      never_op,
+      settings,
+    )
+    .await
+    .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let data = rt.get_contract_state::<(String, bool)>().unwrap();
+    assert_eq!(data.0, "United States");
+    assert_eq!(data.1, true);
   }
 
   #[derive(Serialize, Deserialize)]
@@ -566,7 +617,8 @@ try {
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op
+      never_op,
+      HashMap::new()
     )
         .await
         .unwrap();
@@ -597,6 +649,7 @@ export async function handle() {
       (),
       (80, String::from("arweave.net"), String::from("https")),
       never_op,
+      HashMap::new(),
     )
     .await
     .unwrap();

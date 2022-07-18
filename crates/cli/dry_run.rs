@@ -3,6 +3,7 @@ use indexmap::map::IndexMap;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 use three_em_arweave::arweave::Arweave;
@@ -121,6 +122,7 @@ pub async fn dry_run_result(
     true,
     |_, _| panic!("Unimplemented"),
     &Arweave::new(port, host, protocol, ArweaveCache::new()),
+    HashMap::new(),
   )
   .await;
   execution
