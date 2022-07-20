@@ -13,7 +13,7 @@ path = "lib.rs"
 [dependencies]
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 deno_core = "0.116.0"
-sha2 = "0.9.5"
+sha2 = "0.10.2"
 serde = { version = "1", features = ["derive"] }
 three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
 three_em_js = { version = "0.2.0", path = "../js" }
