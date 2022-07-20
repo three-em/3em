@@ -2127,9 +2127,12 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.81.0"
+version = "0.86.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98930446519f63d00a836efdc22f67766ceae8dbcc1571379f2bcabc6b2b9abc"
+checksum = "4bcbfe95447da2aa7ff171857fc8427513eb57c75a729bb190e974dc695e8f5c"
+dependencies = [
+ "indexmap",
+]
 
 [[package]]
 name = "web-sys"
