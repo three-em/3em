@@ -165,7 +165,7 @@ jobs:
           working-directory: ./js/napi
 
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: bindings-${{ matrix.target }}
           path: ./js/napi
@@ -200,7 +200,7 @@ jobs:
           working-directory: ./js/napi
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: ./js/napi/artifacts
 
