@@ -28,7 +28,7 @@ rsa = "0.5.0"
 sha2 = "0.9.5"
 serde_json = "1"
 hex = "0.4.3"
-indexmap = { version = "1.7.0", features = ["serde-1"] }
+indexmap = { version = "1.9.1", features = ["serde-1"] }
 indoc = "1.0"
 routerify = "3"
 hyper = "0.14"
