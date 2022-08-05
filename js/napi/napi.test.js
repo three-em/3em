@@ -9,6 +9,29 @@ describe("NAPI test", () => {
     expect(run.state.tokens).not.toBeUndefined();
   })
 
+  test("Failed simulation", async () => {
+    try {
+      const simulate = await simulateContract(
+          "invalidId",
+          [{
+            id: "ABCD",
+            owner: "2asdaskdsapdk012",
+            quantity: "1000",
+            reward: "203123921",
+            target: "none",
+            tags: [],
+            input: {}
+          }],
+          JSON.stringify({
+                counter: 9499
+              }
+          ));
+      expect(false).toBeTruthy();
+    } catch (e) {
+      console.log('Caught error', e.toString())
+    }
+  })
+
   test("Simulate contract", async () => {
     const simulate = await simulateContract(
     "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ",

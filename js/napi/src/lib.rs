@@ -3,6 +3,7 @@ use napi::sys::{napi_env, napi_value};
 use napi_derive::napi;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::panic;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::cache::ArweaveCache;
 use three_em_arweave::cache::CacheExt;
@@ -128,73 +129,78 @@ async fn simulate_contract(
   maybe_bundled_contract: Option<bool>
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
-    Handle::current().block_on(async move {
-      let arweave = get_gateway(maybe_config, maybe_cache.clone());
+    panic::catch_unwind(|| {
+      Handle::current().block_on(async move {
+        let arweave = get_gateway(maybe_config, maybe_cache.clone());
 
-      let real_interactions: Vec<GQLEdgeInterface> = interactions
-        .into_iter()
-        .map(|data| {
-          let tags: Vec<GQLTagInterface> = data
-            .tags
+        let real_interactions: Vec<GQLEdgeInterface> = interactions
             .into_iter()
-            .map(|tag| GQLTagInterface {
-              name: tag.name.to_string(),
-              value: tag.value.to_string(),
+            .map(|data| {
+              let tags: Vec<GQLTagInterface> = data
+                  .tags
+                  .into_iter()
+                  .map(|tag| GQLTagInterface {
+                    name: tag.name.to_string(),
+                    value: tag.value.to_string(),
+                  })
+                  .collect::<Vec<GQLTagInterface>>();
+
+              let (height, timestamp, indep_hash) =
+                  if let Some(block_data) = data.block {
+                    (
+                      Some(block_data.height),
+                      Some(block_data.timestamp),
+                      Some(block_data.indep_hash),
+                    )
+                  } else {
+                    (None, None, None)
+                  };
+
+              let transaction = create_simulated_transaction(
+                data.id,
+                data.owner,
+                data.quantity,
+                data.reward,
+                data.target,
+                tags,
+                height,
+                indep_hash,
+                timestamp,
+                data.input.to_string(),
+              );
+
+              transaction
             })
-            .collect::<Vec<GQLTagInterface>>();
+            .collect();
 
-          let (height, timestamp, indep_hash) =
-            if let Some(block_data) = data.block {
-              (
-                Some(block_data.height),
-                Some(block_data.timestamp),
-                Some(block_data.indep_hash),
-              )
-            } else {
-              (None, None, None)
-            };
+        let result = simulate(
+          contract_id,
+          contract_init_state,
+          real_interactions,
+          &arweave,
+          maybe_cache,
+          maybe_bundled_contract
+        )
+            .await;
 
-          let transaction = create_simulated_transaction(
-            data.id,
-            data.owner,
-            data.quantity,
-            data.reward,
-            data.target,
-            tags,
-            height,
-            indep_hash,
-            timestamp,
-            data.input.to_string(),
-          );
-
-          transaction
-        })
-        .collect();
-
-      let result = simulate(
-        contract_id,
-        contract_init_state,
-        real_interactions,
-        &arweave,
-        maybe_cache,
-        maybe_bundled_contract
-      )
-      .await;
-
-      get_result(result)
+        get_result(result)
+      })
     })
   })
-  .await
-  .unwrap();
+  .await;
 
-  if let Some(result) = result {
-    Ok(result)
-  } else {
-    Err(Error::new(
-      Status::Unknown,
-      "Contract could not be processed".to_string(),
-    ))
+  if let Ok(catcher) = result {
+    if let Ok(processing) = catcher {
+      if let Some(result) = processing {
+        return Ok(result);
+      }
+    }
   }
+
+  return Err(Error::new(
+    Status::Unknown,
+    "Contract could not be processed".to_string(),
+  ));
 }
 
 #[napi]
