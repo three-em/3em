@@ -10,6 +10,7 @@ use deno_core::serde_v8;
 use deno_core::JsRuntime;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
+use deno_fetch::Options;
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -113,11 +114,17 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(
-          arweave,
-          op_smartweave_read_state,
-          executor_settings,
-        ),
+        deno_fetch::init(Options {
+          user_agent: String::from("Base"),
+          root_cert_store: None,
+          proxy: None,
+          request_builder_hook: None,
+          unsafely_ignore_certificate_errors: None,
+          client_cert_chain_and_key: None,
+          file_fetch_handler: Rc::new(()),
+        }),
+        three_em_smartweave::init(arweave, op_smartweave_read_state),
+        three_em_base_ops::init(executor_settings),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -521,6 +528,31 @@ export async function handle() {
     rt.call((), None).await.unwrap();
     let host = rt.get_contract_state::<String>().unwrap();
     assert_eq!(host, "http://arweave.net:12345");
+  }
+
+  #[tokio::test]
+  async fn test_base_fetch_op() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  const someFetch = await Base.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+
+  return { state: someFetch };
+}
+"#,
+      (),
+      (12345, String::from("arweave.net"), String::from("http")),
+      never_op,
+      HashMap::new(),
+    )
+        .await
+        .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let tx_id = rt
+      .get_contract_state::<deno_core::serde_json::Value>()
+      .unwrap();
+    println!("{}", tx_id)
   }
 
   #[tokio::test]

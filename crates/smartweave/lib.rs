@@ -21,10 +21,6 @@ pub struct ArweaveInfo {
   pub protocol: String,
 }
 
-pub struct ExecutorSettings {
-  settings: HashMap<String, deno_core::serde_json::Value>,
-}
-
 #[derive(Serialize, Default, Clone)]
 pub struct InteractionTx {
   pub id: String,
@@ -51,7 +47,6 @@ pub struct InteractionContext {
 pub fn init<F, R>(
   arweave: (i32, String, String),
   op_smartweave_read_contract: F,
-  executor_settings: HashMap<String, deno_core::serde_json::Value>,
 ) -> Extension
 where
   F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
@@ -89,7 +84,6 @@ where
         op_async(op_smartweave_read_contract),
       ),
       ("op_smartweave_get_tx", op_async(op_smartweave_get_tx)),
-      ("op_executor_settings", op_async(op_get_executor_settings)),
     ])
     .state(move |state| {
       let (port, host, protocol) = arweave.clone();
@@ -97,9 +91,6 @@ where
         port,
         host,
         protocol,
-      });
-      state.put(ExecutorSettings {
-        settings: executor_settings.clone(),
       });
       Ok(())
     })
@@ -220,18 +211,4 @@ pub async fn op_smartweave_get_host(
   let s = _state.borrow();
   let arweave = s.borrow::<ArweaveInfo>();
   Ok(get_host(arweave))
-}
-
-pub async fn op_get_executor_settings(
-  _state: Rc<RefCell<OpState>>,
-  setting: String,
-  _: (),
-) -> Result<deno_core::serde_json::Value, AnyError> {
-  let s = _state.borrow();
-  let settings = s.borrow::<ExecutorSettings>();
-  if let Some(data) = settings.settings.get(&setting) {
-    Ok(data.clone())
-  } else {
-    Ok(deno_core::serde_json::Value::Null)
-  }
 }
