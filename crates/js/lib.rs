@@ -1,5 +1,6 @@
 mod loader;
 pub mod snapshot;
+pub mod fetch_permissions;
 
 use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
@@ -10,7 +11,7 @@ use deno_core::serde_v8;
 use deno_core::JsRuntime;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
-use deno_fetch::Options;
+use deno_fetch::{DefaultFileFetchHandler, Options};
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -114,14 +115,8 @@ impl Runtime {
         deno_url::init(),
         deno_web::init(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        deno_fetch::init(Options {
-          user_agent: String::from("Base"),
-          root_cert_store: None,
-          proxy: None,
-          request_builder_hook: None,
-          unsafely_ignore_certificate_errors: None,
-          client_cert_chain_and_key: None,
-          file_fetch_handler: Rc::new(()),
+        deno_fetch::init::<fetch_permissions::Permissions>(Options {
+          ..Default::default()
         }),
         three_em_smartweave::init(arweave, op_smartweave_read_state),
         three_em_base_ops::init(executor_settings),
@@ -537,7 +532,7 @@ export async function handle() {
 export async function handle() {
   const someFetch = await Base.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
 
-  return { state: someFetch };
+  return { state: `${someFetch} ${globalThis.Response}` };
 }
 "#,
       (),

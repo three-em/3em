@@ -3,7 +3,7 @@ use deno_core::include_js_files;
 use deno_core::op_async;
 use deno_core::op_sync;
 
-use deno_core::serde::{Deserialize, Serialize};
+use deno_core::serde::{Serialize, Deserialize};
 use deno_core::serde_json::Value;
 use deno_core::Extension;
 use deno_core::OpState;
@@ -24,7 +24,8 @@ pub struct DeterministicFetchOptions {
   url: String,
 }
 
-pub fn init(executor_settings: HashMap<String, Value>) -> Extension {
+pub fn init(executor_settings: HashMap<String, Value>) -> Extension
+{
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:baseops",
@@ -48,7 +49,7 @@ pub async fn op_deterministic_fetch(
   options: DeterministicFetchOptions,
   _: (),
 ) -> Result<String, AnyError> {
-  Ok("".into())
+Ok("".into())
 }
 
 pub async fn op_get_executor_settings(

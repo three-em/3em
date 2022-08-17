@@ -1,9 +1,11 @@
+pub mod fetch_permissions;
+
 use deno_core::error::AnyError;
 use deno_core::serde_json::Value;
 use deno_core::JsRuntime;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
-use deno_fetch::Options;
+use deno_fetch::{DefaultFileFetchHandler, Options};
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -29,14 +31,8 @@ fn create_snapshot(snapshot_path: &Path) {
       deno_url::init(),
       deno_web::init(BlobStore::default(), None),
       deno_crypto::init(None),
-      deno_fetch::init(Options {
-        user_agent: String::from("Base"),
-        root_cert_store: None,
-        proxy: None,
-        request_builder_hook: None,
-        unsafely_ignore_certificate_errors: None,
-        client_cert_chain_and_key: None,
-        file_fetch_handler: Rc::new(()),
+      deno_fetch::init::<fetch_permissions::Permissions>(Options {
+        ..Default::default()
       }),
       three_em_smartweave::init(
         (443, String::from(""), String::from("")),

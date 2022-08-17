@@ -1878,6 +1878,7 @@ dependencies = [
  "serde",
  "three_em_arweave",
  "tokio",
+ "tokio-util 0.6.9",
  "v8",
 ]
 
@@ -2084,9 +2085,11 @@ checksum = "9e99e1983e5d376cd8eb4b66604d2e99e79f5bd988c3055891dcd8c9e2604cc0"
 dependencies = [
  "bytes",
  "futures-core",
+ "futures-io",
  "futures-sink",
  "log",
  "pin-project-lite",
+ "slab",
  "tokio",
 ]
 

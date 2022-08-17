@@ -1,7 +1,17 @@
 (function(window) {
 
-    const fetch = window.__bootstrap.fetch;
+    const { ObjectDefineProperties } = window.__bootstrap.primordials;
     const { subtle } = crypto;
+    const fetchOp = window.__bootstrap.fetch;
+
+    const props = {
+        Request: fetchOp.Request,
+        Response: fetchOp.Response,
+        fetch: fetchOp.fetch
+    }
+
+    globalThis.Request = props.Request;
+    globalThis.Response = props.Response;
 
     class BaseReqResponse {
 
@@ -73,7 +83,7 @@
                 const jsonArgs = JSON.stringify(args);
                 const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
 
-                const fetchData = await fetch(...args);
+                const fetchData = await props.fetch(...args);
                 const buff = await fetchData.arrayBuffer();
 
                 let rep = new BaseReqResponse(fetchData);
