@@ -5,19 +5,19 @@
     const headers = window.__bootstrap.headers;
     const streams = window.__bootstrap.streams;
 
-    window.ByteLengthQueuingStrategy = streams.ByteLengthQueuingStrategy;
-    window.CountQueuingStrategy = streams.CountQueuingStrategy;
+    // window.ByteLengthQueuingStrategy = streams.ByteLengthQueuingStrategy;
+    // window.CountQueuingStrategy = streams.CountQueuingStrategy;
     window.ReadableStream = streams.ReadableStream;
-    window.ReadableStreamDefaultReader = streams.ReadableStreamDefaultReader;
-    window.TransformStream = streams.TransformStream;
-    window.WritableStream = streams.WritableStream;
-    window.WritableStreamDefaultWriter = streams.WritableStreamDefaultWriter;
-    window.WritableStreamDefaultController = streams.WritableStreamDefaultController;
-    window.ReadableByteStreamController = streams.ReadableByteStreamController;
-    window.ReadableStreamBYOBReader = streams.ReadableStreamBYOBReader;
-    window.ReadableStreamBYOBRequest = streams.ReadableStreamBYOBRequest;
-    window.ReadableStreamDefaultController = streams.ReadableStreamDefaultController;
-    window.TransformStreamDefaultController = streams.TransformStreamDefaultController;
+    // window.ReadableStreamDefaultReader = streams.ReadableStreamDefaultReader;
+    // window.TransformStream = streams.TransformStream;
+    // window.WritableStream = streams.WritableStream;
+    // window.WritableStreamDefaultWriter = streams.WritableStreamDefaultWriter;
+    // window.WritableStreamDefaultController = streams.WritableStreamDefaultController;
+    // window.ReadableByteStreamController = streams.ReadableByteStreamController;
+    // window.ReadableStreamBYOBReader = streams.ReadableStreamBYOBReader;
+    // window.ReadableStreamBYOBRequest = streams.ReadableStreamBYOBRequest;
+    // window.ReadableStreamDefaultController = streams.ReadableStreamDefaultController;
+    // window.TransformStreamDefaultController = streams.TransformStreamDefaultController;
     window.Headers = headers.Headers;
     window.URL = url.URL;
     window.URLPattern = urlPattern.URLPattern;
@@ -56,7 +56,7 @@
 
         setBuffer(buff) {
             if(!this.buffer) {
-                this.buffer = new Uint8Array(buff);
+                this.buffer = Object.values(new Uint8Array(buff));
             } else {
                 throw new Error("Buffer already set in Base Request Response");
             }
@@ -64,16 +64,12 @@
         }
 
         asText() {
-            return this.#decoder.decode(this.buffer);
+            return this.#decoder.decode(this.raw);
         }
 
         asJSON() {
             const text = this.asText();
             return JSON.parse(text);
-        }
-
-        asVector() {
-            return Object.values(this.buffer);
         }
 
         toStructuredJson() {
@@ -86,12 +82,12 @@
                 redirected,
                 ok,
                 headers,
-                vector: this.asVector()
+                vector: this.buffer
             }
         }
 
         get raw() {
-            this.arrayBuffer;
+            return new Uint8Array(this.buffer);
         }
     }
 
@@ -107,14 +103,14 @@
                 const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
 
                 const fetchData = await props.fetch(...args);
-                // const buff = await fetchData.arrayBuffer();
+                const buff = await fetchData.arrayBuffer();
 
-                // let rep = new BaseReqResponse(fetchData);
-                // rep = rep.setBuffer(buff);
+                let rep = new BaseReqResponse(fetchData);
+                rep = rep.setBuffer(buff);
 
-                // this.requests[reqHash] = rep.toStructuredJson();
+                this.requests[reqHash] = rep.toStructuredJson();
 
-                // return rep;
+                return rep;
             } catch (e) {
                 return e.toString()
             }
@@ -134,4 +130,5 @@
 
     window.Base = new Base();
 
+    delete window.__bootstrap;
 })(this);

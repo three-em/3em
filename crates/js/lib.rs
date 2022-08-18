@@ -127,6 +127,12 @@ impl Runtime {
       create_params: Some(params),
       ..Default::default()
     });
+
+    {
+      let op_state = rt.op_state();
+      op_state.borrow_mut().put(Permissions);
+    }
+
     let isolate = rt.v8_isolate();
 
     let handle = isolate.thread_safe_handle();
@@ -352,8 +358,8 @@ export async function handle(slice) {
       r#"
 export async function handle() {
 try {
-  const someFetch = await fetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
-  return { state: `Hello` };
+  const someFetch = await Base.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+  return { state: someFetch.asJSON().id };
   } catch(e) {
   return { state: e.toString() }
   }
@@ -368,10 +374,8 @@ try {
         .unwrap();
 
     rt.call((), None).await.unwrap();
-    let tx_id = rt
-      .get_contract_state::<deno_core::serde_json::Value>()
-      .unwrap();
-    println!("{}", tx_id)
+    let tx_id = rt.get_contract_state::<String>().unwrap();
+    assert_eq!(tx_id, "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
   }
 
   #[tokio::test]
