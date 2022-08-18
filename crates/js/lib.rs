@@ -183,6 +183,17 @@ impl Runtime {
     Ok(serde_v8::from_v8(scope, value)?)
   }
 
+  pub fn get_fetch_calls<T>(&mut self) -> Result<T, AnyError>
+    where T: DeserializeOwned + 'static {
+
+    let scope = &mut self.rt.handle_scope();
+    let context = scope.get_current_context();
+    let inner_scope = &mut v8::ContextScope::new(scope, context);
+    let global = context.global(inner_scope);
+    let v8_key = serde_v8::to_v8(inner_scope, "Base").unwrap();
+    Ok(serde_v8::from_v8(inner_scope, v8_key)?)
+  }
+
   pub async fn call<R>(
     &mut self,
     action: R,

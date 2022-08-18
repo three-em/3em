@@ -5,19 +5,7 @@
     const headers = window.__bootstrap.headers;
     const streams = window.__bootstrap.streams;
 
-    // window.ByteLengthQueuingStrategy = streams.ByteLengthQueuingStrategy;
-    // window.CountQueuingStrategy = streams.CountQueuingStrategy;
     window.ReadableStream = streams.ReadableStream;
-    // window.ReadableStreamDefaultReader = streams.ReadableStreamDefaultReader;
-    // window.TransformStream = streams.TransformStream;
-    // window.WritableStream = streams.WritableStream;
-    // window.WritableStreamDefaultWriter = streams.WritableStreamDefaultWriter;
-    // window.WritableStreamDefaultController = streams.WritableStreamDefaultController;
-    // window.ReadableByteStreamController = streams.ReadableByteStreamController;
-    // window.ReadableStreamBYOBReader = streams.ReadableStreamBYOBReader;
-    // window.ReadableStreamBYOBRequest = streams.ReadableStreamBYOBRequest;
-    // window.ReadableStreamDefaultController = streams.ReadableStreamDefaultController;
-    // window.TransformStreamDefaultController = streams.TransformStreamDefaultController;
     window.Headers = headers.Headers;
     window.URL = url.URL;
     window.URLPattern = urlPattern.URLPattern;
