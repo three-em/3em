@@ -23,6 +23,24 @@ pub struct DeterministicFetchOptions {
   url: String,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct DeterministicFetchBody {
+  #[serde(rename = "type")]
+  req_type: String,
+  url: String,
+  statusText: String,
+  status: i8,
+  redirected: bool,
+  ok: bool,
+  headers: HashMap<String, String>,
+  vector: Vec<u8>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct ExmContext {
+  pub requests: HashMap<String, DeterministicFetchBody>,
+}
+
 pub fn init(executor_settings: HashMap<String, Value>) -> Extension {
   Extension::builder()
     .js(include_js_files!(

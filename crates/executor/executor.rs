@@ -19,6 +19,7 @@ use three_em_arweave::gql_result::{
 };
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
+use three_em_exm_base_ops::ExmContext;
 use three_em_js::CallResult;
 use three_em_js::Runtime;
 use three_em_smartweave::{
@@ -31,22 +32,35 @@ pub type CachedState = Option<Value>;
 
 #[derive(Clone)]
 pub enum ExecuteResult {
-  V8(Value, ValidityTable),
+  V8(Value, ValidityTable, ExmContext),
   Evm(Storage, Vec<u8>, ValidityTable),
 }
 
 pub type OnCached = dyn Fn() -> ExecuteResult;
+
+pub fn get_execution_context(
+  maybe_context: Result<ExmContext, AnyError>,
+) -> ExmContext {
+  if let Ok(exm_known_context) = maybe_context {
+    exm_known_context
+  } else {
+    ExmContext {
+      requests: HashMap::new(),
+    }
+  }
+}
 
 pub fn process_execution(
   execute_result: ExecuteResult,
   show_validity: bool,
 ) -> Value {
   match execute_result {
-    ExecuteResult::V8(value, validity_table) => {
+    ExecuteResult::V8(value, validity_table, exm_context) => {
       if show_validity {
         serde_json::json!({
             "state": value,
-            "validity": validity_table
+            "validity": validity_table,
+            "exm": exm_context
         })
       } else {
         value
@@ -238,6 +252,8 @@ pub async fn raw_execute_contract<
         }
 
         let state_val: Value = rt.get_contract_state().unwrap();
+        let exm_context: ExmContext =
+          get_execution_context(rt.get_exm_context::<ExmContext>());
 
         if cache {
           get_cache().lock().unwrap().cache_states(
@@ -249,7 +265,7 @@ pub async fn raw_execute_contract<
           );
         }
 
-        ExecuteResult::V8(state_val, validity)
+        ExecuteResult::V8(state_val, validity, exm_context)
       } else {
         on_cached(validity, cache_state)
       }
@@ -306,6 +322,8 @@ pub async fn raw_execute_contract<
         }
 
         let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
+        let exm_context =
+          get_execution_context(rt.get_exm_context::<ExmContext>());
 
         if cache {
           get_cache().lock().unwrap().cache_states(
@@ -317,7 +335,7 @@ pub async fn raw_execute_contract<
           );
         }
 
-        ExecuteResult::V8(state, validity)
+        ExecuteResult::V8(state, validity, exm_context)
       } else {
         on_cached(validity, cache_state)
       }
@@ -464,7 +482,7 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       assert_eq!(
         value,
         serde_json::json!({"txId":"tx1123123123123123123213213123","txOwner":"SUPERMAN1293120","txTarget":"RECIPIENT1234","txQuantity":"100","txReward":"100","txTags":[{"name":"Input","value":"{}"},{"name":"MyTag","value":"Christpoher Nolan is awesome"}],"txHeight":2,"txIndepHash":"ABCD-EFG","txTimestamp":12301239,"winstonToAr":true,"arToWinston":true,"compareArWinston":1})
@@ -529,7 +547,7 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       let x = serde_json::json!({
             "state": value,
             "validity": validity
@@ -624,7 +642,7 @@ mod tests {
       result
     };
 
-    if let ExecuteResult::V8(value, validity) = execute().await {
+    if let ExecuteResult::V8(value, validity, exm_context) = execute().await {
       assert_eq!(validity.len(), 3);
       let (tx1, tx2, tx3) = (
         validity.get("tx1"),
@@ -725,7 +743,7 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       // tx1 is the evolve action. This must not fail.
       // All network calls happen here and runtime is
       // re-initialized.
@@ -803,7 +821,7 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       assert_eq!(value.get("txId").unwrap(), "STARWARS");
       assert_eq!(value.get("owner").unwrap(), "ADDRESS2");
       assert_eq!(value.get("height").unwrap(), 200);

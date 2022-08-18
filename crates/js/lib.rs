@@ -4,7 +4,7 @@ pub mod snapshot;
 
 use crate::default_permissions::Permissions;
 use crate::loader::EmbeddedModuleLoader;
-use deno_core::error::AnyError;
+use deno_core::error::{generic_error, AnyError};
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
@@ -183,15 +183,22 @@ impl Runtime {
     Ok(serde_v8::from_v8(scope, value)?)
   }
 
-  pub fn get_fetch_calls<T>(&mut self) -> Result<T, AnyError>
-    where T: DeserializeOwned + 'static {
-
+  pub fn get_exm_context<T>(&mut self) -> Result<T, AnyError>
+  where
+    T: DeserializeOwned + 'static,
+  {
     let scope = &mut self.rt.handle_scope();
     let context = scope.get_current_context();
     let inner_scope = &mut v8::ContextScope::new(scope, context);
     let global = context.global(inner_scope);
-    let v8_key = serde_v8::to_v8(inner_scope, "Base").unwrap();
-    Ok(serde_v8::from_v8(inner_scope, v8_key)?)
+    let v8_key = serde_v8::to_v8(inner_scope, "EXM").unwrap();
+    let output = global.get(inner_scope, v8_key);
+
+    if let Some(output_val) = output {
+      Ok(serde_v8::from_v8(inner_scope, output_val)?)
+    } else {
+      generic_error("Impossible to get fetch calls")
+    }
   }
 
   pub async fn call<R>(
@@ -385,6 +392,11 @@ try {
         .unwrap();
 
     rt.call((), None).await.unwrap();
+    let calls = rt
+      .get_fetch_calls::<deno_core::serde_json::Value>()
+      .unwrap()
+      .to_string();
+    println!("{}", calls);
     let tx_id = rt.get_contract_state::<String>().unwrap();
     assert_eq!(tx_id, "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
   }

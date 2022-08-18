@@ -44,7 +44,7 @@
 
         setBuffer(buff) {
             if(!this.buffer) {
-                this.buffer = Object.values(new Uint8Array(buff));
+                this.buffer = Object.values(new Uint8Array(buff || []));
             } else {
                 throw new Error("Buffer already set in Base Request Response");
             }
@@ -62,15 +62,22 @@
 
         toStructuredJson() {
             const { type, url, statusText, status, redirected, ok, headers } = this;
+
+            const newHeaders = {};
+
+            if(headers instanceof window.Headers) {
+                newHeaders = Object.fromEntries(headers.entries())
+            }
+
             return {
-                type,
-                url,
-                statusText,
-                status,
-                redirected,
-                ok,
-                headers,
-                vector: this.buffer
+                type: type || "",
+                url: url || "",
+                statusText: statusText || "",
+                status: status || 404,
+                redirected: redirected || false,
+                ok: ok || false,
+                headers: newHeaders || {},
+                vector: this.buffer || []
             }
         }
 
@@ -116,7 +123,7 @@
 
     }
 
-    window.Base = new Base();
+    window.EXM = new Base();
 
     delete window.__bootstrap;
 })(this);

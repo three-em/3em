@@ -16,6 +16,7 @@ deno_core = "0.147.0"
 sha2 = "0.9.5"
 serde = { version = "1", features = ["derive"] }
 three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
+three_em_exm_base_ops = { version = "0.1.0", path = "../exm" }
 three_em_js = { version = "0.2.0", path = "../js" }
 three_em_wasm = { version = "0.2.0", path = "../wasm" }
 three_em_evm = { version = "0.2.0", path = "../evm" }

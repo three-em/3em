@@ -2024,6 +2024,7 @@ dependencies = [
  "sha2 0.9.9",
  "three_em_arweave",
  "three_em_evm",
+ "three_em_exm_base_ops",
  "three_em_js",
  "three_em_smartweave",
  "three_em_wasm",
