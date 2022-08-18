@@ -14,6 +14,7 @@ use std::env;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
+use deno_fetch::Options;
 
 #[op]
 pub async fn never_op(_: (), _: (), _: ()) -> Result<Value, AnyError> {
@@ -29,7 +30,10 @@ fn create_snapshot(snapshot_path: &Path) {
       deno_url::init(),
       deno_web::init::<Permissions>(BlobStore::default(), None),
       deno_crypto::init(None),
-      deno_fetch::init::<Permissions>(Default::default()),
+      deno_fetch::init::<Permissions>(Options {
+        user_agent: String::from("EXM"),
+       ..Default::default()
+      }),
       three_em_smartweave::init(
         (443, String::from(""), String::from("")),
         never_op::decl(),

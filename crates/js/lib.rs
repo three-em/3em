@@ -19,6 +19,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
+use deno_fetch::Options;
 use three_em_smartweave::InteractionContext;
 
 #[derive(Debug, Clone)]
@@ -113,7 +114,10 @@ impl Runtime {
         deno_url::init(),
         deno_web::init::<Permissions>(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        deno_fetch::init::<Permissions>(Default::default()),
+        deno_fetch::init::<Permissions>(Options {
+          user_agent: String::from("EXM"),
+          ..Default::default()
+        }),
         three_em_smartweave::init(arweave, op_smartweave_read_state),
         three_em_exm_base_ops::init(executor_settings),
       ],
@@ -346,8 +350,12 @@ export async function handle(slice) {
     let mut rt = Runtime::new(
       r#"
 export async function handle() {
-  const someFetch = await Base.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+try {
+  const someFetch = await fetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
   return { state: `Hello` };
+  } catch(e) {
+  return { state: e.toString() }
+  }
 }
 "#,
       (),
