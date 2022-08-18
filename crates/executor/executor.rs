@@ -73,24 +73,23 @@ pub fn process_execution(
 }
 
 #[op]
-pub async fn op_smartweave_read_state(
+pub async fn op_smartweave_read_contract(
   state: Rc<RefCell<OpState>>,
   (contract_id, height, show_validity): (String, Option<usize>, Option<bool>),
   _: (),
 ) -> Result<Value, AnyError> {
-  Ok(Value::String(String::from("Hello")))
-  // let op_state = state.borrow();
-  // let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
-  // let cl = Arweave::new(
-  //   info.port,
-  //   info.host.clone(),
-  //   info.protocol.clone(),
-  //   ArweaveCache::new(),
-  // );
-  // let state =
-  //   crate::execute_contract(contract_id, height, true, false, None, None, &cl)
-  //     .await?;
-  // Ok(process_execution(state, show_validity.unwrap_or(false)))
+  let op_state = state.borrow();
+  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
+  let cl = Arweave::new(
+    info.port,
+    info.host.clone(),
+    info.protocol.clone(),
+    ArweaveCache::new(),
+  );
+  let state =
+    crate::execute_contract(contract_id, height, true, false, None, None, &cl)
+      .await?;
+  Ok(process_execution(state, show_validity.unwrap_or(false)))
 }
 
 pub fn generate_interaction_context(
@@ -169,7 +168,7 @@ pub async fn raw_execute_contract<
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
           arweave_info.to_owned(),
-          op_smartweave_read_state::decl(),
+          op_smartweave_read_contract::decl(),
           settings.clone(),
         )
         .await
@@ -213,7 +212,7 @@ pub async fn raw_execute_contract<
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 arweave_info.to_owned(),
-                op_smartweave_read_state::decl(),
+                op_smartweave_read_contract::decl(),
                 settings.clone(),
               )
               .await

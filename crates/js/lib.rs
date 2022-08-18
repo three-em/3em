@@ -13,13 +13,13 @@ use deno_core::JsRuntime;
 use deno_core::OpDecl;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
+use deno_fetch::Options;
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
-use deno_fetch::Options;
 use three_em_smartweave::InteractionContext;
 
 #[derive(Debug, Clone)]

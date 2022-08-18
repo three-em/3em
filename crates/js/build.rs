@@ -6,6 +6,7 @@ use deno_core::serde_json::Value;
 use deno_core::JsRuntime;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
+use deno_fetch::Options;
 use deno_ops::op;
 use deno_web::BlobStore;
 use std::cell::RefCell;
@@ -14,7 +15,6 @@ use std::env;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
-use deno_fetch::Options;
 
 #[op]
 pub async fn never_op(_: (), _: (), _: ()) -> Result<Value, AnyError> {
@@ -33,7 +33,7 @@ fn create_snapshot(snapshot_path: &Path) {
       deno_tls::init(),
       deno_fetch::init::<Permissions>(Options {
         user_agent: String::from("EXM"),
-       ..Default::default()
+        ..Default::default()
       }),
       three_em_smartweave::init(
         (443, String::from(""), String::from("")),
