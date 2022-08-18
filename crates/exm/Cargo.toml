@@ -1,7 +1,7 @@
 [package]
-name = "three_em_smartweave"
-version = "0.2.0"
-authors = ["Divy Srivastava <dj.srivastava23@gmail.com>"]
+name = "three_em_exm_base_ops"
+version = "0.1.0"
+authors = ["EXM <team@exm.dev>"]
 edition = "2021"
 resolver = "2"
 description = "A blazingly fast, secure, reliable, multi-language execution machine for Smart Contracts."

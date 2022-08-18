@@ -1,6 +1,8 @@
+pub mod default_permissions;
 mod loader;
 pub mod snapshot;
 
+use crate::default_permissions::Permissions;
 use crate::loader::EmbeddedModuleLoader;
 use deno_core::error::AnyError;
 use deno_core::serde::de::DeserializeOwned;
@@ -8,6 +10,7 @@ use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
+use deno_core::OpDecl;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
 use deno_web::BlobStore;
@@ -17,6 +20,7 @@ use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
+
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
   /// Ok, the heap limit is not exceeded.
@@ -76,19 +80,15 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T, F, R>(
+  pub async fn new<T>(
     source: &str,
     init: T,
     arweave: (i32, String, String),
-    op_smartweave_read_state: F,
+    op_smartweave_read_state: OpDecl,
     executor_settings: HashMap<String, deno_core::serde_json::Value>,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
-    F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
-      + 'static,
-    R:
-      Future<Output = Result<deno_core::serde_json::Value, AnyError>> + 'static,
   {
     let specifier = "file:///main.js".to_string();
     let module_loader =
@@ -111,13 +111,11 @@ impl Runtime {
       extensions: vec![
         deno_webidl::init(),
         deno_url::init(),
-        deno_web::init(BlobStore::default(), None),
+        deno_web::init::<Permissions>(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(
-          arweave,
-          op_smartweave_read_state,
-          executor_settings,
-        ),
+        deno_fetch::init::<Permissions>(Default::default()),
+        three_em_smartweave::init(arweave, op_smartweave_read_state),
+        three_em_exm_base_ops::init(executor_settings),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -137,8 +135,7 @@ impl Runtime {
       *state_clone.borrow_mut() = HeapLimitState::Exceeded(curr);
       (curr + 5) << 20
     });
-    rt.sync_ops_cache();
-
+    /// TODO: rt.sync_ops_cache();
     let global =
       rt.execute_script("<anon>", &format!("import(\"{}\")", specifier))?;
     let module = rt.resolve_value(global).await?;
@@ -285,16 +282,14 @@ mod test {
   use deno_core::serde_json::Value;
   use deno_core::OpState;
   use deno_core::ZeroCopyBuf;
+  use deno_ops::op;
   use std::cell::RefCell;
   use std::collections::HashMap;
   use std::rc::Rc;
   use three_em_smartweave::InteractionContext;
 
-  pub async fn never_op(
-    _: Rc<RefCell<OpState>>,
-    _: (String, Option<usize>, Option<bool>),
-    _: (),
-  ) -> Result<Value, AnyError> {
+  #[op]
+  pub async fn never_op(_: (), _: (), _: ()) -> Result<Value, AnyError> {
     unreachable!()
   }
 
@@ -304,7 +299,7 @@ mod test {
       "export async function handle() { return { state: -69 } }",
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -329,7 +324,7 @@ export async function handle(slice) {
 "#,
       ZeroCopyBuf::from(buf),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -347,6 +342,30 @@ export async function handle(slice) {
   }
 
   #[tokio::test]
+  async fn test_base_fetch_op() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  const someFetch = await Base.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+  return { state: `Hello` };
+}
+"#,
+      (),
+      (12345, String::from("arweave.net"), String::from("http")),
+      never_op::decl(),
+      HashMap::new(),
+    )
+        .await
+        .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let tx_id = rt
+      .get_contract_state::<deno_core::serde_json::Value>()
+      .unwrap();
+    println!("{}", tx_id)
+  }
+
+  #[tokio::test]
   async fn test_deterministic_v8() {
     let mut rt = Runtime::new(
       r#"
@@ -356,7 +375,7 @@ export async function handle() {
 "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -383,7 +402,7 @@ export async function handle() {
   "#,
       8,
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -416,7 +435,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -442,7 +461,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -463,7 +482,7 @@ export async function handle() {
   "#,
   (),
         (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+        never_op::decl(),
         HashMap::new()
       )
       .await
@@ -492,7 +511,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -512,7 +531,7 @@ export async function handle() {
 "#,
       (),
       (12345, String::from("arweave.net"), String::from("http")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -545,7 +564,7 @@ export async function handle() {
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new()
     )
         .await
@@ -577,13 +596,13 @@ export async function handle() {
       r#"
 export async function handle() {
   return {
-    state: [await Deno.core.opAsync("op_executor_settings", "Country"), await Deno.core.opAsync("op_executor_settings", "Simulated")]
+    state: [await Deno.core.opAsync("op_get_executor_settings", "Country"), await Deno.core.opAsync("op_get_executor_settings", "Simulated")]
   }
 }
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       settings,
     )
     .await
@@ -617,7 +636,7 @@ try {
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new()
     )
         .await
@@ -648,7 +667,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await

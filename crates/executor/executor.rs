@@ -3,6 +3,7 @@ use deno_core::error::AnyError;
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
 use deno_core::OpState;
+use deno_ops::op;
 use indexmap::map::IndexMap;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -70,23 +71,26 @@ pub fn process_execution(
     }
   }
 }
+
+#[op]
 pub async fn op_smartweave_read_state(
   state: Rc<RefCell<OpState>>,
   (contract_id, height, show_validity): (String, Option<usize>, Option<bool>),
   _: (),
 ) -> Result<Value, AnyError> {
-  let op_state = state.borrow();
-  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
-  let cl = Arweave::new(
-    info.port,
-    info.host.clone(),
-    info.protocol.clone(),
-    ArweaveCache::new(),
-  );
-  let state =
-    crate::execute_contract(contract_id, height, true, false, None, None, &cl)
-      .await?;
-  Ok(process_execution(state, show_validity.unwrap_or(false)))
+  Ok(Value::String(String::from("Hello")))
+  // let op_state = state.borrow();
+  // let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
+  // let cl = Arweave::new(
+  //   info.port,
+  //   info.host.clone(),
+  //   info.protocol.clone(),
+  //   ArweaveCache::new(),
+  // );
+  // let state =
+  //   crate::execute_contract(contract_id, height, true, false, None, None, &cl)
+  //     .await?;
+  // Ok(process_execution(state, show_validity.unwrap_or(false)))
 }
 
 pub fn generate_interaction_context(
@@ -165,7 +169,7 @@ pub async fn raw_execute_contract<
           &(String::from_utf8(loaded_contract.contract_src).unwrap()),
           state,
           arweave_info.to_owned(),
-          op_smartweave_read_state,
+          op_smartweave_read_state::decl(),
           settings.clone(),
         )
         .await
@@ -209,7 +213,7 @@ pub async fn raw_execute_contract<
                 &(String::from_utf8_lossy(&contract.contract_src)),
                 state,
                 arweave_info.to_owned(),
-                op_smartweave_read_state,
+                op_smartweave_read_state::decl(),
                 settings.clone(),
               )
               .await

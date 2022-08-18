@@ -4,7 +4,6 @@ mod dry_run;
 mod local_server;
 mod messages;
 mod node;
-mod node_crypto;
 mod print_help;
 mod run;
 mod start;

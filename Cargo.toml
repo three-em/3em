@@ -8,6 +8,7 @@ members = [
   "./crates/metering",
   "./crates/smartweave",
   "./crates/wasm",
+  "./crates/exm",
   "./tools/benchmarks/3em",
 ]
 exclude = [

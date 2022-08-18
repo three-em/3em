@@ -1,7 +1,7 @@
 use deno_core::error::AnyError;
 use deno_core::include_js_files;
-use deno_core::op_async;
-use deno_core::op_sync;
+use deno_core::OpDecl;
+use deno_ops::op;
 
 use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
@@ -48,16 +48,10 @@ pub struct InteractionContext {
   pub block: InteractionBlock,
 }
 
-pub fn init<F, R>(
+pub fn init(
   arweave: (i32, String, String),
-  op_smartweave_read_contract: F,
-  executor_settings: HashMap<String, deno_core::serde_json::Value>,
-) -> Extension
-where
-  F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
-    + 'static,
-  R: Future<Output = Result<deno_core::serde_json::Value, AnyError>> + 'static,
-{
+  op_smartweave_read_contract: OpDecl,
+) -> Extension {
   Extension::builder()
     .js(include_js_files!(
       prefix "3em:smartweave",
@@ -67,29 +61,13 @@ where
       "contract-assert.js",
     ))
     .ops(vec![
-      (
-        "op_smartweave_wallet_balance",
-        op_async(op_smartweave_wallet_balance),
-      ),
-      (
-        "op_smartweave_wallet_last_tx",
-        op_async(op_smartweave_wallet_last_tx),
-      ),
-      ("op_smartweave_get_host", op_async(op_smartweave_get_host)),
-      (
-        "op_smartweave_get_tx_data",
-        op_async(op_smartweave_get_tx_data),
-      ),
-      (
-        "op_smartweave_unsafe_exit_process",
-        op_sync(op_smartweave_unsafe_exit_process),
-      ),
-      (
-        "op_smartweave_read_contract",
-        op_async(op_smartweave_read_contract),
-      ),
-      ("op_smartweave_get_tx", op_async(op_smartweave_get_tx)),
-      ("op_executor_settings", op_async(op_get_executor_settings)),
+      op_smartweave_unsafe_exit_process::decl(),
+      op_smartweave_wallet_balance::decl(),
+      op_smartweave_wallet_last_tx::decl(),
+      op_smartweave_get_tx_data::decl(),
+      op_smartweave_get_tx::decl(),
+      op_smartweave_get_host::decl(),
+      op_smartweave_read_contract,
     ])
     .state(move |state| {
       let (port, host, protocol) = arweave.clone();
@@ -98,14 +76,12 @@ where
         host,
         protocol,
       });
-      state.put(ExecutorSettings {
-        settings: executor_settings.clone(),
-      });
       Ok(())
     })
     .build()
 }
 
+#[op]
 pub fn op_smartweave_unsafe_exit_process(
   _state: &mut OpState,
   _: (),
@@ -115,6 +91,7 @@ pub fn op_smartweave_unsafe_exit_process(
   std::process::exit(1)
 }
 
+#[op]
 pub async fn op_smartweave_wallet_balance(
   _state: Rc<RefCell<OpState>>,
   address: String,
@@ -133,6 +110,7 @@ pub async fn op_smartweave_wallet_balance(
   Ok(balance)
 }
 
+#[op]
 pub async fn op_smartweave_wallet_last_tx(
   _state: Rc<RefCell<OpState>>,
   address: String,
@@ -149,6 +127,7 @@ pub async fn op_smartweave_wallet_last_tx(
   Ok(tx)
 }
 
+#[op]
 pub async fn op_smartweave_get_tx_data(
   _state: Rc<RefCell<OpState>>,
   tx_id: String,
@@ -165,6 +144,7 @@ pub async fn op_smartweave_get_tx_data(
   Ok(req.to_vec().into())
 }
 
+#[op]
 pub async fn op_smartweave_get_tx(
   _state: Rc<RefCell<OpState>>,
   tx_id: String,
@@ -212,6 +192,7 @@ pub fn get_host(arweave_info: &ArweaveInfo) -> String {
   }
 }
 
+#[op]
 pub async fn op_smartweave_get_host(
   _state: Rc<RefCell<OpState>>,
   _parameters: (),
@@ -220,18 +201,4 @@ pub async fn op_smartweave_get_host(
   let s = _state.borrow();
   let arweave = s.borrow::<ArweaveInfo>();
   Ok(get_host(arweave))
-}
-
-pub async fn op_get_executor_settings(
-  _state: Rc<RefCell<OpState>>,
-  setting: String,
-  _: (),
-) -> Result<deno_core::serde_json::Value, AnyError> {
-  let s = _state.borrow();
-  let settings = s.borrow::<ExecutorSettings>();
-  if let Some(data) = settings.settings.get(&setting) {
-    Ok(data.clone())
-  } else {
-    Ok(deno_core::serde_json::Value::Null)
-  }
 }
