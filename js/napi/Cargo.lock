@@ -2093,6 +2093,7 @@ name = "three_em_node"
 version = "0.2.0"
 dependencies = [
  "jemallocator",
+ "libc",
  "napi",
  "napi-build",
  "napi-derive",

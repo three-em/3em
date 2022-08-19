@@ -18,9 +18,11 @@ tokio = { version = "1.10.1", features = ["full"] }
 napi-derive = "2"
 three_em_executor = { version = "0.2.0", path = "../../crates/executor" }
 three_em_arweave = { version = "0.2.0", path = "../../crates/arweave" }
+libc = "0.2.119"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 jemallocator = { version = "0.3.2", features = ["disable_initial_exec_tls"] }
 
 [build-dependencies]
 napi-build = { version = "1" }
+libc = "0.2.119"
