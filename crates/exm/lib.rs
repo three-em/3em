@@ -58,12 +58,12 @@ pub fn init(executor_settings: HashMap<String, Value>) -> Extension {
 }
 
 #[op]
-pub async fn op_get_executor_settings(
-  _state: Rc<RefCell<OpState>>,
+pub fn op_get_executor_settings(
+  _state: &mut OpState,
   setting: String,
   _: (),
 ) -> Result<Value, AnyError> {
-  let s = _state.borrow();
+  let s = _state;
   let settings = s.borrow::<ExecutorSettings>();
   if let Some(data) = settings.settings.get(&setting) {
     Ok(data.clone())

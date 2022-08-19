@@ -92,6 +92,9 @@
 
         requests = {};
 
+        constructor() {
+        }
+
         async deterministicFetch(...args) {
             try {
                 const jsonArgs = JSON.stringify(args);
@@ -123,7 +126,29 @@
 
     }
 
-    window.EXM = new Base();
+    const ExmSymbol = Symbol('exm');
+    const baseIns = Object.freeze(new Base());
+
+    Object.defineProperty(window, "EXM", {
+        get: () => {
+            const isEXM = Deno.core.opSync("op_get_executor_settings", "EXM");
+            if(isEXM) {
+                if (!window[ExmSymbol]) {
+                    Object.defineProperty(window, ExmSymbol, {
+                        value: baseIns,
+                        configurable: false,
+                        writable: false,
+                        enumerable: false
+                    });
+                }
+                return window[ExmSymbol];
+            } else {
+                throw new Error("EXM is not enabled in the current context");
+            }
+        },
+        enumerable: false,
+        configurable: false
+    });
 
     delete window.__bootstrap;
 })(this);

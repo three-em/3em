@@ -373,11 +373,18 @@ export async function handle(slice) {
 
   #[tokio::test]
   async fn test_base_fetch_op() {
+    let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
+      HashMap::new();
+    exec_settings.insert(
+      String::from("EXM"),
+      deno_core::serde_json::Value::Bool(true),
+    );
     let mut rt = Runtime::new(
       r#"
 export async function handle() {
 try {
   const someFetch = await EXM.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+  const someFetch2 = await EXM.deterministicFetch("https://arweave.net/tx/RjOdIx9Y42f0T19-Tm_xB2Nk_blBv56eJ14tfXMNZTg");
   return { state: someFetch.asJSON().id };
   } catch(e) {
   return { state: e.toString() }
@@ -387,22 +394,31 @@ try {
       (),
       (12345, String::from("arweave.net"), String::from("http")),
       never_op::decl(),
-      HashMap::new(),
+      exec_settings,
     )
         .await
         .unwrap();
 
     rt.call((), None).await.unwrap();
-    let calls = rt
-      .get_exm_context::<ExmContext>()
-      .unwrap();
+    let calls = rt.get_exm_context::<ExmContext>().unwrap();
 
     let tx_id = rt.get_contract_state::<String>().unwrap();
     assert_eq!(
       tx_id.to_string(),
       "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI"
     );
-    assert_eq!(calls.requests.get("7c13bc2cb63b30754ee3047ca46337e626d61d01b8484ecea8d3e235a617091a".into()).unwrap().url, "https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+    assert_eq!(calls.requests.keys().len(), 2);
+    assert_eq!(
+      calls
+        .requests
+        .get(
+          "7c13bc2cb63b30754ee3047ca46337e626d61d01b8484ecea8d3e235a617091a"
+            .into()
+        )
+        .unwrap()
+        .url,
+      "https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI"
+    );
   }
 
   #[tokio::test]
@@ -636,7 +652,7 @@ export async function handle() {
       r#"
 export async function handle() {
   return {
-    state: [await Deno.core.opAsync("op_get_executor_settings", "Country"), await Deno.core.opAsync("op_get_executor_settings", "Simulated")]
+    state: [Deno.core.opSync("op_get_executor_settings", "Country"), Deno.core.opSync("op_get_executor_settings", "Simulated"), Deno.core.opSync("op_get_executor_settings", "unknown")]
   }
 }
 "#,
@@ -649,9 +665,12 @@ export async function handle() {
     .unwrap();
 
     rt.call((), None).await.unwrap();
-    let data = rt.get_contract_state::<(String, bool)>().unwrap();
+    let data = rt
+      .get_contract_state::<(String, bool, deno_core::serde_json::Value)>()
+      .unwrap();
     assert_eq!(data.0, "United States");
     assert_eq!(data.1, true);
+    assert_eq!(data.2, deno_core::serde_json::Value::Null);
   }
 
   #[derive(Serialize, Deserialize)]

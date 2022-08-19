@@ -58,6 +58,10 @@ pub async fn simulate_contract(
     String::from("Simulated"),
     deno_core::serde_json::Value::Bool(true),
   );
+  settings.insert(
+    String::from("EXM"),
+    deno_core::serde_json::Value::Bool(true),
+  );
 
   if loaded_contract.is_ok() {
     let execute = raw_execute_contract(
