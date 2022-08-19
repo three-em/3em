@@ -25,6 +25,7 @@ three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
 three_em_exm_base_ops = { version = "0.1.0", path = "../exm" }
 deno_ops = "0.25.0"
 deno_tls = "0.52.0"
+simd-abstraction = "0.7.0"
 
 [build-dependencies]
 v8 = "0.47.1"
@@ -39,3 +40,4 @@ deno_tls = "0.52.0"
 serde = { version = "1", features = ["derive"] }
 three_em_smartweave = { version = "0.2.0", path = "../smartweave" }
 three_em_exm_base_ops = { version = "0.1.0", path = "../exm" }
+simd-abstraction = "0.7.0"
