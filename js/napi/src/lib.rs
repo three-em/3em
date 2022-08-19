@@ -23,6 +23,7 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 pub struct ExecuteContractResult {
   pub state: serde_json::Value,
   pub validity: HashMap<String, serde_json::Value>,
+  pub exm_context: serde_json::Value
 }
 
 #[napi(object)]
@@ -107,9 +108,10 @@ fn get_result(
 ) -> Option<ExecuteContractResult> {
   if process_result.is_ok() {
     match process_result.unwrap() {
-      ExecuteResult::V8(state, validity) => Some(ExecuteContractResult {
+      ExecuteResult::V8(state, validity, exm_context) => Some(ExecuteContractResult {
         state,
         validity: validity_to_hashmap(validity),
+        exm_context: serde_json::to_value(exm_context).unwrap()
       }),
       ExecuteResult::Evm(..) => todo!(),
     }
@@ -126,7 +128,8 @@ async fn simulate_contract(
   contract_init_state: Option<String>,
   maybe_config: Option<ExecuteConfig>,
   maybe_cache: Option<bool>,
-  maybe_bundled_contract: Option<bool>
+  maybe_bundled_contract: Option<bool>,
+  maybe_settings: Option<HashMap<String, serde_json::Value>>
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     panic::catch_unwind(|| {
@@ -179,7 +182,8 @@ async fn simulate_contract(
           real_interactions,
           &arweave,
           maybe_cache,
-          maybe_bundled_contract
+          maybe_bundled_contract,
+          maybe_settings
         )
             .await;
 
@@ -298,6 +302,7 @@ mod tests {
       Some(r#"{"counter": 2481}"#.into()),
       None,
       Some(false),
+      None,
       None
     )
     .await
@@ -334,7 +339,8 @@ mod tests {
       Some(r#"2"#.into()),
       None,
       Some(false),
-      Some(true)
+      Some(true),
+      None
     ).await.unwrap();
 
     let contract_result = contract.state;

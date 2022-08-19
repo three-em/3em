@@ -26,6 +26,8 @@ use three_em_evm::U256;
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));
 
+pub type ExmContext = three_em_exm_base_ops::ExmContext;
+
 pub async fn simulate_contract(
   contract_id: String,
   contract_init_state: Option<String>,
@@ -33,6 +35,7 @@ pub async fn simulate_contract(
   arweave: &Arweave,
   maybe_cache: Option<bool>,
   maybe_bundled_contract: Option<bool>,
+  maybe_settings: Option<HashMap<String, deno_core::serde_json::Value>>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
@@ -53,7 +56,7 @@ pub async fn simulate_contract(
   .0;
 
   let mut settings: HashMap<String, deno_core::serde_json::Value> =
-    HashMap::new();
+    maybe_settings.unwrap_or_else(|| HashMap::new());
   settings.insert(
     String::from("Simulated"),
     deno_core::serde_json::Value::Bool(true),

@@ -100,15 +100,19 @@
                 const jsonArgs = JSON.stringify(args);
                 const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
 
-                const fetchData = await props.fetch(...args);
-                const buff = await fetchData.arrayBuffer();
+                if(this.requests[reqHash]) {
+                    return Object.freeze(this.requests[reqHash])
+                } else {
+                    const fetchData = await props.fetch(...args);
+                    const buff = await fetchData.arrayBuffer();
 
-                let rep = new BaseReqResponse(fetchData);
-                rep = rep.setBuffer(buff);
+                    let rep = new BaseReqResponse(fetchData);
+                    rep = rep.setBuffer(buff);
 
-                this.requests[reqHash] = rep.toStructuredJson();
+                    this.requests[reqHash] = rep.toStructuredJson();
 
-                return rep;
+                    return rep;
+                }
             } catch (e) {
                 return e.toString()
             }
@@ -132,19 +136,17 @@
     Object.defineProperty(window, "EXM", {
         get: () => {
             const isEXM = Deno.core.opSync("op_get_executor_settings", "EXM");
-            if(isEXM) {
-                if (!window[ExmSymbol]) {
-                    Object.defineProperty(window, ExmSymbol, {
-                        value: baseIns,
-                        configurable: false,
-                        writable: false,
-                        enumerable: false
-                    });
-                }
-                return window[ExmSymbol];
-            } else {
-                throw new Error("EXM is not enabled in the current context");
+            if (!window[ExmSymbol]) {
+                Object.defineProperty(window, ExmSymbol, {
+                    value: isEXM ? baseIns : {
+                        requests: {}
+                    },
+                    configurable: false,
+                    writable: false,
+                    enumerable: false
+                });
             }
+            return window[ExmSymbol];
         },
         enumerable: false,
         configurable: false
