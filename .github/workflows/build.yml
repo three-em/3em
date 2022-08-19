@@ -29,10 +29,10 @@ jobs:
             cross: true
             cross_compile: true
 
-          - os: ubuntu-latest
-            target: aarch64-linux-android
-            cross: true
-            cross_compile: true
+#          - os: ubuntu-latest
+#            target: aarch64-linux-android
+#            cross: true
+#            cross_compile: true
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -54,7 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v1
 
       - name: Setup Cross Compilation Tools
-        if: ${{ matrix.cross_compile }} == 'true' || ${{ matrix.cross_compile }} == true || contains(matrix.cross_compile, 'linux') && matrix.cross == true
+        if: matrix.cross == 'true' && contains(matrix.target, 'linux')
         run: |
           sudo apt update
 
