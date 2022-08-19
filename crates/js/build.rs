@@ -30,7 +30,6 @@ fn create_snapshot(snapshot_path: &Path) {
       deno_url::init(),
       deno_web::init::<Permissions>(BlobStore::default(), None),
       deno_crypto::init(None),
-      deno_tls::init(),
       deno_fetch::init::<Permissions>(Options {
         user_agent: String::from("EXM"),
         ..Default::default()

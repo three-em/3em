@@ -114,7 +114,6 @@ impl Runtime {
         deno_url::init(),
         deno_web::init::<Permissions>(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        deno_tls::init(),
         deno_fetch::init::<Permissions>(Options {
           user_agent: String::from("EXM"),
           ..Default::default()

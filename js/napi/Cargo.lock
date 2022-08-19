@@ -2076,7 +2076,6 @@ dependencies = [
  "deno_crypto",
  "deno_fetch",
  "deno_ops",
- "deno_tls",
  "deno_url",
  "deno_web",
  "deno_webidl",
@@ -2093,7 +2092,6 @@ name = "three_em_node"
 version = "0.2.0"
 dependencies = [
  "jemallocator",
- "libc",
  "napi",
  "napi-build",
  "napi-derive",
