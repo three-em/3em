@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node-darwin-arm64",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "os": [
     "darwin"
   ],
@@ -11,6 +11,6 @@
   "files": [
     "three_em_node.darwin-arm64.node"
   ],
-  "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
+  "author": "EXM Core <team@exm.dev>",
   "license": "MIT"
 }
