@@ -6,7 +6,6 @@ mod messages;
 mod node;
 mod print_help;
 mod run;
-mod start;
 mod utils;
 
 use crate::cli::parse;
@@ -30,13 +29,6 @@ fn main() -> Result<(), AnyError> {
     }
     ParseResult::Known { flag } => {
       match flag {
-        Flags::Start {
-          host,
-          port,
-          node_capacity,
-        } => {
-          rt.block_on(crate::start::start(host, port, node_capacity))?;
-        }
         Flags::Run {
           port,
           host,
