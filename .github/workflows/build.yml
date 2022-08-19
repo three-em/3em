@@ -54,7 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v1
 
       - name: Setup Cross Compilation Tools
-        if: matrix.cross_compile == 'true'
+        if: ${{ matrix.cross_compile }} == 'true' || ${{ matrix.cross_compile }} == true || contains(matrix.cross_compile, 'linux') && matrix.cross == true
         run: |
           sudo apt update
 
