@@ -315,6 +315,7 @@ mod test {
   use std::cell::RefCell;
   use std::collections::HashMap;
   use std::rc::Rc;
+  use three_em_exm_base_ops::ExmContext;
   use three_em_smartweave::InteractionContext;
 
   #[op]
@@ -393,15 +394,15 @@ try {
 
     rt.call((), None).await.unwrap();
     let calls = rt
-      .get_exm_context::<deno_core::serde_json::Value>()
-      .unwrap()
-      .to_string();
-    println!("{}", calls);
+      .get_exm_context::<ExmContext>()
+      .unwrap();
+
     let tx_id = rt.get_contract_state::<String>().unwrap();
     assert_eq!(
       tx_id.to_string(),
       "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI"
     );
+    assert_eq!(calls.requests.get("7c13bc2cb63b30754ee3047ca46337e626d61d01b8484ecea8d3e235a617091a".into()).unwrap().url, "https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
   }
 
   #[tokio::test]

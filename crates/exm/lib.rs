@@ -26,14 +26,14 @@ pub struct DeterministicFetchOptions {
 #[derive(Deserialize, Serialize, Default, Clone)]
 pub struct DeterministicFetchBody {
   #[serde(rename = "type")]
-  req_type: String,
-  url: String,
-  statusText: String,
-  status: i8,
-  redirected: bool,
-  ok: bool,
-  headers: HashMap<String, String>,
-  vector: Vec<u8>,
+  pub req_type: String,
+  pub url: String,
+  pub statusText: String,
+  pub status: i8,
+  pub redirected: bool,
+  pub ok: bool,
+  pub headers: HashMap<String, String>,
+  pub vector: Vec<u8>,
 }
 
 #[derive(Deserialize, Serialize, Default, Clone)]
