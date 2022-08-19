@@ -4,11 +4,6 @@ use std::ops::Deref;
 
 #[derive(Debug)]
 pub enum Flags {
-  Start {
-    port: i32,
-    host: String,
-    node_capacity: i32,
-  },
   Run {
     host: String,
     port: i32,
@@ -71,15 +66,6 @@ pub fn parse() -> Result<ParseResult, pico_args::Error> {
   } else {
     #[allow(clippy::wildcard_in_or_patterns)]
     let flags = match cmd.deref() {
-      "start" => ParseResult::Known {
-        flag: Flags::Start {
-          port: pargs.opt_value_from_str("--port")?.unwrap_or(8755),
-          host: pargs
-            .opt_value_from_str("--host")?
-            .unwrap_or_else(|| String::from("127.0.0.1")),
-          node_capacity: parse_node_limit(&mut pargs).unwrap(),
-        },
-      },
       "dry-run" => ParseResult::Known {
         flag: Flags::DryRun {
           host: pargs

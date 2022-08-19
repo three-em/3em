@@ -1,15 +1,19 @@
+pub mod default_permissions;
 mod loader;
 pub mod snapshot;
 
+use crate::default_permissions::Permissions;
 use crate::loader::EmbeddedModuleLoader;
-use deno_core::error::AnyError;
+use deno_core::error::{generic_error, AnyError};
 use deno_core::serde::de::DeserializeOwned;
 use deno_core::serde::Serialize;
 use deno_core::serde_json::Value;
 use deno_core::serde_v8;
 use deno_core::JsRuntime;
+use deno_core::OpDecl;
 use deno_core::OpState;
 use deno_core::RuntimeOptions;
+use deno_fetch::Options;
 use deno_web::BlobStore;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -17,6 +21,7 @@ use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
+
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
   /// Ok, the heap limit is not exceeded.
@@ -76,19 +81,15 @@ pub struct Runtime {
 }
 
 impl Runtime {
-  pub async fn new<T, F, R>(
+  pub async fn new<T>(
     source: &str,
     init: T,
     arweave: (i32, String, String),
-    op_smartweave_read_state: F,
+    op_smartweave_read_state: OpDecl,
     executor_settings: HashMap<String, deno_core::serde_json::Value>,
   ) -> Result<Self, AnyError>
   where
     T: Serialize + 'static,
-    F: Fn(Rc<RefCell<OpState>>, (String, Option<usize>, Option<bool>), ()) -> R
-      + 'static,
-    R:
-      Future<Output = Result<deno_core::serde_json::Value, AnyError>> + 'static,
   {
     let specifier = "file:///main.js".to_string();
     let module_loader =
@@ -111,19 +112,26 @@ impl Runtime {
       extensions: vec![
         deno_webidl::init(),
         deno_url::init(),
-        deno_web::init(BlobStore::default(), None),
+        deno_web::init::<Permissions>(BlobStore::default(), None),
         deno_crypto::init(Some(0)),
-        three_em_smartweave::init(
-          arweave,
-          op_smartweave_read_state,
-          executor_settings,
-        ),
+        deno_fetch::init::<Permissions>(Options {
+          user_agent: String::from("EXM"),
+          ..Default::default()
+        }),
+        three_em_smartweave::init(arweave, op_smartweave_read_state),
+        three_em_exm_base_ops::init(executor_settings),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
       create_params: Some(params),
       ..Default::default()
     });
+
+    {
+      let op_state = rt.op_state();
+      op_state.borrow_mut().put(Permissions);
+    }
+
     let isolate = rt.v8_isolate();
 
     let handle = isolate.thread_safe_handle();
@@ -137,8 +145,7 @@ impl Runtime {
       *state_clone.borrow_mut() = HeapLimitState::Exceeded(curr);
       (curr + 5) << 20
     });
-    rt.sync_ops_cache();
-
+    /// TODO: rt.sync_ops_cache();
     let global =
       rt.execute_script("<anon>", &format!("import(\"{}\")", specifier))?;
     let module = rt.resolve_value(global).await?;
@@ -173,6 +180,24 @@ impl Runtime {
     let scope = &mut self.rt.handle_scope();
     let value = v8::Local::new(scope, self.contract_state.clone());
     Ok(serde_v8::from_v8(scope, value)?)
+  }
+
+  pub fn get_exm_context<T>(&mut self) -> Result<T, AnyError>
+  where
+    T: DeserializeOwned + 'static,
+  {
+    let scope = &mut self.rt.handle_scope();
+    let context = scope.get_current_context();
+    let inner_scope = &mut v8::ContextScope::new(scope, context);
+    let global = context.global(inner_scope);
+    let v8_key = serde_v8::to_v8(inner_scope, "EXM").unwrap();
+    let output = global.get(inner_scope, v8_key);
+
+    if let Some(output_val) = output {
+      Ok(serde_v8::from_v8(inner_scope, output_val)?)
+    } else {
+      Err(generic_error("Impossible to get fetch calls"))
+    }
   }
 
   pub async fn call<R>(
@@ -285,16 +310,15 @@ mod test {
   use deno_core::serde_json::Value;
   use deno_core::OpState;
   use deno_core::ZeroCopyBuf;
+  use deno_ops::op;
   use std::cell::RefCell;
   use std::collections::HashMap;
   use std::rc::Rc;
+  use three_em_exm_base_ops::ExmContext;
   use three_em_smartweave::InteractionContext;
 
-  pub async fn never_op(
-    _: Rc<RefCell<OpState>>,
-    _: (String, Option<usize>, Option<bool>),
-    _: (),
-  ) -> Result<Value, AnyError> {
+  #[op]
+  pub async fn never_op(_: (), _: (), _: ()) -> Result<Value, AnyError> {
     unreachable!()
   }
 
@@ -304,7 +328,7 @@ mod test {
       "export async function handle() { return { state: -69 } }",
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -329,7 +353,7 @@ export async function handle(slice) {
 "#,
       ZeroCopyBuf::from(buf),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -347,6 +371,56 @@ export async function handle(slice) {
   }
 
   #[tokio::test]
+  async fn test_base_fetch_op() {
+    let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
+      HashMap::new();
+    exec_settings.insert(
+      String::from("EXM"),
+      deno_core::serde_json::Value::Bool(true),
+    );
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+try {
+  const someFetch = await EXM.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+  const someFetch2 = await EXM.deterministicFetch("https://arweave.net/tx/RjOdIx9Y42f0T19-Tm_xB2Nk_blBv56eJ14tfXMNZTg");
+  return { state: someFetch.asJSON().id };
+  } catch(e) {
+  return { state: e.toString() }
+  }
+}
+"#,
+      (),
+      (12345, String::from("arweave.net"), String::from("http")),
+      never_op::decl(),
+      exec_settings,
+    )
+        .await
+        .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let calls = rt.get_exm_context::<ExmContext>().unwrap();
+
+    let tx_id = rt.get_contract_state::<String>().unwrap();
+    assert_eq!(
+      tx_id.to_string(),
+      "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI"
+    );
+    assert_eq!(calls.requests.keys().len(), 2);
+    assert_eq!(
+      calls
+        .requests
+        .get(
+          "7c13bc2cb63b30754ee3047ca46337e626d61d01b8484ecea8d3e235a617091a"
+            .into()
+        )
+        .unwrap()
+        .url,
+      "https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI"
+    );
+  }
+
+  #[tokio::test]
   async fn test_deterministic_v8() {
     let mut rt = Runtime::new(
       r#"
@@ -356,7 +430,7 @@ export async function handle() {
 "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -383,7 +457,7 @@ export async function handle() {
   "#,
       8,
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -416,7 +490,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -442,7 +516,7 @@ export async function handle() {
   "#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -463,7 +537,7 @@ export async function handle() {
   "#,
   (),
         (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+        never_op::decl(),
         HashMap::new()
       )
       .await
@@ -492,7 +566,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -512,7 +586,7 @@ export async function handle() {
 "#,
       (),
       (12345, String::from("arweave.net"), String::from("http")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await
@@ -545,7 +619,7 @@ export async function handle() {
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new()
     )
         .await
@@ -577,22 +651,25 @@ export async function handle() {
       r#"
 export async function handle() {
   return {
-    state: [await Deno.core.opAsync("op_executor_settings", "Country"), await Deno.core.opAsync("op_executor_settings", "Simulated")]
+    state: [Deno.core.opSync("op_get_executor_settings", "Country"), Deno.core.opSync("op_get_executor_settings", "Simulated"), Deno.core.opSync("op_get_executor_settings", "unknown")]
   }
 }
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       settings,
     )
     .await
     .unwrap();
 
     rt.call((), None).await.unwrap();
-    let data = rt.get_contract_state::<(String, bool)>().unwrap();
+    let data = rt
+      .get_contract_state::<(String, bool, deno_core::serde_json::Value)>()
+      .unwrap();
     assert_eq!(data.0, "United States");
     assert_eq!(data.1, true);
+    assert_eq!(data.2, deno_core::serde_json::Value::Null);
   }
 
   #[derive(Serialize, Deserialize)]
@@ -617,7 +694,7 @@ try {
 "#,
       (),
       (443, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new()
     )
         .await
@@ -648,7 +725,7 @@ export async function handle() {
 }"#,
       (),
       (80, String::from("arweave.net"), String::from("https")),
-      never_op,
+      never_op::decl(),
       HashMap::new(),
     )
     .await

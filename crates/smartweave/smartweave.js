@@ -274,7 +274,7 @@
 
   class Contracts {
     async readContractState(contractId, height, showValidity) {
-      const isSimulated = await Deno.core.opAsync("op_executor_settings", "Simulated");
+      const isSimulated = Deno.core.opSync("op_get_executor_settings", "Simulated");
       if(!isSimulated) {
         return Deno.core.opAsync("op_smartweave_read_contract", [contractId, height || null, showValidity || null]);
       } else {

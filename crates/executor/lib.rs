@@ -26,6 +26,8 @@ use three_em_evm::U256;
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));
 
+pub type ExmContext = three_em_exm_base_ops::ExmContext;
+
 pub async fn simulate_contract(
   contract_id: String,
   contract_init_state: Option<String>,
@@ -33,6 +35,7 @@ pub async fn simulate_contract(
   arweave: &Arweave,
   maybe_cache: Option<bool>,
   maybe_bundled_contract: Option<bool>,
+  maybe_settings: Option<HashMap<String, deno_core::serde_json::Value>>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
@@ -53,9 +56,13 @@ pub async fn simulate_contract(
   .0;
 
   let mut settings: HashMap<String, deno_core::serde_json::Value> =
-    HashMap::new();
+    maybe_settings.unwrap_or_else(|| HashMap::new());
   settings.insert(
     String::from("Simulated"),
+    deno_core::serde_json::Value::Bool(true),
+  );
+  settings.insert(
+    String::from("EXM"),
     deno_core::serde_json::Value::Bool(true),
   );
 
@@ -69,7 +76,11 @@ pub async fn simulate_contract(
       true,
       false,
       |validity_table, cache_state| {
-        ExecuteResult::V8(cache_state.unwrap(), validity_table)
+        ExecuteResult::V8(
+          cache_state.unwrap(),
+          validity_table,
+          Default::default(),
+        )
       },
       arweave,
       settings,
@@ -177,7 +188,11 @@ pub async fn execute_contract(
     needs_processing,
     show_errors,
     |validity_table, cache_state| {
-      ExecuteResult::V8(cache_state.unwrap(), validity_table)
+      ExecuteResult::V8(
+        cache_state.unwrap(),
+        validity_table,
+        Default::default(),
+      )
     },
     arweave,
     HashMap::new(),
@@ -466,7 +481,7 @@ mod test {
     .await
     .unwrap();
 
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       let map: IndexMap<String, Value> = validity;
       let keys = map.keys();
 
@@ -510,7 +525,7 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       assert!(!(value.is_null()));
       assert!(value.get("counter").is_some());
       let counter = value.get("counter").unwrap().as_i64().unwrap();
@@ -545,7 +560,7 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, _validity) = result {
+    if let ExecuteResult::V8(value, _validity, exm_context) = result {
       assert!(!(value.is_null()));
       assert!(value.get("people").is_some());
       assert!(value.get("people").unwrap().is_array());

@@ -70,7 +70,7 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
                 match execute_result {
                      Ok(result) => {
                          match result {
-                             ExecuteResult::V8(val, validity) => {
+                             ExecuteResult::V8(val, validity, _) => {
                                  if show_validity {
                                      response_result = Some(Response::new(Body::from(
                                          serde_json::json!({

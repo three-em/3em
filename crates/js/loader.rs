@@ -33,7 +33,8 @@ impl ModuleLoader for EmbeddedModuleLoader {
   ) -> Pin<Box<deno_core::ModuleSourceFuture>> {
     let module_specifier = module_specifier.clone();
 
-    let code = self.0.to_string();
+    let code = (self.0.clone()).into_bytes().into_boxed_slice();
+
     async move {
       let specifier = module_specifier.to_string();
 
