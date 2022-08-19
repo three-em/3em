@@ -8,7 +8,7 @@ on:
 env:
   DEBUG: napi:*
   APP_NAME: three_em_node
-  MACOSX_DEPLOYMENT_TARGET: '12.5'
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
 
 jobs:
   build:
