@@ -35,7 +35,7 @@ pub async fn run(
   }
 
   match execution {
-    ExecuteResult::V8(value, validity_table) => {
+    ExecuteResult::V8(value, validity_table, _) => {
       let value = if show_validity {
         serde_json::json!({
             "state": value,

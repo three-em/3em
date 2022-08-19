@@ -63,7 +63,7 @@
         toStructuredJson() {
             const { type, url, statusText, status, redirected, ok, headers } = this;
 
-            const newHeaders = {};
+            let newHeaders = {};
 
             if(headers instanceof window.Headers) {
                 newHeaders = Object.fromEntries(headers.entries())

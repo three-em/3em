@@ -23,7 +23,7 @@ pub struct DeterministicFetchOptions {
   url: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct DeterministicFetchBody {
   #[serde(rename = "type")]
   req_type: String,
@@ -36,7 +36,7 @@ pub struct DeterministicFetchBody {
   vector: Vec<u8>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct ExmContext {
   pub requests: HashMap<String, DeterministicFetchBody>,
 }

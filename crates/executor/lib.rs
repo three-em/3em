@@ -69,7 +69,11 @@ pub async fn simulate_contract(
       true,
       false,
       |validity_table, cache_state| {
-        ExecuteResult::V8(cache_state.unwrap(), validity_table)
+        ExecuteResult::V8(
+          cache_state.unwrap(),
+          validity_table,
+          Default::default(),
+        )
       },
       arweave,
       settings,
@@ -177,7 +181,11 @@ pub async fn execute_contract(
     needs_processing,
     show_errors,
     |validity_table, cache_state| {
-      ExecuteResult::V8(cache_state.unwrap(), validity_table)
+      ExecuteResult::V8(
+        cache_state.unwrap(),
+        validity_table,
+        Default::default(),
+      )
     },
     arweave,
     HashMap::new(),
@@ -466,7 +474,7 @@ mod test {
     .await
     .unwrap();
 
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       let map: IndexMap<String, Value> = validity;
       let keys = map.keys();
 
@@ -510,7 +518,7 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, validity) = result {
+    if let ExecuteResult::V8(value, validity, exm_context) = result {
       assert!(!(value.is_null()));
       assert!(value.get("counter").is_some());
       let counter = value.get("counter").unwrap().as_i64().unwrap();
@@ -545,7 +553,7 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, _validity) = result {
+    if let ExecuteResult::V8(value, _validity, exm_context) = result {
       assert!(!(value.is_null()));
       assert!(value.get("people").is_some());
       assert!(value.get("people").unwrap().is_array());

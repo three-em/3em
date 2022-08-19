@@ -197,7 +197,7 @@ impl Runtime {
     if let Some(output_val) = output {
       Ok(serde_v8::from_v8(inner_scope, output_val)?)
     } else {
-      generic_error("Impossible to get fetch calls")
+      Err(generic_error("Impossible to get fetch calls"))
     }
   }
 
@@ -376,7 +376,7 @@ export async function handle(slice) {
       r#"
 export async function handle() {
 try {
-  const someFetch = await Base.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+  const someFetch = await EXM.deterministicFetch("https://arweave.net/tx/YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
   return { state: someFetch.asJSON().id };
   } catch(e) {
   return { state: e.toString() }
@@ -393,12 +393,15 @@ try {
 
     rt.call((), None).await.unwrap();
     let calls = rt
-      .get_fetch_calls::<deno_core::serde_json::Value>()
+      .get_exm_context::<deno_core::serde_json::Value>()
       .unwrap()
       .to_string();
     println!("{}", calls);
     let tx_id = rt.get_contract_state::<String>().unwrap();
-    assert_eq!(tx_id, "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI");
+    assert_eq!(
+      tx_id.to_string(),
+      "YuJvCJEMik0J4QQjZULCaEjifABKYh-hEZPH9zokOwI"
+    );
   }
 
   #[tokio::test]

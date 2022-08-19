@@ -322,9 +322,9 @@ pub async fn raw_execute_contract<
         }
 
         let state: Value = deno_core::serde_json::from_slice(&state).unwrap();
-        let exm_context =
-          get_execution_context(rt.get_exm_context::<ExmContext>());
-
+        /// TODO: WASM Context
+        // let exm_context =
+        //   get_execution_context(rt.get_exm_context::<ExmContext>());
         if cache {
           get_cache().lock().unwrap().cache_states(
             contract_id,
@@ -335,7 +335,7 @@ pub async fn raw_execute_contract<
           );
         }
 
-        ExecuteResult::V8(state, validity, exm_context)
+        ExecuteResult::V8(state, validity, Default::default())
       } else {
         on_cached(validity, cache_state)
       }
