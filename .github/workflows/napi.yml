@@ -116,6 +116,7 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: ./js/napi
+          useLockFile: false
 
       - name: Build
         working-directory: ./js/napi
@@ -163,6 +164,7 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: ./js/napi
+          useLockFile: false
 
       - name: Download artifacts
         uses: actions/download-artifact@v2
@@ -198,6 +200,7 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: ./js/napi
+          useLockFile: false
 
       - name: Download all artifacts
         uses: actions/download-artifact@v2
