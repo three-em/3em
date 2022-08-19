@@ -11,7 +11,7 @@ license = "MIT"
 path = "lib.rs"
 
 [dependencies]
-v8 = "0.47.1"
+v8 = "0.48.1"
 deno_core = "0.147.0"
 deno_crypto = "0.79.0"
 deno_web = "0.96.0"
