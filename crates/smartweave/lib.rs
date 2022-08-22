@@ -46,6 +46,7 @@ pub struct InteractionBlock {
 pub struct InteractionContext {
   pub transaction: InteractionTx,
   pub block: InteractionBlock,
+  pub specific_function: Option<String>,
 }
 
 pub fn init(
