@@ -123,6 +123,7 @@ pub async fn dry_run_result(
     |_, _| panic!("Unimplemented"),
     &Arweave::new(port, host, protocol, ArweaveCache::new()),
     HashMap::new(),
+    None,
   )
   .await;
   execution

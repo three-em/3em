@@ -129,7 +129,8 @@ async fn simulate_contract(
   maybe_config: Option<ExecuteConfig>,
   maybe_cache: Option<bool>,
   maybe_bundled_contract: Option<bool>,
-  maybe_settings: Option<HashMap<String, serde_json::Value>>
+  maybe_settings: Option<HashMap<String, serde_json::Value>>,
+  maybe_exm_context: Option<serde_json::Value>
 ) -> Result<ExecuteContractResult> {
   let result = tokio::task::spawn_blocking(move || {
     panic::catch_unwind(|| {
@@ -183,7 +184,8 @@ async fn simulate_contract(
           &arweave,
           maybe_cache,
           maybe_bundled_contract,
-          maybe_settings
+          maybe_settings,
+          maybe_exm_context
         )
             .await;
 
@@ -303,6 +305,7 @@ mod tests {
       None,
       Some(false),
       None,
+      None,
       None
     )
     .await
@@ -340,6 +343,7 @@ mod tests {
       None,
       Some(false),
       Some(true),
+      None,
       None
     ).await.unwrap();
 

@@ -32,14 +32,33 @@
         buffer = undefined;
 
         constructor(rep) {
-            const { type, url, statusText, status, redirected, ok, headers } = rep;
-            this.type = type;
-            this.url = url;
-            this.statusText = statusText;
-            this.status = status;
-            this.redirected = redirected;
-            this.ok = ok;
-            this.headers = headers;
+            if(rep) {
+                const { type, url, statusText, status, redirected, ok, headers } = rep;
+                this.type = type;
+                this.url = url;
+                this.statusText = statusText;
+                this.status = status;
+                this.redirected = redirected;
+                this.ok = ok;
+                this.headers = headers;
+            }
+        }
+
+        static from(obj) {
+            const newBaseReq = new BaseReqResponse(undefined);
+
+            const { type, url, statusText, status, redirected, ok, headers, vector } = obj;
+
+            newBaseReq.type = type || '';
+            newBaseReq.url = url || '';
+            newBaseReq.statusText = statusText || '';
+            newBaseReq.status = status || 404;
+            newBaseReq.redirected = redirected || false;
+            newBaseReq.ok = ok || false;
+            newBaseReq.headers = headers || {};
+            newBaseReq.buffer = vector || [];
+
+            return newBaseReq;
         }
 
         setBuffer(buff) {
@@ -96,25 +115,30 @@
         }
 
         async deterministicFetch(...args) {
-            try {
-                const jsonArgs = JSON.stringify(args);
-                const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
+            const jsonArgs = JSON.stringify(args);
+            const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
+            const isLazyEvaluated = Deno.core.opSync("op_get_executor_settings", "LAZY_EVALUATION");
 
-                if(this.requests[reqHash]) {
-                    return Object.freeze(this.requests[reqHash])
-                } else {
-                    const fetchData = await props.fetch(...args);
-                    const buff = await fetchData.arrayBuffer();
+            if(isLazyEvaluated) {
+                return BaseReqResponse.from(globalThis.exmContext.requests[reqHash]);
+            } else {
+                try {
+                    if (this.requests[reqHash]) {
+                        return Object.freeze(this.requests[reqHash])
+                    } else {
+                        const fetchData = await props.fetch(...args);
+                        const buff = await fetchData.arrayBuffer();
 
-                    let rep = new BaseReqResponse(fetchData);
-                    rep = rep.setBuffer(buff);
+                        let rep = new BaseReqResponse(fetchData);
+                        rep = rep.setBuffer(buff);
 
-                    this.requests[reqHash] = rep.toStructuredJson();
+                        this.requests[reqHash] = rep.toStructuredJson();
 
-                    return rep;
+                        return rep;
+                    }
+                } catch (e) {
+                    return e.toString()
                 }
-            } catch (e) {
-                return e.toString()
             }
         }
 
