@@ -36,6 +36,7 @@ pub async fn simulate_contract(
   maybe_cache: Option<bool>,
   maybe_bundled_contract: Option<bool>,
   maybe_settings: Option<HashMap<String, deno_core::serde_json::Value>>,
+  maybe_exm_context: Option<deno_core::serde_json::Value>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
@@ -84,6 +85,7 @@ pub async fn simulate_contract(
       },
       arweave,
       settings,
+      maybe_exm_context,
     )
     .await;
 
@@ -196,6 +198,7 @@ pub async fn execute_contract(
     },
     arweave,
     HashMap::new(),
+    None,
   )
   .await;
 

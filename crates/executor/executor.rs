@@ -159,6 +159,7 @@ pub async fn raw_execute_contract<
   on_cached: CachedCallBack,
   shared_client: &Arweave,
   settings: HashMap<String, deno_core::serde_json::Value>,
+  maybe_exm_context: Option<deno_core::serde_json::Value>,
 ) -> ExecuteResult {
   let transaction = (&loaded_contract.contract_transaction).to_owned();
   let cache = cache_state.is_some();
@@ -184,6 +185,7 @@ pub async fn raw_execute_contract<
           arweave_info.to_owned(),
           op_smartweave_read_contract::decl(),
           settings.clone(),
+          maybe_exm_context.clone(),
         )
         .await
         .unwrap();
@@ -228,6 +230,7 @@ pub async fn raw_execute_contract<
                 arweave_info.to_owned(),
                 op_smartweave_read_contract::decl(),
                 settings.clone(),
+                maybe_exm_context.clone(),
               )
               .await
               .unwrap();
@@ -479,6 +482,7 @@ mod tests {
         ArweaveCache::new(),
       ),
       HashMap::new(),
+      None,
     )
     .await;
 
@@ -544,6 +548,7 @@ mod tests {
         ArweaveCache::new(),
       ),
       HashMap::new(),
+      None,
     )
     .await;
 
@@ -636,6 +641,7 @@ mod tests {
           ArweaveCache::new(),
         ),
         HashMap::new(),
+        None,
       )
       .await;
 
@@ -740,6 +746,7 @@ mod tests {
         ArweaveCache::new(),
       ),
       HashMap::new(),
+      None,
     )
     .await;
 
@@ -818,6 +825,7 @@ mod tests {
         ArweaveCache::new(),
       ),
       HashMap::new(),
+      None,
     )
     .await;
 
