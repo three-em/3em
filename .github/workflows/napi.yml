@@ -25,16 +25,19 @@ jobs:
             target: x86_64-apple-darwin
             arch: x64
             build: yarn build-release; strip -x *.node
+            use_sysroot: false
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             arch: x64
             build: yarn build-release
+            use_sysroot: false
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             arch: x64
             build: yarn build --release
+            use_sysroot: true
 
     steps:
       - name: Checkout repo
