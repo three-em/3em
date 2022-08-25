@@ -57,7 +57,7 @@ jobs:
         uses: Swatinem/rust-cache@v1
 
       - name: Set up incremental LTO and sysroot build
-        if: matrix.use_sysroot
+        if: matrix.use_sysroot || startsWith(matrix.os, 'ubuntu')
         run: |
           # Avoid running man-db triggers, which sometimes takes several minutes
           # to complete.
