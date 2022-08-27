@@ -353,12 +353,14 @@ pub async fn raw_execute_contract<
       let mut result = vec![];
       for interaction in interactions {
         let tx = interaction.node;
-        let block_info =
-          shared_client.get_transaction_block(&tx.id).await.unwrap_or(three_em_arweave::arweave::BlockInfo {
+        let block_info = shared_client
+          .get_transaction_block(&tx.id)
+          .await
+          .unwrap_or(three_em_arweave::arweave::BlockInfo {
             timestamp: 0,
             diff: String::from("0"),
             indep_hash: String::new(),
-            height: 0
+            height: 0,
           });
 
         let block_info = three_em_evm::BlockInfo {
@@ -376,7 +378,9 @@ pub async fn raw_execute_contract<
 
         let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
 
-        if let Ok(raw_store) = hex::decode(loaded_contract.init_state.as_bytes()) {
+        if let Ok(raw_store) =
+          hex::decode(loaded_contract.init_state.as_bytes())
+        {
           account_store.insert(&account, U256::zero(), U256::from(raw_store));
           machine.set_storage(account_store.clone());
         }
@@ -422,9 +426,10 @@ pub async fn raw_execute_contract<
 mod tests {
   use crate::executor::{raw_execute_contract, ExecuteResult};
   use crate::test_util::{
-    generate_fake_interaction, generate_fake_loaded_contract_data,
-    generate_fake_interaction_input_string
+    generate_fake_interaction, generate_fake_interaction_input_string,
+    generate_fake_loaded_contract_data,
   };
+  use crate::U256;
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
   use indexmap::map::IndexMap;
@@ -438,7 +443,6 @@ mod tests {
     GQLOwnerInterface, GQLTagInterface,
   };
   use three_em_arweave::miscellaneous::ContractType;
-  use crate::U256;
 
   #[tokio::test]
   async fn test_globals_js() {
@@ -927,13 +931,21 @@ mod tests {
       HashMap::new(),
       None,
     )
-        .await;
+    .await;
 
     if let ExecuteResult::Evm(storage, result, validity) = result {
-       println!("{}", hex::encode(result));
-      println!("{:?}", &storage.inner.get(&U256::zero()).unwrap().values().map(|v| v.to_string()).collect::<Vec<String>>());
+      println!("{}", hex::encode(result));
+      println!(
+        "{:?}",
+        &storage
+          .inner
+          .get(&U256::zero())
+          .unwrap()
+          .values()
+          .map(|v| v.to_string())
+          .collect::<Vec<String>>()
+      );
     } else {
-
     }
   }
 }
