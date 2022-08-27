@@ -227,6 +227,7 @@ impl Runtime {
     &mut self,
     action: R,
     interaction_data: Option<InteractionContext>,
+    specific_fn: Option<String>,
   ) -> Result<Option<CallResult>, AnyError>
   where
     R: Serialize + 'static,
@@ -248,11 +249,13 @@ impl Runtime {
         }
       };
 
+      let func_name = &specific_fn.unwrap_or(String::from("handle"))[..];
+
       let action: v8::Local<v8::Value> =
         serde_v8::to_v8(scope, action).unwrap();
 
       let module_obj = self.module.open(scope).to_object(scope).unwrap();
-      let key = v8::String::new(scope, "handle").unwrap().into();
+      let key = v8::String::new(scope, func_name).unwrap().into();
       let func_obj = module_obj.get(scope, key).unwrap();
       let func = v8::Local::<v8::Function>::try_from(func_obj).unwrap();
 
@@ -358,7 +361,7 @@ mod test {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
 
     let value = rt.get_contract_state::<i32>().unwrap();
     assert_eq!(value, -69);
@@ -384,7 +387,7 @@ export async function handle(slice) {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let hash = rt.get_contract_state::<[u8; 20]>().unwrap();
     assert_eq!(
       hash.to_vec(),
@@ -424,7 +427,7 @@ try {
         .await
         .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let calls = rt.get_exm_context::<ExmContext>().unwrap();
 
     println!("{}", deno_core::serde_json::to_string(&calls).unwrap());
@@ -515,11 +518,11 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let rand1 = rt.get_contract_state::<f64>().unwrap();
     assert_eq!(rand1, 0.3800000002095474);
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let rand2 = rt.get_contract_state::<f64>().unwrap();
     assert_eq!(rand2, 0.1933761369163034);
   }
@@ -543,11 +546,11 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let rand1 = rt.get_contract_state::<[u8; 8]>().unwrap();
     assert_eq!(rand1.as_ref(), &[127, 111, 44, 205, 178, 63, 42, 187]);
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let rand2 = rt.get_contract_state::<[u8; 8]>().unwrap();
     assert_eq!(rand2.as_ref(), &[123, 105, 39, 142, 148, 124, 1, 198]);
   }
@@ -577,7 +580,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call(&(), None).await.unwrap();
+    rt.call(&(), None, None).await.unwrap();
     let gced = rt.get_contract_state::<bool>().unwrap();
     assert_eq!(gced, false);
   }
@@ -604,7 +607,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let exists = rt.get_contract_state::<bool>().unwrap();
     assert_eq!(exists, true);
   }
@@ -627,7 +630,7 @@ export async function handle() {
       .unwrap();
 
     let err = rt
-      .call((), None)
+      .call((), None, None)
       .await
       .unwrap_err()
       .downcast::<Error>()
@@ -656,7 +659,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    let evolved = rt.call((), None).await.unwrap();
+    let evolved = rt.call((), None, None).await.unwrap();
     assert_eq!(evolved, Some(CallResult::Evolve("xxdummy".to_string())));
   }
 
@@ -677,7 +680,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let host = rt.get_contract_state::<String>().unwrap();
     assert_eq!(host, "http://arweave.net:12345");
   }
@@ -711,7 +714,7 @@ export async function handle() {
         .await
         .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let data = rt.get_contract_state::<Vec<String>>().unwrap();
     assert_eq!(data.get(0).unwrap(), "App-Name");
     assert_eq!(data.get(1).unwrap(), "SmartWeaveContract");
@@ -750,7 +753,7 @@ export async function handle() {
     .await
     .unwrap();
 
-    rt.call((), None).await.unwrap();
+    rt.call((), None, None).await.unwrap();
     let data = rt
       .get_contract_state::<(String, bool, deno_core::serde_json::Value)>()
       .unwrap();
@@ -795,7 +798,7 @@ try {
     interaction_data.transaction.id =
       String::from("YzVdaDBnaiGToFQJAnJCGtyJwJZbaCASotWEPFhBgBY");
 
-    rt.call((), Some(interaction_data)).await.unwrap();
+    rt.call((), Some(interaction_data), None).await.unwrap();
     let host = rt.get_contract_state::<Vec<String>>().unwrap();
     assert_eq!(host.get(0).unwrap().to_owned(), String::from("eyJjb250ZW50Ijp7ImJvZHkiOiJoZWxsbyB3b3JsZCIsInRpbWVzdGFtcCI6MTY0MTYzNDQzOCwidGl0bGUiOiJoZWxsbyB3b3JsZCJ9LCJkaWdlc3QiOiJOLVJ6UmZXMmxzV0RqdV9GcE5RUzZhWmdzTzdma1Z5eVo3bWJzRWhpNjZ3IiwiYXV0aG9yc2hpcCI6eyJjb250cmlidXRvciI6IjB4ZWFlYjIyNjIwREJEOTgwRTc0NjNjOWQ5NkE1YWU0ZDk0NDhiMTMzYyIsInNpZ25pbmdLZXkiOiJ7XCJjcnZcIjpcIlAtMjU2XCIsXCJleHRcIjp0cnVlLFwia2V5X29wc1wiOltcInZlcmlmeVwiXSxcImt0eVwiOlwiRUNcIixcInhcIjpcImRVcEI3MVhJV1lZYjBQSGlqdkJicTNtMl9CNFA2aGZFZHNBdndkS0JDNk1cIixcInlcIjpcIlBHRmlveWtaODU4cHN3cEZXODZtdjZKQlBFZ1Y4WFNVZWY5M3pqNUFoNFFcIn0iLCJzaWduYXR1cmUiOiJ1WE9YWVJrX1dFVmdaM0xOR0xhWUVsNmVGYS1xa1JyWURwRjJ5ektwUXJhS1I1R0lqWEdiSXg4QUFZQ0VPNEZEQXhVeF93bjVkUWR1RldZZTNKTHEtUSIsInNpZ25pbmdLZXlTaWduYXR1cmUiOiIweDhhMmFjNTE3NTg5OTA2NDkwMWEzZTBlM2VjODc0ZjZmOTFjMWE3NzVjODM4NjNmMDY2OWE0YjUxMjhiYjgxODcwYTQzMmUwZTM1YjAwMjUxZTdmMTg0ZTRlYzE2ZTNjOWVkNDM0YjBjMjkzMDc3N2I3M2UzMzg3MDk5MWQ0NjhlMWIiLCJzaWduaW5nS2V5TWVzc2FnZSI6IkkgYXV0aG9yaXplIHB1Ymxpc2hpbmcgb24gbWlycm9yLnh5eiBmcm9tIHRoaXMgZGV2aWNlIHVzaW5nOlxue1wiY3J2XCI6XCJQLTI1NlwiLFwiZXh0XCI6dHJ1ZSxcImtleV9vcHNcIjpbXCJ2ZXJpZnlcIl0sXCJrdHlcIjpcIkVDXCIsXCJ4XCI6XCJkVXBCNzFYSVdZWWIwUEhpanZCYnEzbTJfQjRQNmhmRWRzQXZ3ZEtCQzZNXCIsXCJ5XCI6XCJQR0Zpb3lrWjg1OHBzd3BGVzg2bXY2SkJQRWdWOFhTVWVmOTN6ajVBaDRRXCJ9IiwiYWxnb3JpdGhtIjp7Im5hbWUiOiJFQ0RTQSIsImhhc2giOiJTSEEtMjU2In19LCJuZnQiOnt9LCJ2ZXJzaW9uIjoiMTItMjEtMjAyMCIsIm9yaWdpbmFsRGlnZXN0IjoiTi1SelJmVzJsc1dEanVfRnBOUVM2YVpnc083ZmtWeXlaN21ic0VoaTY2dyJ9"));
     assert_eq!(
@@ -821,7 +824,7 @@ export async function handle() {
     .unwrap();
 
     let result = rt
-      .call((), None)
+      .call((), None, None)
       .await
       .unwrap()
       .expect("Expected CallResult");

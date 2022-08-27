@@ -109,6 +109,19 @@ pub async fn op_smartweave_read_contract(
 pub fn generate_interaction_context(
   tx: &GQLNodeInterface,
 ) -> InteractionContext {
+  let tags = tx.tags.to_owned();
+
+  let specific_function = {
+    let data = tags
+      .into_iter()
+      .find(|tag| tag.name == String::from("3EM-Function"));
+    if let Some(specific_function_tag) = data {
+      Some(specific_function_tag.value)
+    } else {
+      None
+    }
+  };
+
   InteractionContext {
     transaction: InteractionTx {
       id: tx.id.to_owned(),
@@ -142,6 +155,7 @@ pub fn generate_interaction_context(
       height: tx.block.height.to_owned(),
       timestamp: tx.block.timestamp.to_owned(),
     },
+    specific_function,
   }
 }
 
@@ -205,8 +219,11 @@ pub async fn raw_execute_contract<
           });
 
           let interaction_context = generate_interaction_context(&tx);
+          let specific_fn = interaction_context.specific_function.clone();
 
-          let valid = match rt.call(call_input, Some(interaction_context)).await
+          let valid = match rt
+            .call(call_input, Some(interaction_context), specific_fn)
+            .await
           {
             Ok(None) => serde_json::Value::Bool(true),
             Ok(Some(CallResult::Evolve(evolve))) => {
@@ -675,6 +692,105 @@ mod tests {
         serde_json::json!("Andres")
       );
       assert_eq!(users.get(1).unwrap().to_owned(), serde_json::json!("Divy"));
+    } else {
+      panic!("Failed");
+    }
+  }
+
+  #[tokio::test]
+  pub async fn test_executor_specific_function_js() {
+    let init_state = serde_json::json!({
+      "users": []
+    });
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!(
+        "../../testdata/contracts/user_function_specific_contract.js"
+      ),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+    let fake_interactions = vec![
+      generate_fake_interaction(
+        serde_json::json!({
+          "function": "addUser",
+          "username": "Andres"
+        }),
+        "tx1",
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+      ),
+      generate_fake_interaction(
+        serde_json::json!({
+          "username": "Tate"
+        }),
+        "tx2",
+        None,
+        None,
+        None,
+        None,
+        Some(GQLTagInterface {
+          name: String::from("3EM-Function"),
+          value: String::from("addUser"),
+        }),
+        None,
+        None,
+        None,
+      ),
+    ];
+
+    let execute = || async {
+      let result = raw_execute_contract(
+        String::new(),
+        fake_contract,
+        fake_interactions,
+        IndexMap::new(),
+        None,
+        true,
+        false,
+        |_, _| {
+          panic!("not implemented");
+        },
+        &Arweave::new(
+          443,
+          "arweave.net".to_string(),
+          String::from("https"),
+          ArweaveCache::new(),
+        ),
+        HashMap::new(),
+      )
+      .await;
+
+      result
+    };
+
+    if let ExecuteResult::V8(value, validity, exm_context) = execute().await {
+      assert_eq!(validity.len(), 2);
+      let (tx1, tx2) = (validity.get("tx1"), validity.get("tx2"));
+      assert_eq!(tx1.is_some(), true);
+      assert_eq!(tx2.is_some(), true);
+      assert_eq!((tx1.unwrap()).to_owned(), true);
+      assert_eq!((tx2.unwrap()).to_owned(), true);
+
+      let value_state = value.get("users");
+      assert_eq!(value_state.is_some(), true);
+      let users = value_state
+        .unwrap()
+        .to_owned()
+        .as_array()
+        .unwrap()
+        .to_owned();
+      assert_eq!(
+        users.get(0).unwrap().to_owned(),
+        serde_json::json!("Andres")
+      );
+      assert_eq!(users.get(1).unwrap().to_owned(), serde_json::json!("Tate"));
     } else {
       panic!("Failed");
     }
