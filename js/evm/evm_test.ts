@@ -134,4 +134,5 @@ Deno.test("evm_test_solc2", () => {
     machine.result,
     hex("0000000000000000000000000000000000000000000000000000000000000003"),
   );
+  console.log(machine);
 });
