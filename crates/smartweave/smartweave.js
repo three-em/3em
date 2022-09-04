@@ -30,7 +30,7 @@
           name: "RSA-PSS",
           saltLength: 32,
         },
-        await this.#jwkToCryptoKey(jwk),
+        await this.jwkToCryptoKey(jwk),
         data,
       );
 
@@ -44,7 +44,7 @@
         n: publicModulus,
       };
 
-      const key = await this.#jwkToCryptoKey(publicKey);
+      const key = await this.jwkToPublicCryptoKey(publicKey);
 
       const verifyWith32 = subtle.verify(
         {
@@ -74,7 +74,24 @@
       return new Uint8Array(digest);
     }
 
-    #jwkToCryptoKey(
+    jwkToPublicCryptoKey(
+        jwk,
+    ) {
+      return subtle.importKey(
+          "jwk",
+          jwk,
+          {
+            name: "RSA-PSS",
+            hash: {
+              name: "SHA-256",
+            },
+          },
+          false,
+          ["verify"],
+      );
+    }
+
+    jwkToCryptoKey(
       jwk,
     ) {
       return subtle.importKey(
@@ -87,7 +104,7 @@
           },
         },
         false,
-        ["verify"],
+        ["sign"],
       );
     }
 
