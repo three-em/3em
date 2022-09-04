@@ -338,7 +338,7 @@ mod test {
   use std::collections::HashMap;
   use std::rc::Rc;
   use three_em_exm_base_ops::ExmContext;
-  use three_em_smartweave::InteractionContext;
+  use three_em_smartweave::{InteractionBlock, InteractionContext};
   use v8::Boolean;
 
   #[op]
@@ -437,6 +437,44 @@ export async function handle(slice) {
     rt.call((), None).await.unwrap();
     let hash = rt.get_contract_state::<Value>().unwrap();
     assert_eq!(hash, Value::Bool(true));
+  }
+
+  #[tokio::test]
+  async fn test_runtime_date() {
+    let buf: Vec<u8> = vec![0x00];
+    let mut executor_settings: HashMap<String, Value> = HashMap::new();
+    executor_settings.insert(
+      String::from("TX_DATE"),
+      Value::String(String::from("1662327465259")),
+    );
+    executor_settings.insert(
+      String::from("EXM"),
+      deno_core::serde_json::Value::Bool(true),
+    );
+    let mut rt = Runtime::new(
+      r#"
+export async function handle(slice) {
+  try {
+    return {
+      state: EXM.getDate().getTime()
+    }
+  } catch(e) {
+    return { state: e.stack }
+  }
+}
+"#,
+      ZeroCopyBuf::from(buf),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      executor_settings,
+      None,
+    )
+    .await
+    .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let hash = rt.get_contract_state::<usize>().unwrap();
+    assert_eq!(hash, 1662327465259 as usize);
   }
 
   #[tokio::test]
