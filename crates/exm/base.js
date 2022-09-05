@@ -114,6 +114,10 @@
         constructor() {
         }
 
+        getDate() {
+            return new Date(Number(Deno.core.opSync("op_get_executor_settings", "TX_DATE") || "1317830400000"));
+        }
+
         async deterministicFetch(...args) {
             const jsonArgs = JSON.stringify(args);
             const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));

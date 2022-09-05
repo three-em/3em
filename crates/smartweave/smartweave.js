@@ -30,7 +30,7 @@
           name: "RSA-PSS",
           saltLength: 32,
         },
-        await this.#jwkToCryptoKey(jwk),
+        await this.jwkToCryptoKey(jwk),
         data,
       );
 
@@ -44,7 +44,7 @@
         n: publicModulus,
       };
 
-      const key = await this.#jwkToCryptoKey(publicKey);
+      const key = await this.jwkToPublicCryptoKey(publicKey);
 
       const verifyWith32 = subtle.verify(
         {
@@ -74,7 +74,24 @@
       return new Uint8Array(digest);
     }
 
-    #jwkToCryptoKey(
+    jwkToPublicCryptoKey(
+        jwk,
+    ) {
+      return subtle.importKey(
+          "jwk",
+          jwk,
+          {
+            name: "RSA-PSS",
+            hash: {
+              name: "SHA-256",
+            },
+          },
+          false,
+          ["verify"],
+      );
+    }
+
+    jwkToCryptoKey(
       jwk,
     ) {
       return subtle.importKey(
@@ -87,7 +104,7 @@
           },
         },
         false,
-        ["verify"],
+        ["sign"],
       );
     }
 
@@ -479,7 +496,7 @@
 
   const clonedDate = Date;
   function NewDate(...args) {
-    const dateArgs = args.length === 0 ? [1479427200000] : args;
+    const dateArgs = args.length === 0 ? [globalThis.SmartWeave.block?.timestamp || 1317830400000] : args;
     const instance = new clonedDate(...dateArgs);
     Object.setPrototypeOf(instance, Object.getPrototypeOf(NewDate.prototype));
     return instance;
@@ -488,7 +505,8 @@
   NewDate.prototype = Object.create(Date.prototype);
   Object.setPrototypeOf(NewDate, Date);
 
-  NewDate.now = () => 1479427200000; // 2016-11-18 00:00:00.000
+  NewDate.now = () => globalThis.SmartWeave.block?.timestamp || 1317830400000 || 1317830400000; // Wed Oct 05 2011 12:00:00 GMT-0400 (Eastern Daylight Time)
+  // Steve Jobs Death
 
   Date = NewDate;
 
