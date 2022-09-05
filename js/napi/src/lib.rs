@@ -23,7 +23,7 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 pub struct ExecuteContractResult {
   pub state: serde_json::Value,
   pub validity: HashMap<String, serde_json::Value>,
-  pub exm_context: serde_json::Value
+  pub exm_context: serde_json::Value,
 }
 
 #[napi(object)]
@@ -55,7 +55,19 @@ pub struct SimulateInput {
   pub target: Option<String>,
   pub tags: Vec<Tag>,
   pub block: Option<Block>,
-  pub input: Value,
+  pub input: String,
+}
+
+#[napi(object)]
+pub struct SimulateExecutionContext {
+  pub contract_id: String,
+  pub interactions: Vec<SimulateInput>,
+  pub contract_init_state: Option<String>,
+  pub maybe_config: Option<ExecuteConfig>,
+  pub maybe_cache: Option<bool>,
+  pub maybe_bundled_contract: Option<bool>,
+  pub maybe_settings: Option<HashMap<String, serde_json::Value>>,
+  pub maybe_exm_context: Option<serde_json::Value>,
 }
 
 // Convert the ValidityTable from an IndexMap to HashMap
@@ -108,11 +120,13 @@ fn get_result(
 ) -> Option<ExecuteContractResult> {
   if process_result.is_ok() {
     match process_result.unwrap() {
-      ExecuteResult::V8(state, validity, exm_context) => Some(ExecuteContractResult {
-        state,
-        validity: validity_to_hashmap(validity),
-        exm_context: serde_json::to_value(exm_context).unwrap()
-      }),
+      ExecuteResult::V8(state, validity, exm_context) => {
+        Some(ExecuteContractResult {
+          state,
+          validity: validity_to_hashmap(validity),
+          exm_context: serde_json::to_value(exm_context).unwrap(),
+        })
+      }
       ExecuteResult::Evm(..) => todo!(),
     }
   } else {
@@ -123,59 +137,63 @@ fn get_result(
 
 #[napi]
 async fn simulate_contract(
-  contract_id: String,
-  interactions: Vec<SimulateInput>,
-  contract_init_state: Option<String>,
-  maybe_config: Option<ExecuteConfig>,
-  maybe_cache: Option<bool>,
-  maybe_bundled_contract: Option<bool>,
-  maybe_settings: Option<HashMap<String, serde_json::Value>>,
-  maybe_exm_context: Option<serde_json::Value>
+  context: SimulateExecutionContext,
 ) -> Result<ExecuteContractResult> {
+  let SimulateExecutionContext {
+    contract_id,
+    interactions,
+    contract_init_state,
+    maybe_config,
+    maybe_cache,
+    maybe_bundled_contract,
+    maybe_settings,
+    maybe_exm_context,
+  } = context;
+
   let result = tokio::task::spawn_blocking(move || {
     panic::catch_unwind(|| {
       Handle::current().block_on(async move {
         let arweave = get_gateway(maybe_config, maybe_cache.clone());
 
         let real_interactions: Vec<GQLEdgeInterface> = interactions
-            .into_iter()
-            .map(|data| {
-              let tags: Vec<GQLTagInterface> = data
-                  .tags
-                  .into_iter()
-                  .map(|tag| GQLTagInterface {
-                    name: tag.name.to_string(),
-                    value: tag.value.to_string(),
-                  })
-                  .collect::<Vec<GQLTagInterface>>();
+          .into_iter()
+          .map(|data| {
+            let tags: Vec<GQLTagInterface> = data
+              .tags
+              .into_iter()
+              .map(|tag| GQLTagInterface {
+                name: tag.name.to_string(),
+                value: tag.value.to_string(),
+              })
+              .collect::<Vec<GQLTagInterface>>();
 
-              let (height, timestamp, indep_hash) =
-                  if let Some(block_data) = data.block {
-                    (
-                      Some(block_data.height),
-                      Some(block_data.timestamp),
-                      Some(block_data.indep_hash),
-                    )
-                  } else {
-                    (None, None, None)
-                  };
+            let (height, timestamp, indep_hash) =
+              if let Some(block_data) = data.block {
+                (
+                  Some(block_data.height),
+                  Some(block_data.timestamp),
+                  Some(block_data.indep_hash),
+                )
+              } else {
+                (None, None, None)
+              };
 
-              let transaction = create_simulated_transaction(
-                data.id,
-                data.owner,
-                data.quantity,
-                data.reward,
-                data.target,
-                tags,
-                height,
-                indep_hash,
-                timestamp,
-                data.input.to_string(),
-              );
+            let transaction = create_simulated_transaction(
+              data.id,
+              data.owner,
+              data.quantity,
+              data.reward,
+              data.target,
+              tags,
+              height,
+              indep_hash,
+              timestamp,
+              data.input,
+            );
 
-              transaction
-            })
-            .collect();
+            transaction
+          })
+          .collect();
 
         let result = simulate(
           contract_id,
@@ -185,9 +203,9 @@ async fn simulate_contract(
           maybe_cache,
           maybe_bundled_contract,
           maybe_settings,
-          maybe_exm_context
+          maybe_exm_context,
         )
-            .await;
+        .await;
 
         get_result(result)
       })
@@ -250,7 +268,7 @@ async fn execute_contract(
 mod tests {
   use crate::{
     execute_contract, get_gateway, simulate_contract, ExecuteConfig,
-    SimulateInput,
+    SimulateExecutionContext, SimulateInput,
   };
   use three_em_arweave::arweave::get_cache;
 
@@ -289,27 +307,28 @@ mod tests {
 
   #[tokio::test]
   pub async fn simulate_contract_test() {
-    let contract = simulate_contract(
-      "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ".into(),
-      vec![SimulateInput {
-        id: String::from("abcd"),
-        owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
-        quantity: String::from("12301"),
-        reward: String::from("12931293"),
-        target: None,
-        tags: vec![],
-        block: None,
-        input: serde_json::json!({}),
-      }],
-      Some(r#"{"counter": 2481}"#.into()),
-      None,
-      Some(false),
-      None,
-      None,
-      None
-    )
-    .await
-    .unwrap();
+    let execution_context: SimulateExecutionContext =
+      SimulateExecutionContext {
+        contract_id: "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ".into(),
+        interactions: vec![SimulateInput {
+          id: String::from("abcd"),
+          owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+          quantity: String::from("12301"),
+          reward: String::from("12931293"),
+          target: None,
+          tags: vec![],
+          block: None,
+          input: serde_json::json!({}).to_string(),
+        }],
+        contract_init_state: Some(r#"{"counter": 2481}"#.into()),
+        maybe_config: None,
+        maybe_cache: Some(false),
+        maybe_bundled_contract: None,
+        maybe_settings: None,
+        maybe_exm_context: None,
+      };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
 
     let contract_result = contract.state;
     println!("{}", contract_result);
@@ -318,34 +337,40 @@ mod tests {
 
   #[tokio::test]
   pub async fn simulate_contract_test_bundled() {
-    let contract = simulate_contract(
-      "RadpzdYtVrQiS25JR1hGxZppwCXVCel_nfXk-noyFmc".into(),
-      vec![SimulateInput {
-        id: String::from("abcd"),
-        owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
-        quantity: String::from("12301"),
-        reward: String::from("12931293"),
-        target: None,
-        tags: vec![],
-        block: None,
-        input: serde_json::json!({}),
-      }, SimulateInput {
-        id: String::from("abcd"),
-        owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
-        quantity: String::from("12301"),
-        reward: String::from("12931293"),
-        target: None,
-        tags: vec![],
-        block: None,
-        input: serde_json::json!({}),
-      }],
-      Some(r#"2"#.into()),
-      None,
-      Some(false),
-      Some(true),
-      None,
-      None
-    ).await.unwrap();
+    let execution_context: SimulateExecutionContext =
+      SimulateExecutionContext {
+        contract_id: "RadpzdYtVrQiS25JR1hGxZppwCXVCel_nfXk-noyFmc".into(),
+        interactions: vec![
+          SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({}).to_string(),
+          },
+          SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({}).to_string(),
+          },
+        ],
+        contract_init_state: Some(r#"2"#.into()),
+        maybe_config: None,
+        maybe_cache: Some(false),
+        maybe_bundled_contract: Some(true),
+        maybe_settings: None,
+        maybe_exm_context: None,
+      };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
 
     let contract_result = contract.state;
     println!("{}", contract_result);

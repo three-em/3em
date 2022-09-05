@@ -30,7 +30,17 @@ export interface SimulateInput {
   target?: string | undefined | null
   tags: Array<Tag>
   block?: Block | undefined | null
-  input: any
+  input: string
 }
-export function simulateContract(contractId: string, interactions: Array<SimulateInput>, contractInitState?: string | undefined | null, maybeConfig?: ExecuteConfig | undefined | null, maybeCache?: boolean | undefined | null, maybeBundledContract?: boolean | undefined | null, maybeSettings?: Record<string, any> | undefined | null, maybeExmContext?: any | undefined | null): Promise<ExecuteContractResult>
+export interface SimulateExecutionContext {
+  contractId: string
+  interactions: Array<SimulateInput>
+  contractInitState?: string | undefined | null
+  maybeConfig?: ExecuteConfig | undefined | null
+  maybeCache?: boolean | undefined | null
+  maybeBundledContract?: boolean | undefined | null
+  maybeSettings?: Record<string, any> | undefined | null
+  maybeExmContext?: any | undefined | null
+}
+export function simulateContract(context: SimulateExecutionContext): Promise<ExecuteContractResult>
 export function executeContract(tx: string, maybeHeight?: number | undefined | null, maybeConfig?: ExecuteConfig | undefined | null): Promise<ExecuteContractResult>
