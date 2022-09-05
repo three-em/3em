@@ -11,21 +11,21 @@ describe("NAPI test", () => {
 
   test("Failed simulation", async () => {
     try {
-      const simulate = await simulateContract(
-          "invalidId",
-          [{
-            id: "ABCD",
-            owner: "2asdaskdsapdk012",
-            quantity: "1000",
-            reward: "203123921",
-            target: "none",
-            tags: [],
-            input: {}
-          }],
-          JSON.stringify({
-                counter: 9499
-              }
-          ));
+      const simulate = await simulateContract({
+              contractId: "invalidId",
+              interactions: [{
+                id: "ABCD",
+                owner: "2asdaskdsapdk012",
+                quantity: "1000",
+                reward: "203123921",
+                target: "none",
+                tags: [],
+                input: JSON.stringify({})
+              }],
+              contractInitState: JSON.stringify({
+                    counter: 9499
+              })
+      });
       expect(false).toBeTruthy();
     } catch (e) {
       console.log('Caught error', e.toString())
@@ -33,21 +33,21 @@ describe("NAPI test", () => {
   })
 
   test("Simulate contract", async () => {
-    const simulate = await simulateContract(
-    "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ",
-    [{
+    const simulate = await simulateContract({
+    contractId: "KfU_1Uxe3-h2r3tP6ZMfMT-HBFlM887tTFtS-p4edYQ",
+    interactions: [{
       id: "ABCD",
       owner: "2asdaskdsapdk012",
       quantity: "1000",
       reward: "203123921",
       target: "none",
       tags: [],
-      input: {}
+      input: JSON.stringify({})
     }],
-    JSON.stringify({
+    contractInitState: JSON.stringify({
           counter: 9499
         }
-    ));
+    )});
     expect(simulate.state.counter).toBe(9500);
   })
 })
