@@ -478,6 +478,48 @@ export async function handle(slice) {
   }
 
   #[tokio::test]
+  async fn test_runtime_vanilla_date() {
+    let buf: Vec<u8> = vec![0x00];
+    let mut executor_settings: HashMap<String, Value> = HashMap::new();
+    let mut rt = Runtime::new(
+      r#"
+export async function handle(slice) {
+  try {
+    return {
+      state: new Date().getTime()
+    }
+  } catch(e) {
+    return { state: e.stack }
+  }
+}
+"#,
+      ZeroCopyBuf::from(buf),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      executor_settings,
+      None,
+    )
+    .await
+    .unwrap();
+
+    rt.call(
+      (),
+      Some(InteractionContext {
+        transaction: Default::default(),
+        block: InteractionBlock {
+          timestamp: 1662327465200 as usize,
+          height: 0 as usize,
+          indep_hash: String::new(),
+        },
+      }),
+    )
+    .await
+    .unwrap();
+    let hash = rt.get_contract_state::<usize>().unwrap();
+    assert_eq!(hash, 1662327465200 as usize);
+  }
+
+  #[tokio::test]
   async fn test_base_fetch_op() {
     let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
       HashMap::new();
