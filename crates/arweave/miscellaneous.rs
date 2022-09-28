@@ -6,12 +6,19 @@ use serde::Serialize;
 
 pub type CommonError = AnyError;
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub enum ContractType {
+  #[default]
   JAVASCRIPT,
   WASM,
   EVM,
 }
+
+// impl Default for ContractType {
+//   fn default() -> ContractType {
+//     ContractType::JAVASCRIPT
+//   }
+// }
 
 pub fn get_contract_type_raw(contract_type: String) -> ContractType {
   match &(contract_type.to_lowercase())[..] {

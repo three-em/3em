@@ -4,7 +4,7 @@ use napi_derive::napi;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::panic;
-use three_em_arweave::arweave::Arweave;
+use three_em_arweave::arweave::{Arweave, ManualLoadedContract};
 use three_em_arweave::cache::ArweaveCache;
 use three_em_arweave::cache::CacheExt;
 use three_em_arweave::gql_result::{GQLEdgeInterface, GQLTagInterface};
@@ -14,6 +14,7 @@ use three_em_executor::utils::create_simulated_transaction;
 use three_em_executor::ExecuteResult;
 use three_em_executor::ValidityTable;
 use tokio::runtime::Handle;
+use three_em_arweave::miscellaneous::ContractType;
 
 #[cfg(target_os = "macos")]
 #[global_allocator]
@@ -59,8 +60,21 @@ pub struct SimulateInput {
 }
 
 #[napi(object)]
+pub enum SimulateContractType {
+  JAVASCRIPT,
+  WASM,
+}
+
+#[napi(object)]
+pub struct ContractSource {
+  pub contract_src: Buffer,
+  pub contract_type: SimulateContractType,
+}
+
+#[napi(object)]
 pub struct SimulateExecutionContext {
   pub contract_id: String,
+  pub maybe_contract_source: Option<ContractSource>,
   pub interactions: Vec<SimulateInput>,
   pub contract_init_state: Option<String>,
   pub maybe_config: Option<ExecuteConfig>,
@@ -148,6 +162,7 @@ async fn simulate_contract(
     maybe_bundled_contract,
     maybe_settings,
     maybe_exm_context,
+    maybe_contract_source
   } = context;
 
   let result = tokio::task::spawn_blocking(move || {
@@ -195,6 +210,21 @@ async fn simulate_contract(
           })
           .collect();
 
+        let manual_loaded_contract = {
+          if let Some(contract_source) = maybe_contract_source {
+            let loaded_contract = ManualLoadedContract {
+              contract_src: contract_source.contract_src.into(),
+              contract_type: match contract_source.contract_type {
+                SimulateContractType::JAVASCRIPT => ContractType::JAVASCRIPT,
+                SimulateContractType::WASM => ContractType::WASM
+              }
+            };
+            Some(loaded_contract)
+          } else {
+            None
+          }
+        };
+
         let result = simulate(
           contract_id,
           contract_init_state,
@@ -204,6 +234,7 @@ async fn simulate_contract(
           maybe_bundled_contract,
           maybe_settings,
           maybe_exm_context,
+          manual_loaded_contract
         )
         .await;
 
@@ -266,10 +297,7 @@ async fn execute_contract(
 
 #[cfg(test)]
 mod tests {
-  use crate::{
-    execute_contract, get_gateway, simulate_contract, ExecuteConfig,
-    SimulateExecutionContext, SimulateInput,
-  };
+  use crate::{execute_contract, get_gateway, simulate_contract, ExecuteConfig, SimulateExecutionContext, SimulateInput, ContractSource, SimulateContractType};
   use three_em_arweave::arweave::get_cache;
 
   // #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -326,6 +354,7 @@ mod tests {
         maybe_bundled_contract: None,
         maybe_settings: None,
         maybe_exm_context: None,
+        maybe_contract_source: None
       };
 
     let contract = simulate_contract(execution_context).await.unwrap();
@@ -368,6 +397,7 @@ mod tests {
         maybe_bundled_contract: Some(true),
         maybe_settings: None,
         maybe_exm_context: None,
+        maybe_contract_source: None
       };
 
     let contract = simulate_contract(execution_context).await.unwrap();
@@ -375,5 +405,43 @@ mod tests {
     let contract_result = contract.state;
     println!("{}", contract_result);
     assert_eq!(contract_result, 4);
+  }
+
+  #[tokio::test]
+  pub async fn simulate_contract_test_custom_source() {
+    let contract_source_bytes = include_bytes!("../../../testdata/contracts/user-registry2.js");
+    let contract_source_vec = contract_source_bytes.to_vec();
+    let execution_context: SimulateExecutionContext =
+        SimulateExecutionContext {
+          contract_id: String::new(),
+          interactions: vec![SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({
+              "username": "Andres"
+            }).to_string(),
+          }],
+          contract_init_state: Some(r#"{"users": []}"#.into()),
+          maybe_config: None,
+          maybe_cache: Some(false),
+          maybe_bundled_contract: None,
+          maybe_settings: None,
+          maybe_exm_context: None,
+          maybe_contract_source: Some(ContractSource {
+            contract_src: contract_source_vec.into(),
+            contract_type: SimulateContractType::JAVASCRIPT
+          })
+        };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
+
+    let contract_result = contract.state;
+    println!("{}", contract_result);
+    assert_eq!(contract_result.get("users").unwrap(), &serde_json::json!([{"username": "Andres"}]));
   }
 }

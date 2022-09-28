@@ -14,9 +14,9 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::sync::Mutex;
-use three_em_arweave::arweave::get_cache;
 use three_em_arweave::arweave::Arweave;
 use three_em_arweave::arweave::LoadedContract;
+use three_em_arweave::arweave::{get_cache, ManualLoadedContract};
 use three_em_arweave::gql_result::GQLEdgeInterface;
 use three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
@@ -37,22 +37,34 @@ pub async fn simulate_contract(
   maybe_bundled_contract: Option<bool>,
   maybe_settings: Option<HashMap<String, deno_core::serde_json::Value>>,
   maybe_exm_context: Option<deno_core::serde_json::Value>,
+  maybe_contract_source: Option<ManualLoadedContract>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
   let loaded_contract = tokio::join!(async move {
-    let contract: Result<LoadedContract, AnyError> = arweave
-      .load_contract(
-        shared_id,
-        None,
-        None,
-        contract_init_state,
-        maybe_cache.unwrap_or(false),
-        true,
-        maybe_bundled_contract.unwrap_or(false),
-      )
-      .await;
+    if let Some(contract_source) = maybe_contract_source {
+      let contract = LoadedContract {
+        contract_src: contract_source.contract_src,
+        contract_type: contract_source.contract_type,
+        init_state: contract_init_state.clone().unwrap(),
+        ..Default::default()
+      };
 
-    contract
+      Ok(contract)
+    } else {
+      let contract: Result<LoadedContract, AnyError> = arweave
+        .load_contract(
+          shared_id,
+          None,
+          None,
+          contract_init_state,
+          maybe_cache.unwrap_or(false),
+          true,
+          maybe_bundled_contract.unwrap_or(false),
+        )
+        .await;
+
+      contract
+    }
   })
   .0;
 
