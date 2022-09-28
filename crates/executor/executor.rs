@@ -197,61 +197,67 @@ pub async fn raw_execute_contract<
 
           // TODO: has_multiple_interactions
           // https://github.com/ArweaveTeam/SmartWeave/blob/4d09c66d832091805f583ba73e8da96cde2c0190/src/contract-read.ts#L68
-          let js_input: Value = deno_core::serde_json::from_str(input).unwrap();
+          let js_input_maybe: serde_json::Result<Value> =
+            deno_core::serde_json::from_str(input);
 
-          let call_input = serde_json::json!({
-            "input": js_input,
-            "caller": tx.owner.address
-          });
+          if let Ok(js_input) = js_input_maybe {
+            let call_input = serde_json::json!({
+              "input": js_input,
+              "caller": tx.owner.address
+            });
 
-          let interaction_context = generate_interaction_context(&tx);
+            let interaction_context = generate_interaction_context(&tx);
 
-          let valid = match rt.call(call_input, Some(interaction_context)).await
-          {
-            Ok(None) => serde_json::Value::Bool(true),
-            Ok(Some(CallResult::Evolve(evolve))) => {
-              let contract = shared_client
-                .load_contract(
-                  contract_id.clone(),
-                  Some(evolve),
-                  None,
-                  None,
-                  true,
-                  false,
-                  false,
+            let valid = match rt
+              .call(call_input, Some(interaction_context))
+              .await
+            {
+              Ok(None) => serde_json::Value::Bool(true),
+              Ok(Some(CallResult::Evolve(evolve))) => {
+                let contract = shared_client
+                  .load_contract(
+                    contract_id.clone(),
+                    Some(evolve),
+                    None,
+                    None,
+                    true,
+                    false,
+                    false,
+                  )
+                  .await
+                  .unwrap();
+
+                let state: Value = rt.get_contract_state().unwrap();
+                rt = Runtime::new(
+                  &(String::from_utf8_lossy(&contract.contract_src)),
+                  state,
+                  arweave_info.to_owned(),
+                  op_smartweave_read_contract::decl(),
+                  settings.clone(),
+                  maybe_exm_context.clone(),
                 )
                 .await
                 .unwrap();
 
-              let state: Value = rt.get_contract_state().unwrap();
-              rt = Runtime::new(
-                &(String::from_utf8_lossy(&contract.contract_src)),
-                state,
-                arweave_info.to_owned(),
-                op_smartweave_read_contract::decl(),
-                settings.clone(),
-                maybe_exm_context.clone(),
-              )
-              .await
-              .unwrap();
-
-              serde_json::Value::Bool(true)
-            }
-            Ok(Some(CallResult::Result(_))) => serde_json::Value::Bool(true),
-            Err(err) => {
-              if show_errors {
-                println!("{}", err);
+                serde_json::Value::Bool(true)
               }
+              Ok(Some(CallResult::Result(_))) => serde_json::Value::Bool(true),
+              Err(err) => {
+                if show_errors {
+                  println!("{}", err);
+                }
 
-              if show_errors {
-                serde_json::Value::String(err.to_string())
-              } else {
-                serde_json::Value::Bool(false)
+                if show_errors {
+                  serde_json::Value::String(err.to_string())
+                } else {
+                  serde_json::Value::Bool(false)
+                }
               }
-            }
-          };
-
-          validity.insert(tx.id, valid);
+            };
+            validity.insert(tx.id, valid);
+          } else {
+            validity.insert(tx.id, deno_core::serde_json::Value::Bool(false));
+          }
         }
 
         let state_val: Value = rt.get_contract_state().unwrap();
@@ -292,36 +298,40 @@ pub async fn raw_execute_contract<
           let tx = interaction.node;
 
           let input = get_input_from_interaction(&tx);
-          let wasm_input: Value =
-            deno_core::serde_json::from_str(input).unwrap();
-          let call_input = serde_json::json!({
-            "input": wasm_input,
-            "caller": tx.owner.address,
-          });
-          let interaction_context = generate_interaction_context(&tx);
+          let maybe_wasm_input: serde_json::Result<Value> =
+            deno_core::serde_json::from_str(input);
+          if let Ok(wasm_input) = maybe_wasm_input {
+            let call_input = serde_json::json!({
+              "input": wasm_input,
+              "caller": tx.owner.address,
+            });
+            let interaction_context = generate_interaction_context(&tx);
 
-          let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
-          let exec = rt.call(&mut state, &mut input, interaction_context);
-          let valid_with_result = match exec {
-            Ok(result) => (serde_json::Value::Bool(true), Some(result)),
-            Err(err) => {
-              if show_errors {
-                println!("{}", err);
-              }
+            let mut input = deno_core::serde_json::to_vec(&call_input).unwrap();
+            let exec = rt.call(&mut state, &mut input, interaction_context);
+            let valid_with_result = match exec {
+              Ok(result) => (serde_json::Value::Bool(true), Some(result)),
+              Err(err) => {
+                if show_errors {
+                  println!("{}", err);
+                }
 
-              if show_errors {
-                (serde_json::Value::String(err.to_string()), None)
-              } else {
-                (serde_json::Value::Bool(false), None)
+                if show_errors {
+                  (serde_json::Value::String(err.to_string()), None)
+                } else {
+                  (serde_json::Value::Bool(false), None)
+                }
               }
+            };
+            let valid = valid_with_result.0;
+
+            if valid.is_boolean() && valid.as_bool().unwrap() {
+              state = valid_with_result.1.unwrap();
             }
-          };
-          let valid = valid_with_result.0;
-
-          if valid.is_boolean() && valid.as_bool().unwrap() {
-            state = valid_with_result.1.unwrap();
+            validity.insert(tx.id, valid);
+          } else {
+            validity.insert(tx.id, deno_core::serde_json::Value::Bool(false));
           }
-          validity.insert(tx.id, valid);
         }
 
         let state: Value = deno_core::serde_json::from_slice(&state).unwrap();

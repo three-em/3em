@@ -236,7 +236,8 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { simulateContract, executeContract } = nativeBinding
+const { SimulateContractType, simulateContract, executeContract } = nativeBinding
 
+module.exports.SimulateContractType = SimulateContractType
 module.exports.simulateContract = simulateContract
 module.exports.executeContract = executeContract

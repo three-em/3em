@@ -134,7 +134,7 @@ pub struct GraphqlQuery {
   variables: InteractionVariables,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Default)]
 pub struct LoadedContract {
   pub id: String,
   pub contract_src_tx_id: String,
@@ -143,6 +143,12 @@ pub struct LoadedContract {
   pub init_state: String,
   pub min_fee: Option<String>,
   pub contract_transaction: TransactionData,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct ManualLoadedContract {
+  pub contract_src: Vec<u8>,
+  pub contract_type: ContractType,
 }
 
 enum State {

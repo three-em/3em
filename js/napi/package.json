@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
   "license": "MIT",
   "napi": {
@@ -22,9 +22,10 @@
     "jest": "^28.1.0"
   },
   "optionalDependencies": {
-    "@three-em/node-darwin-arm64": "0.3.10"
+    "@three-em/node-darwin-arm64": "0.3.14"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.0.0"
+    "@napi-rs/cli": "^2.0.0",
+    "@types/node": "^17.0.40"
   }
 }

@@ -1,4 +1,5 @@
 const { executeContract, simulateContract } = require("./");
+const {SimulateContractType} = require("./index");
 
 describe("NAPI test", () => {
 
@@ -49,5 +50,46 @@ describe("NAPI test", () => {
         }
     )});
     expect(simulate.state.counter).toBe(9500);
-  })
+  });
+
+  test("Simulate contract, manual source", async () => {
+    const buffer = new TextEncoder().encode(`
+    /**
+ *
+ * @param state is the current state your application holds
+ * @param action is an object containing { input, caller } . Most of the times you will only use \`action.input\` which contains the input passed as a write operation
+ * @returns {Promise<{ users: Array<{ username: string}> }>}
+ */
+export async function handle(state, action) {
+    const { username } = action.input;
+    state.users.push({ username });
+    return state;
+}
+    `);
+
+    const simulate = await simulateContract({
+      contractId: "",
+      maybeContractSource: {
+        contractType: SimulateContractType.JAVASCRIPT,
+        contractSrc: buffer
+      },
+      interactions: [{
+        id: "ABCD",
+        owner: "2asdaskdsapdk012",
+        quantity: "1000",
+        reward: "203123921",
+        target: "none",
+        tags: [],
+        input: JSON.stringify({
+          username: "Andres"
+        })
+      }],
+      contractInitState: JSON.stringify({
+            users: []
+          }
+      )
+    });
+    expect(simulate.state.users).toEqual([{ username: "Andres" }]);
+
+  });
 })
