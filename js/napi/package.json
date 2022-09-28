@@ -25,6 +25,7 @@
     "@three-em/node-darwin-arm64": "0.3.10"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.0.0"
+    "@napi-rs/cli": "^2.0.0",
+    "@types/node": "^17.0.40"
   }
 }

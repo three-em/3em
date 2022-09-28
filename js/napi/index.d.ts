@@ -32,8 +32,17 @@ export interface SimulateInput {
   block?: Block | undefined | null
   input: string
 }
+export const enum SimulateContractType {
+  JAVASCRIPT = 0,
+  WASM = 1
+}
+export interface ContractSource {
+  contractSrc: Buffer
+  contractType: SimulateContractType
+}
 export interface SimulateExecutionContext {
   contractId: string
+  maybeContractSource?: ContractSource | undefined | null
   interactions: Array<SimulateInput>
   contractInitState?: string | undefined | null
   maybeConfig?: ExecuteConfig | undefined | null
