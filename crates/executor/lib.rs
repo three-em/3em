@@ -2,9 +2,9 @@ pub mod executor;
 pub mod test_util;
 pub mod utils;
 
-use crate::executor::raw_execute_contract;
 pub use crate::executor::ExecuteResult;
 pub use crate::executor::ValidityTable;
+use crate::executor::{raw_execute_contract, V8Result};
 use deno_core::error::{generic_error, AnyError};
 use deno_core::serde_json::Value;
 pub use indexmap::map::IndexMap;
@@ -89,11 +89,12 @@ pub async fn simulate_contract(
       true,
       false,
       |validity_table, cache_state| {
-        ExecuteResult::V8(
-          cache_state.unwrap(),
-          validity_table,
-          Default::default(),
-        )
+        ExecuteResult::V8(V8Result {
+          state: cache_state.unwrap(),
+          validity: validity_table,
+          context: Default::default(),
+          result: None,
+        })
       },
       arweave,
       settings,
@@ -202,11 +203,12 @@ pub async fn execute_contract(
     needs_processing,
     show_errors,
     |validity_table, cache_state| {
-      ExecuteResult::V8(
-        cache_state.unwrap(),
-        validity_table,
-        Default::default(),
-      )
+      ExecuteResult::V8(V8Result {
+        state: cache_state.unwrap(),
+        validity: validity_table,
+        context: Default::default(),
+        result: None,
+      })
     },
     arweave,
     HashMap::new(),
@@ -496,7 +498,8 @@ mod test {
     .await
     .unwrap();
 
-    if let ExecuteResult::V8(value, validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
+      let validity = result.validity;
       let map: IndexMap<String, Value> = validity;
       let keys = map.keys();
 
@@ -540,7 +543,9 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
+      let value = result.state;
+      let validity = result.validity;
       assert!(!(value.is_null()));
       assert!(value.get("counter").is_some());
       let counter = value.get("counter").unwrap().as_i64().unwrap();
@@ -575,7 +580,8 @@ mod test {
     )
     .await
     .unwrap();
-    if let ExecuteResult::V8(value, _validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
+      let value = result.state;
       assert!(!(value.is_null()));
       assert!(value.get("people").is_some());
       assert!(value.get("people").unwrap().is_array());

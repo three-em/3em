@@ -31,8 +31,16 @@ pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
 
 #[derive(Clone)]
+pub struct V8Result {
+  pub state: Value,
+  pub result: Option<Value>,
+  pub validity: ValidityTable,
+  pub context: ExmContext,
+}
+
+#[derive(Clone)]
 pub enum ExecuteResult {
-  V8(Value, ValidityTable, ExmContext),
+  V8(V8Result),
   Evm(Storage, Vec<u8>, ValidityTable),
 }
 
@@ -55,15 +63,15 @@ pub fn process_execution(
   show_validity: bool,
 ) -> Value {
   match execute_result {
-    ExecuteResult::V8(value, validity_table, exm_context) => {
+    ExecuteResult::V8(result) => {
       if show_validity {
         serde_json::json!({
-            "state": value,
-            "validity": validity_table,
-            "exm": exm_context
+            "state": result.state,
+            "validity": result.validity,
+            "exm": result.context
         })
       } else {
-        value
+        result.state
       }
     }
     ExecuteResult::Evm(store, result, validity_table) => {
@@ -190,6 +198,8 @@ pub async fn raw_execute_contract<
         .await
         .unwrap();
 
+        let mut latest_result: Option<Value> = None;
+
         for interaction in interactions {
           let tx = interaction.node;
 
@@ -208,52 +218,63 @@ pub async fn raw_execute_contract<
 
             let interaction_context = generate_interaction_context(&tx);
 
-            let valid = match rt
-              .call(call_input, Some(interaction_context))
-              .await
-            {
-              Ok(None) => serde_json::Value::Bool(true),
-              Ok(Some(CallResult::Evolve(evolve))) => {
-                let contract = shared_client
-                  .load_contract(
-                    contract_id.clone(),
-                    Some(evolve),
-                    None,
-                    None,
-                    true,
-                    false,
-                    false,
+            let valid =
+              match rt.call(call_input, Some(interaction_context)).await {
+                Ok(None) => {
+                  latest_result = None;
+                  serde_json::Value::Bool(true)
+                }
+                Ok(Some(CallResult::Evolve(evolve))) => {
+                  let contract = shared_client
+                    .load_contract(
+                      contract_id.clone(),
+                      Some(evolve),
+                      None,
+                      None,
+                      true,
+                      false,
+                      false,
+                    )
+                    .await
+                    .unwrap();
+
+                  let state: Value = rt.get_contract_state().unwrap();
+                  rt = Runtime::new(
+                    &(String::from_utf8_lossy(&contract.contract_src)),
+                    state,
+                    arweave_info.to_owned(),
+                    op_smartweave_read_contract::decl(),
+                    settings.clone(),
+                    maybe_exm_context.clone(),
                   )
                   .await
                   .unwrap();
 
-                let state: Value = rt.get_contract_state().unwrap();
-                rt = Runtime::new(
-                  &(String::from_utf8_lossy(&contract.contract_src)),
-                  state,
-                  arweave_info.to_owned(),
-                  op_smartweave_read_contract::decl(),
-                  settings.clone(),
-                  maybe_exm_context.clone(),
-                )
-                .await
-                .unwrap();
+                  latest_result = None;
 
-                serde_json::Value::Bool(true)
-              }
-              Ok(Some(CallResult::Result(_))) => serde_json::Value::Bool(true),
-              Err(err) => {
-                if show_errors {
-                  println!("{}", err);
+                  serde_json::Value::Bool(true)
                 }
+                Ok(Some(CallResult::Result(result_value))) => {
+                  let result_to_value = rt.to_value::<Value>(&result_value);
+                  if result_to_value.is_ok() {
+                    latest_result = Some(result_to_value.unwrap());
+                  }
+                  serde_json::Value::Bool(true)
+                }
+                Err(err) => {
+                  latest_result = None;
 
-                if show_errors {
-                  serde_json::Value::String(err.to_string())
-                } else {
-                  serde_json::Value::Bool(false)
+                  if show_errors {
+                    println!("{}", err);
+                  }
+
+                  if show_errors {
+                    serde_json::Value::String(err.to_string())
+                  } else {
+                    serde_json::Value::Bool(false)
+                  }
                 }
-              }
-            };
+              };
             validity.insert(tx.id, valid);
           } else {
             validity.insert(tx.id, deno_core::serde_json::Value::Bool(false));
@@ -274,7 +295,12 @@ pub async fn raw_execute_contract<
           );
         }
 
-        ExecuteResult::V8(state_val, validity, exm_context)
+        ExecuteResult::V8(V8Result {
+          state: state_val,
+          result: latest_result,
+          validity,
+          context: exm_context,
+        })
       } else {
         on_cached(validity, cache_state)
       }
@@ -348,7 +374,12 @@ pub async fn raw_execute_contract<
           );
         }
 
-        ExecuteResult::V8(state, validity, Default::default())
+        ExecuteResult::V8(V8Result {
+          state,
+          validity,
+          context: Default::default(),
+          result: None,
+        })
       } else {
         on_cached(validity, cache_state)
       }
@@ -496,11 +527,110 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
       assert_eq!(
-        value,
+        result.state,
         serde_json::json!({"txId":"tx1123123123123123123213213123","txOwner":"SUPERMAN1293120","txTarget":"RECIPIENT1234","txQuantity":"100","txReward":"100","txTags":[{"name":"Input","value":"{}"},{"name":"MyTag","value":"Christpoher Nolan is awesome"}],"txHeight":2,"txIndepHash":"ABCD-EFG","txTimestamp":12301239,"winstonToAr":true,"arToWinston":true,"compareArWinston":1})
       );
+    } else {
+      panic!("Unexpected entry");
+    }
+  }
+
+  #[tokio::test]
+  async fn test_counter_result_js() {
+    let init_state = serde_json::json!({
+      "counts": 0
+    });
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/counter.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1123123123123123123213213123",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+      Some(String::from("SUPERMAN1293120")),
+      Some(String::from("RECIPIENT1234")),
+      Some(GQLTagInterface {
+        name: String::from("MyTag"),
+        value: String::from("Christpoher Nolan is awesome"),
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(12301239),
+    );
+
+    let fake_interactions = vec![transaction1.clone()];
+    let fake_interactions_2 = vec![transaction1.clone(), transaction1.clone()];
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract.clone(),
+      fake_interactions,
+      IndexMap::new(),
+      None,
+      true,
+      false,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+      HashMap::new(),
+      None,
+    )
+    .await;
+
+    if let ExecuteResult::V8(result) = result {
+      assert_eq!(result.result.is_some(), true);
+      assert_eq!(
+        result.result.unwrap(),
+        Value::String(String::from("Some result"))
+      );
+    } else {
+      panic!("Unexpected entry");
+    }
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract,
+      fake_interactions_2,
+      IndexMap::new(),
+      None,
+      true,
+      false,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+      HashMap::new(),
+      None,
+    )
+    .await;
+
+    if let ExecuteResult::V8(result) = result {
+      assert_eq!(result.state.get("counts").unwrap().as_i64().unwrap(), 2);
+      assert_eq!(result.result.is_some(), false);
     } else {
       panic!("Unexpected entry");
     }
@@ -562,12 +692,12 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
       let x = serde_json::json!({
-            "state": value,
-            "validity": validity
+            "state": result.state,
+            "validity": result.validity
       });
-      assert_eq!(value["ticker"], serde_json::json!("ARCONFT67"));
+      assert_eq!(result.state["ticker"], serde_json::json!("ARCONFT67"));
     } else {
       panic!("Unexpected entry");
     }
@@ -658,7 +788,10 @@ mod tests {
       result
     };
 
-    if let ExecuteResult::V8(value, validity, exm_context) = execute().await {
+    if let ExecuteResult::V8(result) = execute().await {
+      let validity = result.validity;
+      let value = result.state;
+
       assert_eq!(validity.len(), 3);
       let (tx1, tx2, tx3) = (
         validity.get("tx1"),
@@ -685,6 +818,8 @@ mod tests {
         serde_json::json!("Andres")
       );
       assert_eq!(users.get(1).unwrap().to_owned(), serde_json::json!("Divy"));
+      assert_eq!(result.result.is_some(), true);
+      assert_eq!(result.result.unwrap(), 2);
     } else {
       panic!("Failed");
     }
@@ -760,7 +895,9 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
+      let validity = result.validity;
+      let value = result.state;
       // tx1 is the evolve action. This must not fail.
       // All network calls happen here and runtime is
       // re-initialized.
@@ -839,7 +976,8 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity, exm_context) = result {
+    if let ExecuteResult::V8(result) = result {
+      let value = result.state;
       assert_eq!(value.get("txId").unwrap(), "STARWARS");
       assert_eq!(value.get("owner").unwrap(), "ADDRESS2");
       assert_eq!(value.get("height").unwrap(), 200);

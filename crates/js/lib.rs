@@ -78,6 +78,9 @@ pub struct Runtime {
   is_promise: Option<bool>,
   /// Current state value.
   contract_state: v8::Global<v8::Value>,
+
+  /// Whether the current runtime belongs to EXM execution
+  is_exm: bool,
 }
 
 impl Runtime {
@@ -120,7 +123,7 @@ impl Runtime {
           ..Default::default()
         }),
         three_em_smartweave::init(arweave, op_smartweave_read_state),
-        three_em_exm_base_ops::init(executor_settings),
+        three_em_exm_base_ops::init(executor_settings.clone()),
       ],
       module_loader: Some(module_loader),
       startup_snapshot: Some(snapshot::snapshot()),
@@ -179,12 +182,18 @@ impl Runtime {
       );
     }
 
+    let exm_setting_val = executor_settings
+      .get("EXM")
+      .unwrap_or_else(|| &Value::Bool(false));
+    let is_exm = exm_setting_val.as_bool().unwrap();
+
     Ok(Self {
       rt,
       module,
       state,
       is_promise: None,
       contract_state,
+      is_exm,
     })
   }
 
@@ -194,6 +203,18 @@ impl Runtime {
 
   pub fn scope(&mut self) -> v8::HandleScope {
     self.rt.handle_scope()
+  }
+
+  pub fn to_value<T>(
+    &mut self,
+    global_value: &v8::Global<v8::Value>,
+  ) -> Result<T, AnyError>
+  where
+    T: DeserializeOwned + 'static,
+  {
+    let scope = &mut self.rt.handle_scope();
+    let value = v8::Local::new(scope, global_value.clone());
+    Ok(serde_v8::from_v8(scope, value)?)
   }
 
   pub fn get_contract_state<T>(&mut self) -> Result<T, AnyError>
@@ -282,6 +303,7 @@ impl Runtime {
     };
 
     {
+      let mut result_act: Option<v8::Global<v8::Value>> = None;
       // Run the event loop.
       let global = self.rt.resolve_value(global).await?;
 
@@ -296,7 +318,7 @@ impl Runtime {
       let result_key = v8::String::new(scope, "result").unwrap().into();
       let result = state.get(scope, result_key).unwrap();
       if !result.is_null_or_undefined() {
-        return Ok(Some(CallResult::Result(v8::Global::new(scope, result))));
+        result_act = Some(v8::Global::new(scope, result));
       }
 
       let state_obj = state.get(scope, state_key).unwrap();
@@ -304,16 +326,22 @@ impl Runtime {
         // Update the contract state.
         self.contract_state = v8::Global::new(scope, state_obj);
 
-        // Contract evolution.
-        let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
-        let can_evolve = state.get(scope, evolve_key).unwrap();
-        if can_evolve.boolean_value(scope) {
-          let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
-          let evolve = state.get(scope, evolve_key).unwrap();
-          return Ok(Some(CallResult::Evolve(
-            evolve.to_rust_string_lossy(scope),
-          )));
+        if !self.is_exm {
+          // Contract evolution.
+          let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
+          let can_evolve = state.get(scope, evolve_key).unwrap();
+          if can_evolve.boolean_value(scope) {
+            let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
+            let evolve = state.get(scope, evolve_key).unwrap();
+            return Ok(Some(CallResult::Evolve(
+              evolve.to_rust_string_lossy(scope),
+            )));
+          }
         }
+      }
+
+      if let Some(result_v8_val) = result_act {
+        return Ok(Some(CallResult::Result(result_v8_val)));
       }
     };
 
