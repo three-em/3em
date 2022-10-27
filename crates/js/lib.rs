@@ -307,41 +307,50 @@ impl Runtime {
       // Run the event loop.
       let global = self.rt.resolve_value(global).await?;
 
+      // let data = self.get_contract_state::<Value>().unwrap();
+      // println!("{}", data.to_string());
+
       let scope = &mut self.rt.handle_scope();
 
-      let state = v8::Local::new(scope, global)
-        .to_object(scope)
-        .ok_or(Error::Terminated)?;
-      let state_key = v8::String::new(scope, "state").unwrap().into();
+      let state_obj_local = v8::Local::new(scope, global).to_object(scope);
 
-      // Return value.
-      let result_key = v8::String::new(scope, "result").unwrap().into();
-      let result = state.get(scope, result_key).unwrap();
-      if !result.is_null_or_undefined() {
-        result_act = Some(v8::Global::new(scope, result));
-      }
+      if let Some(state) = state_obj_local {
+        let state_key = v8::String::new(scope, "state").unwrap().into();
 
-      let state_obj = state.get(scope, state_key).unwrap();
-      if let Some(state) = state_obj.to_object(scope) {
-        // Update the contract state.
-        self.contract_state = v8::Global::new(scope, state_obj);
+        // Return value.
+        let result_key = v8::String::new(scope, "result").unwrap().into();
+        let result = state.get(scope, result_key).unwrap();
+        if !result.is_null_or_undefined() {
+          result_act = Some(v8::Global::new(scope, result));
+        }
 
-        if !self.is_exm {
-          // Contract evolution.
-          let evolve_key = v8::String::new(scope, "canEvolve").unwrap().into();
-          let can_evolve = state.get(scope, evolve_key).unwrap();
-          if can_evolve.boolean_value(scope) {
-            let evolve_key = v8::String::new(scope, "evolve").unwrap().into();
-            let evolve = state.get(scope, evolve_key).unwrap();
-            return Ok(Some(CallResult::Evolve(
-              evolve.to_rust_string_lossy(scope),
-            )));
+        if let Some(state_obj) = state.get(scope, state_key) {
+          if let Some(state) = state_obj.to_object(scope) {
+            // Update the contract state.
+            if !state_obj.is_null_or_undefined() {
+              self.contract_state = v8::Global::new(scope, state_obj);
+
+              if !self.is_exm {
+                // Contract evolution.
+                let evolve_key =
+                  v8::String::new(scope, "canEvolve").unwrap().into();
+                let can_evolve = state.get(scope, evolve_key).unwrap();
+                if can_evolve.boolean_value(scope) {
+                  let evolve_key =
+                    v8::String::new(scope, "evolve").unwrap().into();
+                  let evolve = state.get(scope, evolve_key).unwrap();
+                  return Ok(Some(CallResult::Evolve(
+                    evolve.to_rust_string_lossy(scope),
+                  )));
+                }
+              }
+            }
           }
         }
-      }
 
-      if let Some(result_v8_val) = result_act {
-        return Ok(Some(CallResult::Result(result_v8_val)));
+        if let Some(result_v8_val) = result_act {
+          return Ok(Some(CallResult::Result(result_v8_val)));
+        }
       }
     };
 
@@ -358,7 +367,7 @@ mod test {
   use deno_core::error::AnyError;
   use deno_core::serde::Deserialize;
   use deno_core::serde::Serialize;
-  use deno_core::serde_json::Value;
+  use deno_core::serde_json::{json, Value};
   use deno_core::OpState;
   use deno_core::ZeroCopyBuf;
   use deno_ops::op;
@@ -391,6 +400,34 @@ mod test {
 
     let value = rt.get_contract_state::<i32>().unwrap();
     assert_eq!(value, -69);
+  }
+
+  #[tokio::test]
+  async fn test_state_empty() {
+    let mut rt = Runtime::new(
+      r#"export async function handle(state, action) {
+        state.data++;
+        state.data = Number(100 * 2 + state.data);
+        if(state.data > 300) {
+          return { state };
+        }
+      }"#,
+      json!({
+        "data": 0
+      }),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      HashMap::new(),
+      None,
+    )
+    .await
+    .unwrap();
+
+    rt.call((), None).await.unwrap();
+    rt.call((), None).await.unwrap();
+    let value = rt.get_contract_state::<Value>().unwrap();
+    let number = value.get("data").unwrap().as_i64().unwrap();
+    assert_eq!(number, 402);
   }
 
   #[tokio::test]

@@ -140,14 +140,20 @@ pub async fn dry_run(
 ) -> Result<(), AnyError> {
   let execution = dry_run_result(port, host, protocol, file).await;
 
-  if let ExecuteResult::V8(value, validity_table, _) = execution {
+  if let ExecuteResult::V8(data) = execution {
+    let (state, validity, result) = (
+      data.state,
+      data.validity,
+      data.result.unwrap_or(Value::default()),
+    );
     let value = if show_validity {
       serde_json::json!({
-          "state": value,
-          "validity": validity_table
+          "state": state,
+          "validity": validity,
+          "result": result
       })
     } else {
-      value
+      state
     };
 
     if pretty_print {
@@ -185,7 +191,9 @@ mod tests {
     )
     .await;
 
-    if let ExecuteResult::V8(value, validity_table, _) = execution {
+    if let ExecuteResult::V8(data) = execution {
+      let value = data.state;
+      let validity_table = data.validity;
       assert_eq!(
         value,
         serde_json::json!({

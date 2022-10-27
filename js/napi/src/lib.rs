@@ -8,13 +8,13 @@ use three_em_arweave::arweave::{Arweave, ManualLoadedContract};
 use three_em_arweave::cache::ArweaveCache;
 use three_em_arweave::cache::CacheExt;
 use three_em_arweave::gql_result::{GQLEdgeInterface, GQLTagInterface};
+use three_em_arweave::miscellaneous::ContractType;
 use three_em_executor::execute_contract as execute;
 use three_em_executor::simulate_contract as simulate;
 use three_em_executor::utils::create_simulated_transaction;
 use three_em_executor::ExecuteResult;
 use three_em_executor::ValidityTable;
 use tokio::runtime::Handle;
-use three_em_arweave::miscellaneous::ContractType;
 
 #[cfg(target_os = "macos")]
 #[global_allocator]
@@ -23,6 +23,7 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 #[napi(object)]
 pub struct ExecuteContractResult {
   pub state: serde_json::Value,
+  pub result: serde_json::Value,
   pub validity: HashMap<String, serde_json::Value>,
   pub exm_context: serde_json::Value,
 }
@@ -134,9 +135,16 @@ fn get_result(
 ) -> Option<ExecuteContractResult> {
   if process_result.is_ok() {
     match process_result.unwrap() {
-      ExecuteResult::V8(state, validity, exm_context) => {
+      ExecuteResult::V8(data) => {
+        let (state, result, validity, exm_context) = (
+          data.state,
+          data.result.unwrap_or(Value::Null),
+          data.validity,
+          data.context,
+        );
         Some(ExecuteContractResult {
           state,
+          result,
           validity: validity_to_hashmap(validity),
           exm_context: serde_json::to_value(exm_context).unwrap(),
         })
@@ -162,7 +170,7 @@ async fn simulate_contract(
     maybe_bundled_contract,
     maybe_settings,
     maybe_exm_context,
-    maybe_contract_source
+    maybe_contract_source,
   } = context;
 
   let result = tokio::task::spawn_blocking(move || {
@@ -216,8 +224,8 @@ async fn simulate_contract(
               contract_src: contract_source.contract_src.into(),
               contract_type: match contract_source.contract_type {
                 SimulateContractType::JAVASCRIPT => ContractType::JAVASCRIPT,
-                SimulateContractType::WASM => ContractType::WASM
-              }
+                SimulateContractType::WASM => ContractType::WASM,
+              },
             };
             Some(loaded_contract)
           } else {
@@ -234,7 +242,7 @@ async fn simulate_contract(
           maybe_bundled_contract,
           maybe_settings,
           maybe_exm_context,
-          manual_loaded_contract
+          manual_loaded_contract,
         )
         .await;
 
@@ -297,7 +305,11 @@ async fn execute_contract(
 
 #[cfg(test)]
 mod tests {
-  use crate::{execute_contract, get_gateway, simulate_contract, ExecuteConfig, SimulateExecutionContext, SimulateInput, ContractSource, SimulateContractType};
+  use crate::{
+    execute_contract, get_gateway, simulate_contract, ContractSource,
+    ExecuteConfig, SimulateContractType, SimulateExecutionContext,
+    SimulateInput,
+  };
   use three_em_arweave::arweave::get_cache;
 
   // #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -354,7 +366,7 @@ mod tests {
         maybe_bundled_contract: None,
         maybe_settings: None,
         maybe_exm_context: None,
-        maybe_contract_source: None
+        maybe_contract_source: None,
       };
 
     let contract = simulate_contract(execution_context).await.unwrap();
@@ -397,7 +409,7 @@ mod tests {
         maybe_bundled_contract: Some(true),
         maybe_settings: None,
         maybe_exm_context: None,
-        maybe_contract_source: None
+        maybe_contract_source: None,
       };
 
     let contract = simulate_contract(execution_context).await.unwrap();
@@ -409,39 +421,45 @@ mod tests {
 
   #[tokio::test]
   pub async fn simulate_contract_test_custom_source() {
-    let contract_source_bytes = include_bytes!("../../../testdata/contracts/user-registry2.js");
+    let contract_source_bytes =
+      include_bytes!("../../../testdata/contracts/user-registry2.js");
     let contract_source_vec = contract_source_bytes.to_vec();
     let execution_context: SimulateExecutionContext =
-        SimulateExecutionContext {
-          contract_id: String::new(),
-          interactions: vec![SimulateInput {
-            id: String::from("abcd"),
-            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
-            quantity: String::from("12301"),
-            reward: String::from("12931293"),
-            target: None,
-            tags: vec![],
-            block: None,
-            input: serde_json::json!({
-              "username": "Andres"
-            }).to_string(),
-          }],
-          contract_init_state: Some(r#"{"users": []}"#.into()),
-          maybe_config: None,
-          maybe_cache: Some(false),
-          maybe_bundled_contract: None,
-          maybe_settings: None,
-          maybe_exm_context: None,
-          maybe_contract_source: Some(ContractSource {
-            contract_src: contract_source_vec.into(),
-            contract_type: SimulateContractType::JAVASCRIPT
+      SimulateExecutionContext {
+        contract_id: String::new(),
+        interactions: vec![SimulateInput {
+          id: String::from("abcd"),
+          owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+          quantity: String::from("12301"),
+          reward: String::from("12931293"),
+          target: None,
+          tags: vec![],
+          block: None,
+          input: serde_json::json!({
+            "username": "Andres"
           })
-        };
+          .to_string(),
+        }],
+        contract_init_state: Some(r#"{"users": []}"#.into()),
+        maybe_config: None,
+        maybe_cache: Some(false),
+        maybe_bundled_contract: None,
+        maybe_settings: None,
+        maybe_exm_context: None,
+        maybe_contract_source: Some(ContractSource {
+          contract_src: contract_source_vec.into(),
+          contract_type: SimulateContractType::JAVASCRIPT,
+        }),
+      };
 
     let contract = simulate_contract(execution_context).await.unwrap();
 
     let contract_result = contract.state;
     println!("{}", contract_result);
-    assert_eq!(contract_result.get("users").unwrap(), &serde_json::json!([{"username": "Andres"}]));
+    assert_eq!(
+      contract_result.get("users").unwrap(),
+      &serde_json::json!([{"username": "Andres"}])
+    );
+    assert_eq!(contract.result.as_str().unwrap(), "Hello World");
   }
 }
