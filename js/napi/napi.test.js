@@ -63,7 +63,7 @@ describe("NAPI test", () => {
 export async function handle(state, action) {
     const { username } = action.input;
     state.users.push({ username });
-    return state;
+    return { state, result: 'Hello World' };
 }
     `);
 
@@ -90,6 +90,6 @@ export async function handle(state, action) {
       )
     });
     expect(simulate.state.users).toEqual([{ username: "Andres" }]);
-
+    expect(simulate.result).toEqual("Hello World");
   });
 })

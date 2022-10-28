@@ -35,14 +35,19 @@ pub async fn run(
   }
 
   match execution {
-    ExecuteResult::V8(value, validity_table, _) => {
+    ExecuteResult::V8(data) => {
+      let state = data.state;
+      let validity_table = data.validity;
+      let result = data.result.unwrap_or(serde_json::Value::Null);
+
       let value = if show_validity {
         serde_json::json!({
-            "state": value,
-            "validity": validity_table
+            "state": state,
+            "validity": validity_table,
+            "result": result
         })
       } else {
-        value
+        state
       };
 
       if !no_print {

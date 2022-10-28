@@ -6,6 +6,7 @@ export async function handle(state, action) {
  }
 
  return {
-     state
+     state,
+     result: state.users.length
  };
 }

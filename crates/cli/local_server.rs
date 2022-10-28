@@ -70,18 +70,23 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
                 match execute_result {
                      Ok(result) => {
                          match result {
-                             ExecuteResult::V8(val, validity, _) => {
+                             ExecuteResult::V8(data) => {
+                                 let val = data.state;
+                                 let validity = data.validity;
+                                 let result = data.result.unwrap_or(serde_json::Value::Null);
                                  if show_validity {
                                      response_result = Some(Response::new(Body::from(
                                          serde_json::json!({
                                              "state": val,
-                                             "validity": validity
+                                             "validity": validity,
+                                             "result": result
                                          }).to_string()
                                      )));
                                  } else {
                                      response_result = Some(Response::new(Body::from(
                                          serde_json::json!({
-                                             "state": val
+                                             "state": val,
+                                             "result": result
                                          }).to_string()
                                      )));
                                  }
