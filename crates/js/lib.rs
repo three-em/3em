@@ -462,6 +462,29 @@ export async function handle(slice) {
   }
 
   #[tokio::test]
+  async fn test_runtime_smartweave_arweave_wallets_ownertoaddress() {
+    let buf: Vec<u8> = vec![0x00];
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return { state: await SmartWeave.arweave.wallets.ownerToAddress("kTuBmCmd8dbEiq4zbEPx0laVMEbgXNQ1KBUYqg3TWpLDokkcrZfa04hxYWVLZMnXH2PRSCjvCi5YVu3TG27kl29eMs-CJ-D97WyfvEZwZ7V4EDLS1uqiOrfnkBxXDfJwMI7pdGWg0JYwhsqePB8A9WfIfjrWXiGkleAAtU-dLc8Q3QYIbUBa_rNrvC_AwhXhoKUNq5gaKAdB5xQBfHJg8vMFaTsbGOxIH8v7gJyz7gc9JQf0F42ByWPmhIsm4bIHs7eGPgtUKASNBmWIgs8blP7AmbzyJp4bx_AOQ4KOCei25Smw2-UAZehCGibl50i-blv5ldpGhcKDBC7ukjZpOY99V0mdDynbQBi606DdTWGJSXGNkvpwYnLh53VOE3uX0zuxNnRlwA9BN_VisWMrQwk_KnB0Fz0qGlJsXNQEWb_TEaf6eWLcSIUZUUC9o0L6J6mI9hiJjf_sisiR6AsWF4UoA-snWsFNzgPdkeOHW_biJMep6DOnWX8lmh8meDGMi1XOxJ4hJAawD7uS3A8jL7Kn7eYtiQ7bnZG69WtBueyOQh78yStMvoKz6awzBt1IaTBUG9_CHrEy_Tx6aQZu1c2D_nZonTd0pV2ljC7E642VtOWsRFL78-1xF6P0FD4eWh6HoDpD05_3oUBrAdusLMkn8Gm5tl0wIwMrLF58FYk") }
+}
+"#,
+      ZeroCopyBuf::from(buf),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      HashMap::new(),
+      None,
+    )
+        .await
+        .unwrap();
+
+    rt.call((), None).await.unwrap();
+    let address = rt.get_contract_state::<String>().unwrap();
+    assert_eq!(address, "z5-Ql2zU5Voac97BHMDGrk3_2gEDqM72iHxCJhkcJ5A");
+  }
+
+  #[tokio::test]
   async fn test_runtime_smartweave_crypto_sign() {
     let buf: Vec<u8> = vec![0x00];
     let mut rt = Runtime::new(

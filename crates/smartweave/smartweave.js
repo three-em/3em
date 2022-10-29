@@ -157,7 +157,9 @@
     }
 
     b64UrlToBuffer(b64UrlString) {
-      return Uint8Array.from(atob(b64UrlString), (c) => c.charCodeAt(0));
+      return new Uint8Array(atob(b64UrlString.replace(/-/g, '+').replace(/_/g, '/')).split('').map(val => {
+        return val.charCodeAt(0);
+      }));
     }
 
     bufferTob64(buffer) {
