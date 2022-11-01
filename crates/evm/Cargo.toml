@@ -11,7 +11,7 @@ license = "MIT"
 path = "lib.rs"
 
 [dependencies]
-primitive-types = { default-features = false, version = "0.10.1" }
+primitive-types = { default-features = false, version = "0.12.1" }
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [dev-dependencies]
