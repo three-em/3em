@@ -198,6 +198,7 @@ impl<S: Serialize + DeserializeOwned> Runtime<S> {
       state,
       is_promise: None,
       new_contract_state: init,
+      // NOTE(bartlomieju): should be removed in favor of `new_contract_state`
       contract_state,
       is_exm,
     })
@@ -228,9 +229,9 @@ impl<S: Serialize + DeserializeOwned> Runtime<S> {
     T: DeserializeOwned + 'static,
   {
     let scope = &mut self.rt.handle_scope();
-    Ok(self.new_contract_state.clone())
-    // let value = v8::Local::new(scope, self.contract_state.clone());
-    // Ok(serde_v8::from_v8(scope, value)?)
+    // NOTE(bartlomieju): this should probably return `new_contract_state`
+    let value = v8::Local::new(scope, self.contract_state.clone());
+    Ok(serde_v8::from_v8(scope, value)?)
   }
 
   pub fn get_exm_context<T>(&mut self) -> Result<T, AnyError>
