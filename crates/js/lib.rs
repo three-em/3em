@@ -93,7 +93,7 @@ impl Runtime {
     maybe_exm_context: Option<deno_core::serde_json::Value>,
   ) -> Result<Self, AnyError>
   where
-    T: Serialize + 'static,
+    T: Serialize + 'static, // @bartlomieju
   {
     let specifier = "file:///main.js".to_string();
     let module_loader =
@@ -154,8 +154,12 @@ impl Runtime {
       rt.execute_script("<anon>", &format!("import(\"{}\")", specifier))?;
     let module = rt.resolve_value(global).await?;
 
+    // @bartlomieju
+    // Here we create the value that's constantly being modified and should not
     let contract_state = {
       let scope = &mut rt.handle_scope();
+      // @bartlomieju
+      // init is meant to be anything that can be serialized with serde_v8 (Serialize
       let local = serde_v8::to_v8(scope, init)?;
       v8::Global::new(scope, local)
     };
@@ -277,6 +281,9 @@ impl Runtime {
       let func_obj = module_obj.get(scope, key).unwrap();
       let func = v8::Local::<v8::Function>::try_from(func_obj).unwrap();
 
+      // @bartlomieju
+      // Here we're creating the argument to be passed into the `handle(arg1, arg2)` function
+      // Cloning it here doesn't work because it holds a reference
       let state =
         v8::Local::<v8::Value>::new(scope, self.contract_state.clone());
       let undefined = v8::undefined(scope);
@@ -328,6 +335,10 @@ impl Runtime {
           if let Some(state) = state_obj.to_object(scope) {
             // Update the contract state.
             if !state_obj.is_null_or_undefined() {
+              // @bartlomieju
+              // self.contract_state should only be updated when `handle` returns `{ state }` in it.
+              // It is technically doing that, but as we know `self.contract_state` is a reference
+              // So if it gets modified through the call, this line has literally no effect (line 280)
               self.contract_state = v8::Global::new(scope, state_obj);
 
               if !self.is_exm {
@@ -408,7 +419,7 @@ mod test {
       r#"export async function handle(state, action) {
         state.data++;
         state.data = Number(100 * 2 + state.data);
-        if(state.data > 300) {
+        if(state.data < 300) {
           return { state };
         }
       }"#,
@@ -427,7 +438,7 @@ mod test {
     rt.call((), None).await.unwrap();
     let value = rt.get_contract_state::<Value>().unwrap();
     let number = value.get("data").unwrap().as_i64().unwrap();
-    assert_eq!(number, 402);
+    assert_eq!(number, 201);
   }
 
   #[tokio::test]
