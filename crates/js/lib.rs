@@ -60,13 +60,13 @@ pub enum CallResult {
   Result(v8::Global<v8::Value>),
 }
 
-unsafe impl Send for Runtime {}
-unsafe impl Sync for Runtime {}
+unsafe impl<S> Send for Runtime<S> {}
+unsafe impl<S> Sync for Runtime<S> {}
 
 unsafe impl Send for EmbeddedModuleLoader {}
 unsafe impl Sync for EmbeddedModuleLoader {}
 
-pub struct Runtime {
+pub struct Runtime<S> {
   rt: JsRuntime,
   module: v8::Global<v8::Value>,
   pub state: Rc<RefCell<HeapLimitState>>,
@@ -77,23 +77,24 @@ pub struct Runtime {
   /// Some(false), if the handler is called and it does not return a pending promise.
   is_promise: Option<bool>,
   /// Current state value.
+  new_contract_state: S,
   contract_state: v8::Global<v8::Value>,
 
   /// Whether the current runtime belongs to EXM execution
   is_exm: bool,
 }
 
-impl Runtime {
-  pub async fn new<T>(
+impl<S: Serialize + DeserializeOwned> Runtime<S> {
+  pub async fn new(
     source: &str,
-    init: T,
+    init: S,
     arweave: (i32, String, String),
     op_smartweave_read_state: OpDecl,
     executor_settings: HashMap<String, deno_core::serde_json::Value>,
     maybe_exm_context: Option<deno_core::serde_json::Value>,
   ) -> Result<Self, AnyError>
   where
-    T: Serialize + 'static, // @bartlomieju
+    S: Serialize + 'static, // @bartlomieju
   {
     let specifier = "file:///main.js".to_string();
     let module_loader =
@@ -160,7 +161,7 @@ impl Runtime {
       let scope = &mut rt.handle_scope();
       // @bartlomieju
       // init is meant to be anything that can be serialized with serde_v8 (Serialize
-      let local = serde_v8::to_v8(scope, init)?;
+      let local = serde_v8::to_v8(scope, &init)?;
       v8::Global::new(scope, local)
     };
 
@@ -196,6 +197,7 @@ impl Runtime {
       module,
       state,
       is_promise: None,
+      new_contract_state: init,
       contract_state,
       is_exm,
     })
@@ -226,8 +228,9 @@ impl Runtime {
     T: DeserializeOwned + 'static,
   {
     let scope = &mut self.rt.handle_scope();
-    let value = v8::Local::new(scope, self.contract_state.clone());
-    Ok(serde_v8::from_v8(scope, value)?)
+    Ok(self.new_contract_state.clone())
+    // let value = v8::Local::new(scope, self.contract_state.clone());
+    // Ok(serde_v8::from_v8(scope, value)?)
   }
 
   pub fn get_exm_context<T>(&mut self) -> Result<T, AnyError>
@@ -284,8 +287,9 @@ impl Runtime {
       // @bartlomieju
       // Here we're creating the argument to be passed into the `handle(arg1, arg2)` function
       // Cloning it here doesn't work because it holds a reference
-      let state =
-        v8::Local::<v8::Value>::new(scope, self.contract_state.clone());
+      let state = {
+        serde_v8::to_v8(scope, &self.new_contract_state)?
+      };
       let undefined = v8::undefined(scope);
       let mut local = func
         .call(scope, undefined.into(), &[state, action])
@@ -339,7 +343,7 @@ impl Runtime {
               // self.contract_state should only be updated when `handle` returns `{ state }` in it.
               // It is technically doing that, but as we know `self.contract_state` is a reference
               // So if it gets modified through the call, this line has literally no effect (line 280)
-              self.contract_state = v8::Global::new(scope, state_obj);
+              self.new_contract_state = serde_v8::from_v8(scope, state_obj)?;
 
               if !self.is_exm {
                 // Contract evolution.
