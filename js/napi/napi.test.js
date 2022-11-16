@@ -3,7 +3,7 @@ const {SimulateContractType} = require("./index");
 
 describe("NAPI test", () => {
 
-  jest.setTimeout(10000);
+  jest.setTimeout(25000);
 
   test("Test contract", async () => {
     const run = await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE");
