@@ -58,7 +58,8 @@ impl std::error::Error for Error {}
 pub enum CallResult {
   // Contract wants to "evolve"
   Evolve(String),
-  Result(v8::Global<v8::Value>),
+  // Result, was state updated?
+  Result(v8::Global<v8::Value>, bool),
 }
 
 unsafe impl Send for Runtime {}
@@ -309,6 +310,8 @@ impl Runtime {
       v8::Global::new(scope, local)
     };
 
+    let mut was_state_updated = false;
+
     {
       let mut result_act: Option<v8::Global<v8::Value>> = None;
       // Run the event loop.
@@ -336,6 +339,7 @@ impl Runtime {
             // Update the contract state.
             if !state_obj.is_null_or_undefined() {
               self.contract_state = v8::Global::new(scope, state_obj);
+              was_state_updated = true;
 
               if !self.is_exm {
                 // Contract evolution.
@@ -356,7 +360,10 @@ impl Runtime {
         }
 
         if let Some(result_v8_val) = result_act {
-          return Ok(Some(CallResult::Result(result_v8_val)));
+          return Ok(Some(CallResult::Result(
+            result_v8_val,
+            was_state_updated,
+          )));
         }
       }
     };
@@ -1041,11 +1048,49 @@ export async function handle() {
       .expect("Expected CallResult");
 
     match result {
-      CallResult::Result(value) => {
+      CallResult::Result(value, state_updated) => {
         let scope = &mut rt.scope();
         let local = v8::Local::new(scope, value);
         let value: String = deno_core::serde_v8::from_v8(scope, local).unwrap();
         assert_eq!(value, "Hello, World!".to_string());
+        assert_eq!(state_updated, false);
+      }
+      CallResult::Evolve(evolve) => panic!(
+        "Expected CallResult::Result, got CallResult::Evolve({})",
+        evolve
+      ),
+    }
+  }
+
+  #[tokio::test]
+  async fn test_contract_state_updated() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return { result: "Hello, World!", state: 1230 };
+}"#,
+      (),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      HashMap::new(),
+      None,
+    )
+    .await
+    .unwrap();
+
+    let result = rt
+      .call((), None)
+      .await
+      .unwrap()
+      .expect("Expected CallResult");
+
+    match result {
+      CallResult::Result(value, state_updated) => {
+        let scope = &mut rt.scope();
+        let local = v8::Local::new(scope, value);
+        let value: String = deno_core::serde_v8::from_v8(scope, local).unwrap();
+        assert_eq!(value, "Hello, World!".to_string());
+        assert_eq!(state_updated, true);
       }
       CallResult::Evolve(evolve) => panic!(
         "Expected CallResult::Result, got CallResult::Evolve({})",

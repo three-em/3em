@@ -36,6 +36,7 @@ pub struct V8Result {
   pub result: Option<Value>,
   pub validity: ValidityTable,
   pub context: ExmContext,
+  pub updated: bool,
 }
 
 #[derive(Clone)]
@@ -179,6 +180,7 @@ pub async fn raw_execute_contract<
       ArweaveProtocol::HTTP => String::from("http"),
     },
   );
+  let mut is_state_updated = false;
 
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
@@ -259,11 +261,16 @@ pub async fn raw_execute_contract<
 
                   serde_json::Value::Bool(true)
                 }
-                Ok(Some(CallResult::Result(result_value))) => {
+                Ok(Some(CallResult::Result(result_value, state_updated))) => {
                   let result_to_value = rt.to_value::<Value>(&result_value);
                   if result_to_value.is_ok() {
                     latest_result = Some(result_to_value.unwrap());
                   }
+
+                  if state_updated && !is_state_updated {
+                    is_state_updated = state_updated;
+                  }
+
                   serde_json::Value::Bool(true)
                 }
                 Err(err) => {
@@ -305,6 +312,7 @@ pub async fn raw_execute_contract<
           result: latest_result,
           validity,
           context: exm_context,
+          updated: is_state_updated,
         })
       } else {
         on_cached(validity, cache_state)
@@ -384,6 +392,7 @@ pub async fn raw_execute_contract<
           validity,
           context: Default::default(),
           result: None,
+          updated: false,
         })
       } else {
         on_cached(validity, cache_state)

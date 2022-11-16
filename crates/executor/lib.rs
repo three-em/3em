@@ -94,6 +94,7 @@ pub async fn simulate_contract(
           validity: validity_table,
           context: Default::default(),
           result: None,
+          updated: true,
         })
       },
       arweave,
@@ -208,6 +209,7 @@ pub async fn execute_contract(
         validity: validity_table,
         context: Default::default(),
         result: None,
+        updated: false,
       })
     },
     arweave,
