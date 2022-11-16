@@ -14,6 +14,7 @@ export interface ExecuteContractResult {
   result: any
   validity: Record<string, any>
   exmContext: any
+  updated: boolean
 }
 export interface ExecuteConfig {
   host: string

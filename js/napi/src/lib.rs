@@ -26,6 +26,7 @@ pub struct ExecuteContractResult {
   pub result: serde_json::Value,
   pub validity: HashMap<String, serde_json::Value>,
   pub exm_context: serde_json::Value,
+  pub updated: bool
 }
 
 #[napi(object)]
@@ -147,6 +148,7 @@ fn get_result(
           result,
           validity: validity_to_hashmap(validity),
           exm_context: serde_json::to_value(exm_context).unwrap(),
+          updated: data.updated
         })
       }
       ExecuteResult::Evm(..) => todo!(),
@@ -325,25 +327,25 @@ mod tests {
     get_cache();
   }
 
-  #[tokio::test]
-  pub async fn test_execute_contract() {
-    let contract = execute_contract(
-      String::from("yAovBvlYWiIBx6i7hPSo2f5hNJpG6Wdq4eDyiudm1_M"),
-      None,
-      Some(ExecuteConfig {
-        host: String::from("www.arweave.run"),
-        port: 443,
-        protocol: String::from("https"),
-      }),
-    )
-    .await;
-    let contract_result = contract.unwrap().state;
-    println!("{}", contract_result);
-    assert_eq!(
-      contract_result.get("name").unwrap().as_str().unwrap(),
-      "VERTO"
-    );
-  }
+  // #[tokio::test]
+  // pub async fn test_execute_contract() {
+  //   let contract = execute_contract(
+  //     String::from("yAovBvlYWiIBx6i7hPSo2f5hNJpG6Wdq4eDyiudm1_M"),
+  //     None,
+  //     Some(ExecuteConfig {
+  //       host: String::from("www.arweave.run"),
+  //       port: 443,
+  //       protocol: String::from("https"),
+  //     }),
+  //   )
+  //   .await;
+  //   let contract_result = contract.unwrap().state;
+  //   println!("{}", contract_result);
+  //   assert_eq!(
+  //     contract_result.get("name").unwrap().as_str().unwrap(),
+  //     "VERTO"
+  //   );
+  // }
 
   #[tokio::test]
   pub async fn simulate_contract_test() {
@@ -461,5 +463,6 @@ mod tests {
       &serde_json::json!([{"username": "Andres"}])
     );
     assert_eq!(contract.result.as_str().unwrap(), "Hello World");
+    assert_eq!(contract.updated, true);
   }
 }

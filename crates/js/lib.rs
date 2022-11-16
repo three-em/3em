@@ -21,6 +21,7 @@ use std::fmt::Debug;
 use std::future::Future;
 use std::rc::Rc;
 use three_em_smartweave::InteractionContext;
+use v8::HandleScope;
 
 #[derive(Debug, Clone)]
 pub enum HeapLimitState {
@@ -57,7 +58,8 @@ impl std::error::Error for Error {}
 pub enum CallResult {
   // Contract wants to "evolve"
   Evolve(String),
-  Result(v8::Global<v8::Value>),
+  // Result, was state updated?
+  Result(v8::Global<v8::Value>, bool),
 }
 
 unsafe impl Send for Runtime {}
@@ -279,9 +281,15 @@ impl Runtime {
 
       let state =
         v8::Local::<v8::Value>::new(scope, self.contract_state.clone());
+
+      let state_clone = {
+        let state_json = serde_v8::from_v8::<Value>(scope, state).unwrap();
+        serde_v8::to_v8(scope, state_json).unwrap()
+      };
+
       let undefined = v8::undefined(scope);
       let mut local = func
-        .call(scope, undefined.into(), &[state, action])
+        .call(scope, undefined.into(), &[state_clone, action])
         .ok_or(Error::Terminated)?;
 
       if self.is_promise.is_none() {
@@ -301,6 +309,8 @@ impl Runtime {
 
       v8::Global::new(scope, local)
     };
+
+    let mut was_state_updated = false;
 
     {
       let mut result_act: Option<v8::Global<v8::Value>> = None;
@@ -329,6 +339,7 @@ impl Runtime {
             // Update the contract state.
             if !state_obj.is_null_or_undefined() {
               self.contract_state = v8::Global::new(scope, state_obj);
+              was_state_updated = true;
 
               if !self.is_exm {
                 // Contract evolution.
@@ -349,7 +360,10 @@ impl Runtime {
         }
 
         if let Some(result_v8_val) = result_act {
-          return Ok(Some(CallResult::Result(result_v8_val)));
+          return Ok(Some(CallResult::Result(
+            result_v8_val,
+            was_state_updated,
+          )));
         }
       }
     };
@@ -408,7 +422,7 @@ mod test {
       r#"export async function handle(state, action) {
         state.data++;
         state.data = Number(100 * 2 + state.data);
-        if(state.data > 300) {
+        if(state.data < 300) {
           return { state };
         }
       }"#,
@@ -427,21 +441,20 @@ mod test {
     rt.call((), None).await.unwrap();
     let value = rt.get_contract_state::<Value>().unwrap();
     let number = value.get("data").unwrap().as_i64().unwrap();
-    assert_eq!(number, 402);
+    assert_eq!(number, 201);
   }
 
   #[tokio::test]
   async fn test_runtime_smartweave() {
-    let buf: Vec<u8> = vec![0x00];
     let mut rt = Runtime::new(
       r#"
 export async function handle(slice) {
   return { state: await SmartWeave
           .arweave
-          .crypto.hash(slice, 'SHA-1') }
+          .crypto.hash(new Uint8Array(slice), 'SHA-1') }
 }
 "#,
-      ZeroCopyBuf::from(buf),
+      json!([0]),
       (80, String::from("arweave.net"), String::from("https")),
       never_op::decl(),
       HashMap::new(),
@@ -463,14 +476,13 @@ export async function handle(slice) {
 
   #[tokio::test]
   async fn test_runtime_smartweave_arweave_wallets_ownertoaddress() {
-    let buf: Vec<u8> = vec![0x00];
     let mut rt = Runtime::new(
       r#"
 export async function handle() {
   return { state: await SmartWeave.arweave.wallets.ownerToAddress("kTuBmCmd8dbEiq4zbEPx0laVMEbgXNQ1KBUYqg3TWpLDokkcrZfa04hxYWVLZMnXH2PRSCjvCi5YVu3TG27kl29eMs-CJ-D97WyfvEZwZ7V4EDLS1uqiOrfnkBxXDfJwMI7pdGWg0JYwhsqePB8A9WfIfjrWXiGkleAAtU-dLc8Q3QYIbUBa_rNrvC_AwhXhoKUNq5gaKAdB5xQBfHJg8vMFaTsbGOxIH8v7gJyz7gc9JQf0F42ByWPmhIsm4bIHs7eGPgtUKASNBmWIgs8blP7AmbzyJp4bx_AOQ4KOCei25Smw2-UAZehCGibl50i-blv5ldpGhcKDBC7ukjZpOY99V0mdDynbQBi606DdTWGJSXGNkvpwYnLh53VOE3uX0zuxNnRlwA9BN_VisWMrQwk_KnB0Fz0qGlJsXNQEWb_TEaf6eWLcSIUZUUC9o0L6J6mI9hiJjf_sisiR6AsWF4UoA-snWsFNzgPdkeOHW_biJMep6DOnWX8lmh8meDGMi1XOxJ4hJAawD7uS3A8jL7Kn7eYtiQ7bnZG69WtBueyOQh78yStMvoKz6awzBt1IaTBUG9_CHrEy_Tx6aQZu1c2D_nZonTd0pV2ljC7E642VtOWsRFL78-1xF6P0FD4eWh6HoDpD05_3oUBrAdusLMkn8Gm5tl0wIwMrLF58FYk") }
 }
 "#,
-      ZeroCopyBuf::from(buf),
+      json!([0]),
       (80, String::from("arweave.net"), String::from("https")),
       never_op::decl(),
       HashMap::new(),
@@ -486,7 +498,6 @@ export async function handle() {
 
   #[tokio::test]
   async fn test_runtime_smartweave_crypto_sign() {
-    let buf: Vec<u8> = vec![0x00];
     let mut rt = Runtime::new(
       r#"
 export async function handle(slice) {
@@ -513,7 +524,7 @@ export async function handle(slice) {
   }
 }
 "#,
-      ZeroCopyBuf::from(buf),
+      json!([0]),
       (80, String::from("arweave.net"), String::from("https")),
       never_op::decl(),
       HashMap::new(),
@@ -529,7 +540,6 @@ export async function handle(slice) {
 
   #[tokio::test]
   async fn test_runtime_date() {
-    let buf: Vec<u8> = vec![0x00];
     let mut executor_settings: HashMap<String, Value> = HashMap::new();
     executor_settings.insert(
       String::from("TX_DATE"),
@@ -551,7 +561,7 @@ export async function handle(slice) {
   }
 }
 "#,
-      ZeroCopyBuf::from(buf),
+      json!([0]),
       (80, String::from("arweave.net"), String::from("https")),
       never_op::decl(),
       executor_settings,
@@ -567,7 +577,6 @@ export async function handle(slice) {
 
   #[tokio::test]
   async fn test_runtime_vanilla_date() {
-    let buf: Vec<u8> = vec![0x00];
     let mut executor_settings: HashMap<String, Value> = HashMap::new();
     let mut rt = Runtime::new(
       r#"
@@ -581,7 +590,7 @@ export async function handle(slice) {
   }
 }
 "#,
-      ZeroCopyBuf::from(buf),
+      json!([0]),
       (80, String::from("arweave.net"), String::from("https")),
       never_op::decl(),
       executor_settings,
@@ -743,7 +752,7 @@ export async function handle() {
   export async function handle(size) {
     const u8 = new Uint8Array(size);
     await crypto.getRandomValues(u8);
-    return { state: u8 };
+    return { state: Object.values(u8) };
   }
   "#,
       8,
@@ -1039,11 +1048,49 @@ export async function handle() {
       .expect("Expected CallResult");
 
     match result {
-      CallResult::Result(value) => {
+      CallResult::Result(value, state_updated) => {
         let scope = &mut rt.scope();
         let local = v8::Local::new(scope, value);
         let value: String = deno_core::serde_v8::from_v8(scope, local).unwrap();
         assert_eq!(value, "Hello, World!".to_string());
+        assert_eq!(state_updated, false);
+      }
+      CallResult::Evolve(evolve) => panic!(
+        "Expected CallResult::Result, got CallResult::Evolve({})",
+        evolve
+      ),
+    }
+  }
+
+  #[tokio::test]
+  async fn test_contract_state_updated() {
+    let mut rt = Runtime::new(
+      r#"
+export async function handle() {
+  return { result: "Hello, World!", state: 1230 };
+}"#,
+      (),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      HashMap::new(),
+      None,
+    )
+    .await
+    .unwrap();
+
+    let result = rt
+      .call((), None)
+      .await
+      .unwrap()
+      .expect("Expected CallResult");
+
+    match result {
+      CallResult::Result(value, state_updated) => {
+        let scope = &mut rt.scope();
+        let local = v8::Local::new(scope, value);
+        let value: String = deno_core::serde_v8::from_v8(scope, local).unwrap();
+        assert_eq!(value, "Hello, World!".to_string());
+        assert_eq!(state_updated, true);
       }
       CallResult::Evolve(evolve) => panic!(
         "Expected CallResult::Result, got CallResult::Evolve({})",

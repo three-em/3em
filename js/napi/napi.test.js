@@ -3,7 +3,7 @@ const {SimulateContractType} = require("./index");
 
 describe("NAPI test", () => {
 
-  jest.setTimeout(10000);
+  jest.setTimeout(25000);
 
   test("Test contract", async () => {
     const run = await executeContract("t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE");
@@ -91,5 +91,45 @@ export async function handle(state, action) {
     });
     expect(simulate.state.users).toEqual([{ username: "Andres" }]);
     expect(simulate.result).toEqual("Hello World");
+    expect(simulate.updated).toBeTruthy();
+  });
+
+  test("Simulate contract, manual source, not state just result", async () => {
+    const buffer = new TextEncoder().encode(`
+    /**
+ *
+ * @param state is the current state your application holds
+ * @param action is an object containing { input, caller } . Most of the times you will only use \`action.input\` which contains the input passed as a write operation
+ * @returns {Promise<{ users: Array<{ username: string}> }>}
+ */
+export async function handle(state, action) {
+    return { result: 'Hello World' };
+}
+    `);
+
+    const simulate = await simulateContract({
+      contractId: "",
+      maybeContractSource: {
+        contractType: SimulateContractType.JAVASCRIPT,
+        contractSrc: buffer
+      },
+      interactions: [{
+        id: "ABCD",
+        owner: "2asdaskdsapdk012",
+        quantity: "1000",
+        reward: "203123921",
+        target: "none",
+        tags: [],
+        input: JSON.stringify({
+          username: "Andres"
+        })
+      }],
+      contractInitState: JSON.stringify({
+            users: []
+          }
+      )
+    });
+    expect(simulate.result).toEqual("Hello World");
+    expect(simulate.updated).toBeFalsy();
   });
 })

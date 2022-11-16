@@ -4,12 +4,14 @@
     const urlPattern = window.__bootstrap.urlPattern;
     const headers = window.__bootstrap.headers;
     const streams = window.__bootstrap.streams;
+    const structuredClone = window.__bootstrap.structuredClone;
 
     window.ReadableStream = streams.ReadableStream;
     window.Headers = headers.Headers;
     window.URL = url.URL;
     window.URLPattern = urlPattern.URLPattern;
     window.URLSearchParams = url.URLSearchParams;
+    window.structuredClone = structuredClone;
 
     const { subtle } = crypto;
     const fetchOp = window.__bootstrap.fetch;
