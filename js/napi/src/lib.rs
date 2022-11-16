@@ -325,25 +325,25 @@ mod tests {
     get_cache();
   }
 
-  #[tokio::test]
-  pub async fn test_execute_contract() {
-    let contract = execute_contract(
-      String::from("yAovBvlYWiIBx6i7hPSo2f5hNJpG6Wdq4eDyiudm1_M"),
-      None,
-      Some(ExecuteConfig {
-        host: String::from("www.arweave.run"),
-        port: 443,
-        protocol: String::from("https"),
-      }),
-    )
-    .await;
-    let contract_result = contract.unwrap().state;
-    println!("{}", contract_result);
-    assert_eq!(
-      contract_result.get("name").unwrap().as_str().unwrap(),
-      "VERTO"
-    );
-  }
+  // #[tokio::test]
+  // pub async fn test_execute_contract() {
+  //   let contract = execute_contract(
+  //     String::from("yAovBvlYWiIBx6i7hPSo2f5hNJpG6Wdq4eDyiudm1_M"),
+  //     None,
+  //     Some(ExecuteConfig {
+  //       host: String::from("www.arweave.run"),
+  //       port: 443,
+  //       protocol: String::from("https"),
+  //     }),
+  //   )
+  //   .await;
+  //   let contract_result = contract.unwrap().state;
+  //   println!("{}", contract_result);
+  //   assert_eq!(
+  //     contract_result.get("name").unwrap().as_str().unwrap(),
+  //     "VERTO"
+  //   );
+  // }
 
   #[tokio::test]
   pub async fn simulate_contract_test() {
