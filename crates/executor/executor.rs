@@ -200,9 +200,14 @@ pub async fn raw_execute_contract<
 
         let mut latest_result: Option<Value> = None;
 
+        // let mut i = 0;
         for interaction in interactions {
           let tx = interaction.node;
-
+          // i = i + 1;
+          // if i >= 1029 {
+          //   continue;
+          // }
+          // println!("{} {}", &tx.id, i);
           let input = get_input_from_interaction(&tx);
 
           // TODO: has_multiple_interactions
