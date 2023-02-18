@@ -113,7 +113,7 @@ impl Runtime {
       true
     });
 
-    let params = v8::CreateParams::default().heap_limits(0, 5 << 20);
+    let params = v8::CreateParams::default().heap_limits(0, 200 << 20);
     let mut rt = JsRuntime::new(RuntimeOptions {
       extensions: vec![
         deno_webidl::init(),
@@ -145,6 +145,7 @@ impl Runtime {
 
     let state_clone = state.clone();
     rt.add_near_heap_limit_callback(move |curr, _| {
+      println!("Heap limit reached");
       let terminated = handle.terminate_execution();
       assert!(terminated);
 
