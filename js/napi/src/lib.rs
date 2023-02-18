@@ -26,7 +26,7 @@ pub struct ExecuteContractResult {
   pub result: serde_json::Value,
   pub validity: HashMap<String, serde_json::Value>,
   pub exm_context: serde_json::Value,
-  pub updated: bool
+  pub updated: bool,
 }
 
 #[napi(object)]
@@ -148,7 +148,7 @@ fn get_result(
           result,
           validity: validity_to_hashmap(validity),
           exm_context: serde_json::to_value(exm_context).unwrap(),
-          updated: data.updated
+          updated: data.updated,
         })
       }
       ExecuteResult::Evm(..) => todo!(),
