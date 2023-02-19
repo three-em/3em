@@ -532,10 +532,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@napi-rs/cli@^2.0.0":
-  "integrity" "sha512-+yCOuPqernvD8BMphbadF87ElaJ0rjanOZrbnauaEdR07YyoalGw3FTk15HHyflIwQKlYd69gkG5EM4WFkICKw=="
-  "resolved" "https://registry.npmjs.org/@napi-rs/cli/-/cli-2.4.2.tgz"
-  "version" "2.4.2"
+"@napi-rs/cli@^2.14.8":
+  "integrity" "sha512-IvA3s8BqohMdUbOkFn7+23u1dhIJZCkA8Xps7DD4SLdCMbcbUF6MUuKiqxuqmVHBFTaxU25sU56WdX3efqGgPw=="
+  "resolved" "https://registry.npmjs.org/@napi-rs/cli/-/cli-2.14.8.tgz"
+  "version" "2.14.8"
 
 "@sinclair/typebox@^0.23.3":
   "integrity" "sha512-AFBVi/iT4g20DHoujvMH1aEDn8fGJh4xsRGCP6d8RpLPMqsNPvW01Jcn0QysXTsg++/xj25NmJsGyH9xug/wKg=="
