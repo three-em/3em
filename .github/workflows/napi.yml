@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-20.04, windows-latest, macos-latest]
         node: [14, 16]
         include:
           - os: macos-latest
@@ -52,10 +52,6 @@ jobs:
           cache-dependency-path: js/napi/yarn.lock
 
       - uses: dtolnay/rust-toolchain@stable
-
-      - name: Setup GCC Libs Linux
-        if: startsWith(matrix.os, 'ubuntu')
-        run: sudo apt install gcc-multilib
 
       - name: Use Rust Cache
         uses: Swatinem/rust-cache@v1
