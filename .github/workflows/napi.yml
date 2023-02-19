@@ -52,7 +52,11 @@ jobs:
           cache-dependency-path: js/napi/yarn.lock
 
       - uses: dtolnay/rust-toolchain@stable
-      
+
+      - name: Setup GCC Libs Linux
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sudo apt install gcc-multilib
+
       - name: Use Rust Cache
         uses: Swatinem/rust-cache@v1
 
