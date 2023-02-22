@@ -113,7 +113,21 @@ impl Runtime {
       true
     });
 
-    let params = v8::CreateParams::default().heap_limits(0, 200 << 20);
+    let heap_default =
+      deno_core::serde_json::Value::String(String::from("200"));
+
+    let heap_mbs = {
+      let heap_limit_mb_value = executor_settings
+        .get("HEAP_LIMIT")
+        .unwrap_or_else(|| &heap_default);
+
+      let heap_limit_mb = heap_limit_mb_value.as_str().unwrap();
+      let heap_limit_usize: usize = heap_limit_mb.parse().unwrap();
+      heap_limit_usize
+    };
+
+    let params =
+      v8::CreateParams::default().heap_limits(0, heap_mbs.clone() << 20);
     let mut rt = JsRuntime::new(RuntimeOptions {
       extensions: vec![
         deno_webidl::init(),
@@ -150,7 +164,7 @@ impl Runtime {
       assert!(terminated);
 
       *state_clone.borrow_mut() = HeapLimitState::Exceeded(curr);
-      (curr + 200) << 20
+      (curr + heap_mbs.clone()) << 20
     });
     /// TODO: rt.sync_ops_cache();
     let global =
@@ -831,36 +845,84 @@ export async function handle() {
     assert_eq!(exists, true);
   }
 
-  // #[tokio::test]
-  // async fn test_deterministic_allocation_failure() {
-  //   let mut rt = Runtime::new(
-  //       r#"
-  // export async function handle() {
-  //   return { state: "Hello, World!".repeat(1024 * 1024 * 100).split("").reverse().join("") };
-  // }
-  // "#,
-  // (),
-  //       (80, String::from("arweave.net"), String::from("https")),
-  //       never_op::decl(),
-  //       HashMap::new(),
-  //     None
-  //     )
-  //     .await
-  //     .unwrap();
-  //
-  //   let err = rt
-  //     .call((), None)
-  //     .await
-  //     .unwrap_err()
-  //     .downcast::<Error>()
-  //     .unwrap();
-  //   assert_eq!(err, Error::Terminated);
-  //
-  //   match rt.state() {
-  //     HeapLimitState::Exceeded(_current) => {}
-  //     _ => panic!("Expected heap limit to be exceeded"),
-  //   }
-  // }
+  #[tokio::test]
+  async fn test_deterministic_allocation_failure() {
+    let mut executor_settings = HashMap::new();
+    executor_settings.insert(
+      String::from("HEAP_LIMIT"),
+      deno_core::serde_json::Value::String(String::from(r#"5"#)),
+    );
+    let mut rt = Runtime::new(
+        r#"
+  export async function handle() {
+    return { state: "Hello, World!".repeat(1024 * 1024 * 5).split("").reverse().join("") };
+  }
+  "#,
+  (),
+        (80, String::from("arweave.net"), String::from("https")),
+        never_op::decl(),
+        executor_settings,
+      None
+      )
+      .await
+      .unwrap();
+
+    let mut s = v8::HeapStatistics::default();
+    rt.rt.handle_scope().get_heap_statistics(&mut s);
+    println!(
+      "{} {} {}",
+      s.heap_size_limit(),
+      s.total_heap_size(),
+      s.used_heap_size()
+    );
+    assert_eq!(s.heap_size_limit(), 5 << 20);
+
+    let err = rt
+      .call((), None)
+      .await
+      .unwrap_err()
+      .downcast::<Error>()
+      .unwrap();
+    assert_eq!(err, Error::Terminated);
+
+    match rt.state() {
+      HeapLimitState::Exceeded(_current) => {}
+      _ => panic!("Expected heap limit to be exceeded"),
+    }
+  }
+
+  #[tokio::test]
+  async fn test_deterministic_alloc_default() {
+    let mut executor_settings: HashMap<String, Value> = HashMap::new();
+    executor_settings.insert(
+      String::from("EXM"),
+      deno_core::serde_json::Value::Bool(true),
+    );
+    let mut rt = Runtime::new(
+      r#"
+export async function handle(slice) {
+  try {
+    return {
+      state: "Something"
+    }
+  } catch(e) {
+    return { state: e.stack }
+  }
+}
+"#,
+      json!([0]),
+      (80, String::from("arweave.net"), String::from("https")),
+      never_op::decl(),
+      executor_settings,
+      None,
+    )
+    .await
+    .unwrap();
+
+    let mut s = v8::HeapStatistics::default();
+    rt.rt.handle_scope().get_heap_statistics(&mut s);
+    assert_eq!(s.heap_size_limit(), 200 << 20);
+  }
 
   #[tokio::test]
   async fn test_contract_evolve() {

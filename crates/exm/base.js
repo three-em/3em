@@ -120,6 +120,21 @@
             return new Date(Number(Deno.core.opSync("op_get_executor_settings", "TX_DATE") || "1317830400000"));
         }
 
+        print(data) {
+
+            let toPrint = '';
+            if(typeof data === 'undefined') {
+                toPrint = 'undefined';
+            } else if(data === null) {
+                toPrint = 'null';
+            } else {
+                toPrint = data.toString();
+            }
+
+
+            Deno.core.opSync("op_exm_write_to_console", toPrint);
+        }
+
         async deterministicFetch(...args) {
             const jsonArgs = JSON.stringify(args);
             const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));

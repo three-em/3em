@@ -47,7 +47,10 @@ pub fn init(executor_settings: HashMap<String, Value>) -> Extension {
       prefix "3em:baseops",
       "base.js",
     ))
-    .ops(vec![op_get_executor_settings::decl()])
+    .ops(vec![
+      op_get_executor_settings::decl(),
+      op_exm_write_to_console::decl(),
+    ])
     .state(move |state| {
       state.put(ExecutorSettings {
         settings: executor_settings.clone(),
@@ -70,4 +73,9 @@ pub fn op_get_executor_settings(
   } else {
     Ok(Value::Null)
   }
+}
+
+#[op]
+pub fn op_exm_write_to_console(_: &mut OpState, content: String, _: ()) {
+  println!("{}", content);
 }

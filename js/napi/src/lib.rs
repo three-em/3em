@@ -465,4 +465,42 @@ mod tests {
     assert_eq!(contract.result.as_str().unwrap(), "Hello World");
     assert_eq!(contract.updated, true);
   }
+
+  #[tokio::test]
+  pub async fn simulate_contract_ans() {
+    let contract_source_bytes =
+      include_bytes!("../../../testdata/contracts/ans.js");
+    let contract_source_vec = contract_source_bytes.to_vec();
+    let execution_context: SimulateExecutionContext =
+          SimulateExecutionContext {
+              contract_id: String::new(),
+              interactions: vec![SimulateInput {
+                  id: String::from("abcd"),
+                  owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+                  quantity: String::from("12301"),
+                  reward: String::from("12931293"),
+                  target: None,
+                  tags: vec![],
+                  block: None,
+                  input: serde_json::json!({"jwk_n":"iwLlbpT6b7rYOV6aJTTeSD5wXdqZYwYBGphdOclGeftR3wJcLp5OzWrQqexbfpvi-CBkxz0yroX4Of9Ikv_qoakIoz1qQsQztD2UR2MI6SAvbGPn8swKL7QId2OtyRtOJ3TAEuULt1lpA0nj67dOKNq-2HyhDyuCaZ6TTC2Luk5QUrqWKs9ix8xBNM_O20lmRGgDsrhNtTMca2tnkCk4JffGrEDVsF6iRM4Ls_KOcrAJlsrpSypi2M7O4rQkcyWaBerXomtkj4I5KBXnr5J9_sdLS-2esAHzpArNA2gnYi8aqtlJgSYWAX9TTItqjszK6kIIBlPJCMn7K1a4p2kJilJpOsPY9VFaPP5B5_ie2V87_6xpqgmMMjBzc2zS9MBkg55JP-sImXBMJQAvL89muSYIDAdqh8Z6dIEiwIGnnWHCbZKsPjkDV3Cmx1br4zx73Kp6fYD7lTNuFriKcRo7z7rcfdE5qJ-pamSpXZhEo1q4J08ZihOuA1LrvDuLrTwVMam_r0E5WJKHg28w2LD7pMgSUb7vhbMLTNSLMcvC19Tip2bBosfmX79tPoW0UQ5lUx1IykdIuARp6LTV5g8nESnxoAnRiBEQgJffXuMhnDbLu6lW_aoYRWM_uwGEu2So4a584mCc0ziNKb9ZfvmLxWS4M1NJd6Lnt9hHTkBxq-8","sig":"GZ0vreib6rUv/rG488ZdzFtIFiLWes2gptzRlX1p4fBebORurdShCPtQWvgXn3J9wTncnveuDLO2nK57gcliwqXYxSetWoJnyn5y4KeKWU3+zA+QUKoMntOu66XY3SF09taUMAfpDi73wOtBbN2vo+SR3NVjsxx3ibit2zannAOOf49CZABH6B2EujaVklv1pczfAzrVQPVU1z+XpGb7O1ydv380vc/gWT3yBduIjZLCvD3d8BK+6x3kLji8NsnqfFDTPCSVR11mZwedUGEVvG1ONYmxt7y8a5RZLWbdI2GeUroeOuimsUBqzPVORZ0ZH9vzpQ1lbHORYEvbpmq0wVn8w+kA5s9Z03S15y86ZX1260PangBLCOTUi8gZneKdByUkp18rl37XeH2CdBlkRrANdJZH/X3g0WUOkYEqSaVkw9zXO+a/sUmoDVGW6cqmdxN0ltJpLNd98nuDCHbS0FIIa9ksNwsQlnK5V/tZP+9Skw/lCBip6R8HKoRZhLuAsmh6k0eOKUFXJ7Objf40/+GvUGyNDJRxwtIvzQkTdALKNRDKNhhS4Kk8RH0ZhUIOhQHufg3HNaO3HmZeIOuo4pIOe1rma6oE4kiB8o7Je59I05d9PYIBgx619qMIWrRnc9z3sm/oPZvTNeLEL1G+46UVLe5MPkYpcXuQBzNe8ps=","txid":"0x7d07008ae820b889ad406142e5043dfd8d9ba6d9723fbef78a4c69ed294a65eb","mint_domain":"wearemintingyes", "function": "mint"})
+                          .to_string(),
+                }],
+              contract_init_state: Some(String::from(include_str!("../../../testdata/contracts/ans.json"))),
+              maybe_config: None,
+              maybe_cache: Some(false),
+              maybe_bundled_contract: None,
+              maybe_settings: None,
+              maybe_exm_context: None,
+              maybe_contract_source: Some(ContractSource {
+                  contract_src: contract_source_vec.into(),
+                  contract_type: SimulateContractType::JAVASCRIPT,
+                }),
+            };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
+
+    let contract_result = contract.state;
+    let str_state = contract_result.to_string();
+    assert!(str_state.contains("wearemintingyes"));
+  }
 }
