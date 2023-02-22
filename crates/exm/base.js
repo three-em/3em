@@ -127,6 +127,8 @@
                 toPrint = 'undefined';
             } else if(data === null) {
                 toPrint = 'null';
+            } else if(typeof data === 'object') {
+                toPrint = JSON.stringify(data);
             } else {
                 toPrint = data.toString();
             }
