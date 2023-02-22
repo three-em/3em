@@ -37,6 +37,7 @@ pub struct V8Result {
   pub validity: ValidityTable,
   pub context: ExmContext,
   pub updated: bool,
+  pub errors: HashMap<String, String>
 }
 
 #[derive(Clone)]
@@ -202,6 +203,8 @@ pub async fn raw_execute_contract<
 
         let mut latest_result: Option<Value> = None;
 
+        let mut errors: HashMap<String, String> = HashMap::new();
+
         // let mut i = 0;
         for interaction in interactions {
           let tx = interaction.node;
@@ -274,6 +277,11 @@ pub async fn raw_execute_contract<
                   serde_json::Value::Bool(true)
                 }
                 Err(err) => {
+
+                  let err_str = err.to_string();
+
+                  errors.insert(tx.id.clone(), err_str.clone());
+
                   latest_result = None;
 
                   if show_errors {
@@ -281,7 +289,7 @@ pub async fn raw_execute_contract<
                   }
 
                   if show_errors {
-                    serde_json::Value::String(err.to_string())
+                    serde_json::Value::String(err_str)
                   } else {
                     serde_json::Value::Bool(false)
                   }
@@ -313,6 +321,7 @@ pub async fn raw_execute_contract<
           validity,
           context: exm_context,
           updated: is_state_updated,
+          errors
         })
       } else {
         on_cached(validity, cache_state)
@@ -393,6 +402,7 @@ pub async fn raw_execute_contract<
           context: Default::default(),
           result: None,
           updated: false,
+          errors: HashMap::new()
         })
       } else {
         on_cached(validity, cache_state)
