@@ -37,6 +37,7 @@ pub struct V8Result {
   pub validity: ValidityTable,
   pub context: ExmContext,
   pub updated: bool,
+  pub errors: HashMap<String, String>,
 }
 
 #[derive(Clone)]
@@ -202,6 +203,8 @@ pub async fn raw_execute_contract<
 
         let mut latest_result: Option<Value> = None;
 
+        let mut errors: HashMap<String, String> = HashMap::new();
+
         // let mut i = 0;
         for interaction in interactions {
           let tx = interaction.node;
@@ -274,6 +277,10 @@ pub async fn raw_execute_contract<
                   serde_json::Value::Bool(true)
                 }
                 Err(err) => {
+                  let err_str = err.to_string();
+
+                  errors.insert(tx.id.clone(), err_str.clone());
+
                   latest_result = None;
 
                   if show_errors {
@@ -281,7 +288,7 @@ pub async fn raw_execute_contract<
                   }
 
                   if show_errors {
-                    serde_json::Value::String(err.to_string())
+                    serde_json::Value::String(err_str)
                   } else {
                     serde_json::Value::Bool(false)
                   }
@@ -313,6 +320,7 @@ pub async fn raw_execute_contract<
           validity,
           context: exm_context,
           updated: is_state_updated,
+          errors,
         })
       } else {
         on_cached(validity, cache_state)
@@ -393,6 +401,7 @@ pub async fn raw_execute_contract<
           context: Default::default(),
           result: None,
           updated: false,
+          errors: HashMap::new(),
         })
       } else {
         on_cached(validity, cache_state)
@@ -546,6 +555,77 @@ mod tests {
         result.state,
         serde_json::json!({"txId":"tx1123123123123123123213213123","txOwner":"SUPERMAN1293120","txTarget":"RECIPIENT1234","txQuantity":"100","txReward":"100","txTags":[{"name":"Input","value":"{}"},{"name":"MyTag","value":"Christpoher Nolan is awesome"}],"txHeight":2,"txIndepHash":"ABCD-EFG","txTimestamp":12301239,"winstonToAr":true,"arToWinston":true,"compareArWinston":1})
       );
+    } else {
+      panic!("Unexpected entry");
+    }
+  }
+
+  #[tokio::test]
+  async fn test_error_logs() {
+    let init_state = serde_json::json!({
+      "counts": 0
+    });
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/counter_error.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1123123123123123123213213123",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+      Some(String::from("SUPERMAN1293120")),
+      Some(String::from("RECIPIENT1234")),
+      Some(GQLTagInterface {
+        name: String::from("MyTag"),
+        value: String::from("Christpoher Nolan is awesome"),
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(12301239),
+    );
+
+    let fake_interactions_2 = vec![transaction1.clone(), transaction1.clone()];
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract.clone(),
+      fake_interactions_2,
+      IndexMap::new(),
+      None,
+      true,
+      false,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+      HashMap::new(),
+      None,
+    )
+    .await;
+
+    if let ExecuteResult::V8(result) = result {
+      assert_eq!(result.errors.len(), 1);
+      assert!(result
+        .errors
+        .get("tx1123123123123123123213213123")
+        .unwrap()
+        .as_str()
+        .contains("An error has been thrown"));
     } else {
       panic!("Unexpected entry");
     }
