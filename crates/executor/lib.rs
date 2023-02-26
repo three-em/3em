@@ -95,7 +95,7 @@ pub async fn simulate_contract(
           context: Default::default(),
           result: None,
           updated: true,
-          errors: HashMap::new()
+          errors: HashMap::new(),
         })
       },
       arweave,
@@ -211,7 +211,7 @@ pub async fn execute_contract(
         context: Default::default(),
         result: None,
         updated: false,
-        errors: HashMap::new()
+        errors: HashMap::new(),
       })
     },
     arweave,

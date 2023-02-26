@@ -37,7 +37,7 @@ pub struct V8Result {
   pub validity: ValidityTable,
   pub context: ExmContext,
   pub updated: bool,
-  pub errors: HashMap<String, String>
+  pub errors: HashMap<String, String>,
 }
 
 #[derive(Clone)]
@@ -277,7 +277,6 @@ pub async fn raw_execute_contract<
                   serde_json::Value::Bool(true)
                 }
                 Err(err) => {
-
                   let err_str = err.to_string();
 
                   errors.insert(tx.id.clone(), err_str.clone());
@@ -321,7 +320,7 @@ pub async fn raw_execute_contract<
           validity,
           context: exm_context,
           updated: is_state_updated,
-          errors
+          errors,
         })
       } else {
         on_cached(validity, cache_state)
@@ -402,7 +401,7 @@ pub async fn raw_execute_contract<
           context: Default::default(),
           result: None,
           updated: false,
-          errors: HashMap::new()
+          errors: HashMap::new(),
         })
       } else {
         on_cached(validity, cache_state)
@@ -617,13 +616,16 @@ mod tests {
       HashMap::new(),
       None,
     )
-        .await;
+    .await;
 
     if let ExecuteResult::V8(result) = result {
       assert_eq!(result.errors.len(), 1);
-      assert!(
-        result.errors.get("tx1123123123123123123213213123").unwrap().as_str().contains("An error has been thrown")
-      );
+      assert!(result
+        .errors
+        .get("tx1123123123123123123213213123")
+        .unwrap()
+        .as_str()
+        .contains("An error has been thrown"));
     } else {
       panic!("Unexpected entry");
     }
