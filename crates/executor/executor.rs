@@ -562,6 +562,74 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn test_error_logs() {
+    let init_state = serde_json::json!({
+      "counts": 0
+    });
+
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/contracts/counter_error.js"),
+      ContractType::JAVASCRIPT,
+      init_state.to_string(),
+    );
+
+    let mut transaction1 = generate_fake_interaction(
+      serde_json::json!({}),
+      "tx1123123123123123123213213123",
+      Some(String::from("ABCD-EFG")),
+      Some(2),
+      Some(String::from("SUPERMAN1293120")),
+      Some(String::from("RECIPIENT1234")),
+      Some(GQLTagInterface {
+        name: String::from("MyTag"),
+        value: String::from("Christpoher Nolan is awesome"),
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(GQLAmountInterface {
+        winston: Some(String::from("100")),
+        ar: None,
+      }),
+      Some(12301239),
+    );
+
+    let fake_interactions_2 = vec![transaction1.clone(), transaction1.clone()];
+
+    let result = raw_execute_contract(
+      String::from("10230123021302130"),
+      fake_contract.clone(),
+      fake_interactions_2,
+      IndexMap::new(),
+      None,
+      true,
+      false,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+      HashMap::new(),
+      None,
+    )
+        .await;
+
+    if let ExecuteResult::V8(result) = result {
+      assert_eq!(result.errors.len(), 1);
+      assert!(
+        result.errors.get("tx1123123123123123123213213123").unwrap().as_str().contains("An error has been thrown")
+      );
+    } else {
+      panic!("Unexpected entry");
+    }
+  }
+
+  #[tokio::test]
   async fn test_counter_result_js() {
     let init_state = serde_json::json!({
       "counts": 0
