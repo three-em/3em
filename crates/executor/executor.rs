@@ -531,7 +531,7 @@ mod tests {
       None,
       true,
       false,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(
@@ -599,7 +599,7 @@ mod tests {
       None,
       true,
       false,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(
@@ -671,7 +671,7 @@ mod tests {
       None,
       true,
       false,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(
@@ -703,7 +703,7 @@ mod tests {
       None,
       true,
       false,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(
@@ -767,7 +767,7 @@ mod tests {
       None,
       true,
       true,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(
@@ -860,7 +860,7 @@ mod tests {
         None,
         true,
         false,
-        |_, _| {
+        |_, _, _| {
           panic!("not implemented");
         },
         &Arweave::new(
@@ -970,7 +970,7 @@ mod tests {
       None,
       true,
       false,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(
@@ -1051,7 +1051,7 @@ mod tests {
       None,
       true,
       false,
-      |_, _| {
+      |_, _, _| {
         panic!("not implemented");
       },
       &Arweave::new(

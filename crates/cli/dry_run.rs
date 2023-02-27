@@ -120,7 +120,7 @@ pub async fn dry_run_result(
     None,
     true,
     true,
-    |_, _| panic!("Unimplemented"),
+    |_, _, _| panic!("Unimplemented"),
     &Arweave::new(port, host, protocol, ArweaveCache::new()),
     HashMap::new(),
     None,
