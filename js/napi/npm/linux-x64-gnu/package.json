@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node-linux-x64-gnu",
-  "version": "0.3.18",
+  "version": "0.3.19",
   "os": [
     "linux"
   ],

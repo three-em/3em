@@ -9,6 +9,7 @@ export interface ExecuteContractResult {
   validity: Record<string, any>
   exmContext: any
   updated: boolean
+  errors: Record<string, string>
 }
 export interface ExecuteConfig {
   host: string
