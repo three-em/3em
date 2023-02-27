@@ -88,14 +88,14 @@ pub async fn simulate_contract(
       None,
       true,
       false,
-      |validity_table, cache_state| {
+      |validity_table, cache_state, errors| {
         ExecuteResult::V8(V8Result {
           state: cache_state.unwrap(),
           validity: validity_table,
           context: Default::default(),
           result: None,
           updated: true,
-          errors: HashMap::new(),
+          errors,
         })
       },
       arweave,
@@ -204,14 +204,14 @@ pub async fn execute_contract(
     cache_state,
     needs_processing,
     show_errors,
-    |validity_table, cache_state| {
+    |validity_table, cache_state, errors| {
       ExecuteResult::V8(V8Result {
         state: cache_state.unwrap(),
         validity: validity_table,
         context: Default::default(),
         result: None,
         updated: false,
-        errors: HashMap::new(),
+        errors: errors,
       })
     },
     arweave,

@@ -132,4 +132,52 @@ export async function handle(state, action) {
     expect(simulate.result).toEqual("Hello World");
     expect(simulate.updated).toBeFalsy();
   });
+
+  test("Simulate contract, errors", async () => {
+    const buffer = new TextEncoder().encode(`
+export async function handle(state, action) {
+    state.counts++;
+    let stateObj = { state };
+    if(state.counts > 1) {
+        throw new Error("Ups");
+    }
+    return stateObj;
+}
+
+    `);
+
+    const simulate = await simulateContract({
+      contractId: "",
+      maybeContractSource: {
+        contractType: SimulateContractType.JAVASCRIPT,
+        contractSrc: buffer
+      },
+      interactions: [{
+        id: "ABCD",
+        owner: "2asdaskdsapdk012",
+        quantity: "1000",
+        reward: "203123921",
+        target: "none",
+        tags: [],
+        input: JSON.stringify({
+          username: "Andres"
+        })
+      },{
+        id: "ABCD",
+        owner: "2asdaskdsapdk012",
+        quantity: "1000",
+        reward: "203123921",
+        target: "none",
+        tags: [],
+        input: JSON.stringify({
+          username: "Andres"
+        })
+      }],
+      contractInitState: JSON.stringify({
+            counts: 0
+          }
+      )
+    });
+   expect(simulate.errors["ABCD"]).toContain("Ups")
+  });
 })

@@ -27,6 +27,7 @@ pub struct ExecuteContractResult {
   pub validity: HashMap<String, serde_json::Value>,
   pub exm_context: serde_json::Value,
   pub updated: bool,
+  pub errors: HashMap<String, String>,
 }
 
 #[napi(object)]
@@ -137,11 +138,12 @@ fn get_result(
   if process_result.is_ok() {
     match process_result.unwrap() {
       ExecuteResult::V8(data) => {
-        let (state, result, validity, exm_context) = (
+        let (state, result, validity, exm_context, errors) = (
           data.state,
           data.result.unwrap_or(Value::Null),
           data.validity,
           data.context,
+          data.errors,
         );
         Some(ExecuteContractResult {
           state,
@@ -149,6 +151,7 @@ fn get_result(
           validity: validity_to_hashmap(validity),
           exm_context: serde_json::to_value(exm_context).unwrap(),
           updated: data.updated,
+          errors,
         })
       }
       ExecuteResult::Evm(..) => todo!(),
@@ -376,6 +379,53 @@ mod tests {
     let contract_result = contract.state;
     println!("{}", contract_result);
     assert_eq!(contract_result.get("counter").unwrap(), 2482);
+  }
+
+  #[tokio::test]
+  pub async fn simulate_counter_failure() {
+    let contract_source_bytes =
+      include_bytes!("../../../testdata/contracts/counter_error.js");
+    let contract_source_vec = contract_source_bytes.to_vec();
+    let execution_context: SimulateExecutionContext =
+      SimulateExecutionContext {
+        contract_id: String::new(),
+        interactions: vec![
+          SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({}).to_string(),
+          },
+          SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({}).to_string(),
+          },
+        ],
+        contract_init_state: Some(r#"{"counts": 0}"#.into()),
+        maybe_config: None,
+        maybe_cache: Some(false),
+        maybe_bundled_contract: None,
+        maybe_settings: None,
+        maybe_exm_context: None,
+        maybe_contract_source: Some(ContractSource {
+          contract_src: contract_source_vec.into(),
+          contract_type: SimulateContractType::JAVASCRIPT,
+        }),
+      };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
+
+    assert_eq!(contract.errors.len(), 1);
   }
 
   #[tokio::test]

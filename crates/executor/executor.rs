@@ -29,6 +29,7 @@ use three_em_wasm::WasmRuntime;
 
 pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
+pub type ExecErrors = HashMap<String, String>;
 
 #[derive(Clone)]
 pub struct V8Result {
@@ -157,7 +158,7 @@ pub fn generate_interaction_context(
 
 #[allow(clippy::too_many_arguments)]
 pub async fn raw_execute_contract<
-  CachedCallBack: FnOnce(ValidityTable, CachedState) -> ExecuteResult,
+  CachedCallBack: FnOnce(ValidityTable, CachedState, ExecErrors) -> ExecuteResult,
 >(
   contract_id: String,
   loaded_contract: LoadedContract,
@@ -182,6 +183,7 @@ pub async fn raw_execute_contract<
     },
   );
   let mut is_state_updated = false;
+  let mut errors: HashMap<String, String> = HashMap::new();
 
   match loaded_contract.contract_type {
     ContractType::JAVASCRIPT => {
@@ -203,16 +205,9 @@ pub async fn raw_execute_contract<
 
         let mut latest_result: Option<Value> = None;
 
-        let mut errors: HashMap<String, String> = HashMap::new();
-
         // let mut i = 0;
         for interaction in interactions {
           let tx = interaction.node;
-          // i = i + 1;
-          // if i >= 1029 {
-          //   continue;
-          // }
-          // println!("{} {}", &tx.id, i);
           let input = get_input_from_interaction(&tx);
 
           // TODO: has_multiple_interactions
@@ -323,7 +318,7 @@ pub async fn raw_execute_contract<
           errors,
         })
       } else {
-        on_cached(validity, cache_state)
+        on_cached(validity, cache_state, errors)
       }
     }
     ContractType::WASM => {
@@ -401,10 +396,10 @@ pub async fn raw_execute_contract<
           context: Default::default(),
           result: None,
           updated: false,
-          errors: HashMap::new(),
+          errors: errors,
         })
       } else {
-        on_cached(validity, cache_state)
+        on_cached(validity, cache_state, errors)
       }
     }
     ContractType::EVM => {
