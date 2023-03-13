@@ -147,7 +147,7 @@
             } else {
                 try {
                     if (this.requests[reqHash]) {
-                        return Object.freeze(this.requests[reqHash])
+                        return Object.freeze(BaseReqResponse.from(this.requests[reqHash]))
                     } else {
                         const fetchData = await props.fetch(...args);
                         const buff = await fetchData.arrayBuffer();
