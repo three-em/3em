@@ -1,0 +1,16 @@
+{
+  "containers": [],
+  "molecule_endpoints": {
+    "evm": "http://evm.molecule.sh/signer",
+    "ar": "http://ar.molecule.sh/ota",
+    "sol": "http://sol.molecule.sh/auth",
+    "tez": "http://tez.molecule.sh"
+  },
+  "message_counter": 0,
+  "messages": {
+    "ar": "ark-variant--",
+    "evm": "ark-variant--"
+  },
+  "signatures": []
+
+}

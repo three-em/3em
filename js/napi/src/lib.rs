@@ -553,4 +553,46 @@ mod tests {
     let str_state = contract_result.to_string();
     assert!(str_state.contains("wearemintingyes"));
   }
+
+  #[tokio::test]
+  pub async fn simulate_contract_ark() {
+    let contract_source_bytes =
+        include_bytes!("../../../testdata/contracts/ark.js");
+    let contract_source_vec = contract_source_bytes.to_vec();
+    let execution_context: SimulateExecutionContext =
+        SimulateExecutionContext {
+          contract_id: String::new(),
+          interactions: vec![SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({
+                  "function": "createContainer",
+                  "caller_address": "0x197f818c1313dc58b32d88078ecdfb40ea822614",
+                  "type": "evm",
+                  "label": "test-evm",
+                  "sig": "0x0e8cda3652185efcb9e68cbd932836c46df14dcf3b052931f463f0cd189a0fdd619206accafbb44afc155ce1c629da2eda4370fd71376ad250f28b50711b112b1c"
+                  }).to_string(),
+          }],
+          contract_init_state: Some(String::from(include_str!("../../../testdata/contracts/ark.json"))),
+          maybe_config: None,
+          maybe_cache: Some(false),
+          maybe_bundled_contract: None,
+          maybe_settings: None,
+          maybe_exm_context: None,
+          maybe_contract_source: Some(ContractSource {
+            contract_src: contract_source_vec.into(),
+            contract_type: SimulateContractType::JAVASCRIPT,
+          }),
+        };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
+    assert_eq!(contract.errors.len(), 0);
+    let contract_result = contract.state;
+    let str_state = contract_result.to_string();
+  }
 }
