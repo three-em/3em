@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "author": "Divy Srivastava <dj.srivastava23@gmail.com>",
   "license": "MIT",
   "napi": {
