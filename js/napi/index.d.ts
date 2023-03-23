@@ -52,7 +52,7 @@ export interface SimulateExecutionContext {
   maybeCache?: boolean | undefined | null
   maybeBundledContract?: boolean | undefined | null
   maybeSettings?: Record<string, any> | undefined | null
-  maybeExmContext?: any | undefined | null
+  maybeExmContext?: string | undefined | null
 }
 export function simulateContract(context: SimulateExecutionContext): Promise<ExecuteContractResult>
 export function executeContract(tx: string, maybeHeight?: number | undefined | null, maybeConfig?: ExecuteConfig | undefined | null): Promise<ExecuteContractResult>
