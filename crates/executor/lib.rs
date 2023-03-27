@@ -36,7 +36,7 @@ pub async fn simulate_contract(
   maybe_cache: Option<bool>,
   maybe_bundled_contract: Option<bool>,
   maybe_settings: Option<HashMap<String, deno_core::serde_json::Value>>,
-  maybe_exm_context: Option<deno_core::serde_json::Value>,
+  maybe_exm_context_str: Option<String>,
   maybe_contract_source: Option<ManualLoadedContract>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
@@ -80,6 +80,14 @@ pub async fn simulate_contract(
   );
 
   if loaded_contract.is_ok() {
+    let maybe_exm_context = {
+      if let Some(context_str) = maybe_exm_context_str {
+        Some(deno_core::serde_json::from_str(&context_str[..]).unwrap())
+      } else {
+        None
+      }
+    };
+
     let execute = raw_execute_contract(
       contract_id,
       loaded_contract.unwrap(),
