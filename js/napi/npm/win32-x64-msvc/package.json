@@ -1,6 +1,6 @@
 {
   "name": "@three-em/node-win32-x64-msvc",
-  "version": "0.3.22",
+  "version": "0.3.23",
   "os": [
     "win32"
   ],
