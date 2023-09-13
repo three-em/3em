@@ -22,10 +22,12 @@ pub async fn run(
   no_cache: bool,
   show_errors: bool,
 ) -> Result<(), AnyError> {
+  // Create a new Arweave Object with a new cache
   let arweave = Arweave::new(port, host, protocol, ArweaveCache::new());
   let start = std::time::Instant::now();
 
-  let execution =
+  //Run contract based on contract id - this is only a runtime so no input is sent here
+  let execution: ExecuteResult =
     execute_contract(tx, height, !no_cache, show_errors, None, None, &arweave)
       .await?;
 
@@ -39,7 +41,7 @@ pub async fn run(
       let state = data.state;
       let validity_table = data.validity;
       let result = data.result.unwrap_or(serde_json::Value::Null);
-
+      // return state and result when endpoint is reached. 
       let value = if show_validity {
         serde_json::json!({
             "state": state,

@@ -1,3 +1,18 @@
+/**
+ * 
+ * @Purpose: Parse cmd arguments so main.rs has data to execute other libs.
+ *           Parse Command Arguments and determine whether cmd is 'Run', 'DryRun' or 'Serve'.
+ *           Upon Match, grab the rest of the data from 'pargs' and feed it into the 'Flags' enum.
+ *           ParseResult enum which houses the Flags enum is then returned inside Ok()
+ * 
+ * @Note: Code to understand right away
+ * `subcommand()` - grabs first argument in cmd i.e. 'Run', 'DryRun' or 'Serve'
+ * `opt_value_from_str(key)` - sees if an optional key was provided & extracts value, ex. [--height, 42] -> 42
+ * `unwrap_or_else()` - extract value or do something else, ex. Option<String> becomes String
+ * `as_deref()` - converts an Option<String> into Option<&str> so we can borrow and not clone any values, more efficient.
+ * 
+ */
+
 use crate::print_help::print_help;
 use pico_args::Arguments;
 use std::ops::Deref;
@@ -50,20 +65,26 @@ fn parse_node_limit(
 }
 
 pub fn parse() -> Result<ParseResult, pico_args::Error> {
-  let mut pargs = Arguments::from_env();
-  let is_help = pargs.contains("--help");
+  let mut pargs = Arguments::from_env();   //Ex. -> Arguments(["arg1", "arg2", "arg3"])
+  let is_help = pargs.contains("--help");  //Checks if user entered help flag
 
+  /**
+   * subcommand -> Ok(Some("arg1")) grabs first argument
+   * as_deref -> Peels back the Ok() wrapper so its Some("arg1")
+   * unwrap_or -> Peels back <Some> or panics
+   * to_string -> Converts back to mutable string
+   */
   let cmd = pargs
     .subcommand()?
     .as_deref()
     .unwrap_or("Unknown")
     .to_string();
 
-  if is_help {
+  if is_help { //Store cmd with --help flag inside Help struct
     Ok(ParseResult::Help {
       cmd: String::from(cmd),
     })
-  } else {
+  } else { //CHECK IF subcommand was dry-run, run or serve
     #[allow(clippy::wildcard_in_or_patterns)]
     let flags = match cmd.deref() {
       "dry-run" => ParseResult::Known {

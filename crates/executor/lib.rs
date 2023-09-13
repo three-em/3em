@@ -22,7 +22,23 @@ use three_em_arweave::gql_result::GQLNodeInterface;
 use three_em_arweave::miscellaneous::get_sort_key;
 use three_em_evm::Instruction;
 use three_em_evm::U256;
-
+/**
+ * @Purpose - Enables execution of contracts
+ * 
+ * Questions.
+ * what is interactions and maybe exm context
+ * 
+ * elaborate on the loaded contract with tokio::join
+ * 
+ * what does raw_execute_contract call exactly? Is this the final step that will really simulate a contract
+ * 
+ * how is execute contract different from simulate_contract and why does mem-core rely on simulate_contract instead. 
+ * 
+ * Which crates matter in 3em to cover anything and everythng arweave, not EVM
+ * 
+ * Biggest take home here is to how to grab this data base and test out each piece of the code. 
+ * 
+ */
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));
 
@@ -40,6 +56,17 @@ pub async fn simulate_contract(
   maybe_contract_source: Option<ManualLoadedContract>,
 ) -> Result<ExecuteResult, AnyError> {
   let shared_id = contract_id.clone();
+  /**
+   * Two Options
+   * if contract source provided
+   *    Load contract type and source
+   * else
+   *    load_contract based on contract id
+   * return
+   *    loaded contract 
+   *
+   */
+  // There is no reason to join - you join here to run async tasks concurrently.
   let loaded_contract = tokio::join!(async move {
     if let Some(contract_source) = maybe_contract_source {
       let contract = LoadedContract {
@@ -68,6 +95,7 @@ pub async fn simulate_contract(
   })
   .0;
 
+  // Grab user defined settings, else create new hashmap
   let mut settings: HashMap<String, deno_core::serde_json::Value> =
     maybe_settings.unwrap_or_else(|| HashMap::new());
   settings.insert(
@@ -79,10 +107,16 @@ pub async fn simulate_contract(
     deno_core::serde_json::Value::Bool(true),
   );
 
+  /**
+   * 
+   * maybe_exm_context_str != None, save it
+   * 
+   * 
+   */
   if loaded_contract.is_ok() {
     let maybe_exm_context = {
       if let Some(context_str) = maybe_exm_context_str {
-        Some(deno_core::serde_json::from_str(&context_str[..]).unwrap())
+        Some(deno_core::serde_json::from_str(&context_str[..]).unwrap()) //convert the context_str into JSON
       } else {
         None
       }
@@ -128,13 +162,17 @@ pub async fn execute_contract(
   contract_content_type: Option<String>,
   arweave: &Arweave,
 ) -> Result<ExecuteResult, AnyError> {
+  // Need to see how getting contract_id from LRU_CACHE yields result variable
   if let Some(result) = LRU_CACHE.lock().unwrap().get(&contract_id) {
     return Ok(result.clone());
   }
 
+  // Two copies bc we have to pass ownership to the functions below
   let contract_id_copy = contract_id.to_owned();
   let contract_id_copy2 = contract_id.to_owned();
   let shared_id = contract_id.clone();
+  // tokio::join behaves like Promise.all
+  // each async move will return a piece of the tuple (loaded_contract, interactions)
   let (loaded_contract, interactions) = tokio::join!(
     async move {
       let contract: Result<LoadedContract, AnyError> = arweave

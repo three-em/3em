@@ -339,6 +339,25 @@
       return new Contracts();
     }
 
+    get kv() { //place the get and and del commands here 
+      const isLazyEvaluated = Deno.core.opSync("op_get_executor_settings", "LAZY_EVALUATION");
+      return {
+        put(key, value) {
+          if(isLazyEvaluated) {
+            return;
+          } else {
+            globalThis.EXM.putKv(key, value);
+          }
+        },
+        get(key) {
+            return globalThis.EXM.getKv(key);
+        },
+        del(key) {
+          globalThis.EXM.delKv(key);
+        }
+      };
+    }
+
     get unsafeClient() {
       const txGetData = async (txId, opts) => {
         try {
