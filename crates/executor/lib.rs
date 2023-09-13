@@ -24,20 +24,20 @@ use three_em_evm::Instruction;
 use three_em_evm::U256;
 /**
  * @Purpose - Enables execution of contracts
- * 
+ *
  * Questions.
  * what is interactions and maybe exm context
- * 
+ *
  * elaborate on the loaded contract with tokio::join
- * 
+ *
  * what does raw_execute_contract call exactly? Is this the final step that will really simulate a contract
- * 
- * how is execute contract different from simulate_contract and why does mem-core rely on simulate_contract instead. 
- * 
+ *
+ * how is execute contract different from simulate_contract and why does mem-core rely on simulate_contract instead.
+ *
  * Which crates matter in 3em to cover anything and everythng arweave, not EVM
- * 
- * Biggest take home here is to how to grab this data base and test out each piece of the code. 
- * 
+ *
+ * Biggest take home here is to how to grab this data base and test out each piece of the code.
+ *
  */
 static LRU_CACHE: Lazy<Mutex<LruCache<String, ExecuteResult>>> =
   Lazy::new(|| Mutex::new(LruCache::unbounded()));
@@ -63,7 +63,7 @@ pub async fn simulate_contract(
    * else
    *    load_contract based on contract id
    * return
-   *    loaded contract 
+   *    loaded contract
    *
    */
   // There is no reason to join - you join here to run async tasks concurrently.
@@ -108,10 +108,10 @@ pub async fn simulate_contract(
   );
 
   /**
-   * 
+   *
    * maybe_exm_context_str != None, save it
-   * 
-   * 
+   *
+   *
    */
   if loaded_contract.is_ok() {
     let maybe_exm_context = {

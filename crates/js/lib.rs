@@ -437,7 +437,7 @@ mod test {
   #[tokio::test]
   async fn test_putKv() {
     let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
-        HashMap::new();
+      HashMap::new();
     exec_settings.insert(
       String::from("EXM"),
       deno_core::serde_json::Value::Bool(true),
@@ -458,29 +458,30 @@ mod test {
       (12345, String::from("arweave.net"), String::from("http")),
       never_op::decl(),
       exec_settings,
-      None
+      None,
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     rt.call((), None).await.unwrap();
     let calls = rt.get_exm_context::<ExmContext>().unwrap();
-    let state = rt.get_contract_state::<deno_core::serde_json::Value>().unwrap();
-    
+    let state = rt
+      .get_contract_state::<deno_core::serde_json::Value>()
+      .unwrap();
+
     let variable_type = format!("{:?}", state.as_str().unwrap());
 
     println!("**Testing PUT: {}", state.as_str().unwrap());
     let res = calls.kv.get("hello").unwrap();
     println!("**Test PUT 2: {}", res);
     assert_eq!(res, "world");
-
   }
 
   // GET
   #[tokio::test]
   async fn test_getKv() {
     let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
-        HashMap::new();
+      HashMap::new();
     exec_settings.insert(
       String::from("EXM"),
       deno_core::serde_json::Value::Bool(true),
@@ -502,31 +503,32 @@ mod test {
       (12345, String::from("arweave.net"), String::from("http")),
       never_op::decl(),
       exec_settings,
-      None
+      None,
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     rt.call((), None).await.unwrap();
 
-    let state = rt.get_contract_state::<deno_core::serde_json::Value>().unwrap();
+    let state = rt
+      .get_contract_state::<deno_core::serde_json::Value>()
+      .unwrap();
 
     println!("**Testing GET: {}", state);
     //assert_eq!(state.as_str().unwrap(), "hello world");
+  }
 
-  } 
-
-    // DELETE
-    #[tokio::test]
-    async fn test_delKv() { 
-      let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
-          HashMap::new();
-      exec_settings.insert(
-        String::from("EXM"),
-        deno_core::serde_json::Value::Bool(true),
-      );
-      let mut rt = Runtime::new(
-        r#"
+  // DELETE
+  #[tokio::test]
+  async fn test_delKv() {
+    let mut exec_settings: HashMap<String, deno_core::serde_json::Value> =
+      HashMap::new();
+    exec_settings.insert(
+      String::from("EXM"),
+      deno_core::serde_json::Value::Bool(true),
+    );
+    let mut rt = Runtime::new(
+      r#"
         export async function handle() {
         try {
             EXM.print("Data");
@@ -539,22 +541,23 @@ mod test {
           }
         }
         "#,
-        (),
-        (12345, String::from("arweave.net"), String::from("http")),
-        never_op::decl(),
-        exec_settings,
-        None
-      )
-          .await
-          .unwrap();
-  
-      rt.call((), None).await.unwrap();
-  
-      let state = rt.get_contract_state::<deno_core::serde_json::Value>().unwrap();
-      println!("**Testing DEL: {}", state);
-      //assert_eq!(state.as_str().unwrap(), "hello world");
-  
-    } 
+      (),
+      (12345, String::from("arweave.net"), String::from("http")),
+      never_op::decl(),
+      exec_settings,
+      None,
+    )
+    .await
+    .unwrap();
+
+    rt.call((), None).await.unwrap();
+
+    let state = rt
+      .get_contract_state::<deno_core::serde_json::Value>()
+      .unwrap();
+    println!("**Testing DEL: {}", state);
+    //assert_eq!(state.as_str().unwrap(), "hello world");
+  }
 
   #[tokio::test]
   async fn test_state_empty() {

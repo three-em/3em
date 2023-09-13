@@ -41,7 +41,7 @@ pub async fn run(
       let state = data.state;
       let validity_table = data.validity;
       let result = data.result.unwrap_or(serde_json::Value::Null);
-      // return state and result when endpoint is reached. 
+      // return state and result when endpoint is reached.
       let value = if show_validity {
         serde_json::json!({
             "state": state,
