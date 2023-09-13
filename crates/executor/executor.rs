@@ -27,6 +27,13 @@ use three_em_smartweave::{
 };
 use three_em_wasm::WasmRuntime;
 
+/*
+ * Questions:
+ * opsmartweavereadcontract - uses executecontract instead of simulate
+ *
+ *
+*/
+
 pub type ValidityTable = IndexMap<String, Value>;
 pub type CachedState = Option<Value>;
 pub type ExecErrors = HashMap<String, String>;
@@ -53,14 +60,17 @@ pub fn get_execution_context(
   maybe_context: Result<ExmContext, AnyError>,
 ) -> ExmContext {
   if let Ok(exm_known_context) = maybe_context {
+    //Check for existence of maybe_context, else create new hashmap
     exm_known_context
   } else {
     ExmContext {
       requests: HashMap::new(),
+      kv: HashMap::new(),
     }
   }
 }
 
+// Grabs the result of an execution and packages data to be given back to FE
 pub fn process_execution(
   execute_result: ExecuteResult,
   show_validity: bool,
@@ -103,8 +113,9 @@ pub async fn op_smartweave_read_contract(
   (contract_id, height, show_validity): (String, Option<usize>, Option<bool>),
   _: (),
 ) -> Result<Value, AnyError> {
+  //Reads the state in the contract, not write to it
   let op_state = state.borrow();
-  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>();
+  let info = op_state.borrow::<three_em_smartweave::ArweaveInfo>(); //Borrow data in ArweaveInfo type
   let cl = Arweave::new(
     info.port,
     info.host.clone(),

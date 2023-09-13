@@ -48,7 +48,8 @@
 
         static from(obj) {
             const newBaseReq = new BaseReqResponse(undefined);
-
+            //obj == request object
+            //exmContext -> properties inside base class, request
             const { type, url, statusText, status, redirected, ok, headers, vector } = obj;
 
             newBaseReq.type = type || '';
@@ -110,6 +111,8 @@
     window.BaseReqResponse = BaseReqResponse;
 
     class Base {
+        // key is the table name
+        kv = {};
 
         requests = {};
 
@@ -137,16 +140,28 @@
             Deno.core.opSync("op_exm_write_to_console", toPrint);
         }
 
+        putKv(key, value) {
+            this.kv[key] = value;
+        }
+
+        getKv(key) {
+            return this.kv[key];
+        }
+
+        delKv(key) {
+            delete this.kv[key];
+        }
+
         async deterministicFetch(...args) {
             const jsonArgs = JSON.stringify(args);
             const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
             const isLazyEvaluated = Deno.core.opSync("op_get_executor_settings", "LAZY_EVALUATION");
 
-            if(isLazyEvaluated) {
+            if(isLazyEvaluated) { //Create the headers
                 return BaseReqResponse.from(globalThis.exmContext.requests[reqHash]);
             } else {
                 try {
-                    if (this.requests[reqHash]) {
+                    if (this.requests[reqHash]) { //happens when its lazy evaluated
                         return Object.freeze(BaseReqResponse.from(this.requests[reqHash]))
                     } else {
                         const fetchData = await props.fetch(...args);
@@ -163,6 +178,14 @@
                     return e.toString()
                 }
             }
+        }
+
+        testPutKv() {
+            return this.kv['hello'];
+        }
+
+        testDelKv() {
+            return this.kv;
         }
 
         async sha256(buffer) {
@@ -186,7 +209,8 @@
             if (!window[ExmSymbol]) {
                 Object.defineProperty(window, ExmSymbol, {
                     value: isEXM ? baseIns : {
-                        requests: {}
+                        requests: {},
+                        kv: {},
                     },
                     configurable: false,
                     writable: false,

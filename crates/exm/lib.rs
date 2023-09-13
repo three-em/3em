@@ -39,6 +39,7 @@ pub struct DeterministicFetchBody {
 #[derive(Deserialize, Serialize, Default, Clone)]
 pub struct ExmContext {
   pub requests: HashMap<String, DeterministicFetchBody>,
+  pub kv: HashMap<String, deno_core::serde_json::Value>,
 }
 
 pub fn init(executor_settings: HashMap<String, Value>) -> Extension {
