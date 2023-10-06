@@ -218,4 +218,47 @@ export async function handle(state, action) {
     expect(simulate.state).toEqual({"8f39fb4940c084460da00a876a521ef2ba84ad6ea8d2f5628c9f1f8aeb395342":1595580000000000});
   });
 
+  test("KV Test", async () => {
+    const buffer = new TextEncoder().encode(`
+    /**
+ *
+ * @param state is the current state your application holds
+ * @param action is an object containing { input, caller } . Most of the times you will only use action.input which contains the input passed as a write operation
+ * @returns {Promise<{ users: Array<{ username: string}> }>}
+ */
+export async function handle(state, action) {
+    const { username } = action.input; SmartWeave.kv.put(username, "world");
+    state.users.push({ username });
+    return { state, result: 'Hello World' };
+}
+`);
+
+    const simulate = await simulateContract({
+      contractId: "",
+      maybeContractSource: {
+        contractType: SimulateContractType.JAVASCRIPT,
+        contractSrc: buffer
+      },
+      interactions: [{
+        id: "ABCD",
+        owner: "2asdaskdsapdk012",
+        quantity: "1000",
+        reward: "203123921",
+        target: "none",
+        tags: [],
+        input: JSON.stringify({"username":"Andres"})
+      }],
+      contractInitState: JSON.stringify({}),
+      maybeSettings: {
+      },
+      maybeExmContext: JSON.stringify({
+        requests: {},
+        kv: {
+          'PreviouslyAddedKey': 'Buccees'
+        }
+      })
+    });
+    console.log(simulate);
+  });
+
 })

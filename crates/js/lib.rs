@@ -182,12 +182,12 @@ impl Runtime {
       let context = scope.get_current_context();
 
       if maybe_exm_context.is_some() {
+        let exm_context = maybe_exm_context.unwrap();
         let inner_scope = &mut v8::ContextScope::new(scope, context);
 
         let global = context.global(inner_scope);
         let v8_key = serde_v8::to_v8(inner_scope, "exmContext").unwrap();
-        let v8_val =
-          serde_v8::to_v8(inner_scope, maybe_exm_context.unwrap()).unwrap();
+        let v8_val = serde_v8::to_v8(inner_scope, exm_context).unwrap();
         global.set(inner_scope, v8_key, v8_val);
       }
     };

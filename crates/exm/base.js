@@ -206,6 +206,12 @@
     Object.defineProperty(window, "EXM", {
         get: () => {
             const isEXM = Deno.core.opSync("op_get_executor_settings", "EXM");
+            const preKv = (globalThis?.exmContext?.kv || {});
+            if(Object.values(preKv).length > 0) {
+                Object.entries(preKv).forEach(([key, val]) => {
+                    baseIns.putKv(key, val);
+                });
+            }
             if (!window[ExmSymbol]) {
                 Object.defineProperty(window, ExmSymbol, {
                     value: isEXM ? baseIns : {

@@ -354,6 +354,9 @@
         },
         del(key) {
           globalThis.EXM.delKv(key);
+        },
+        getAll() {
+          return globalThis.EXM.kv;
         }
       };
     }
