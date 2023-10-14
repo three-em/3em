@@ -111,10 +111,11 @@
     window.BaseReqResponse = BaseReqResponse;
 
     class Base {
-        // key is the table name
         kv = {};
 
         requests = {};
+
+        initiated = [];
 
         constructor() {
         }
@@ -150,6 +151,10 @@
 
         delKv(key) {
             delete this.kv[key];
+        }
+
+        setInitiated() {
+            this.initiated.push("1");
         }
 
         async deterministicFetch(...args) {
@@ -207,16 +212,31 @@
         get: () => {
             const isEXM = Deno.core.opSync("op_get_executor_settings", "EXM");
             const preKv = (globalThis?.exmContext?.kv || {});
-            if(Object.values(preKv).length > 0) {
+            // Inject KV for persistence
+            if(Object.values(preKv).length > 0 && baseIns.initiated.length === 0) {
                 Object.entries(preKv).forEach(([key, val]) => {
                     baseIns.putKv(key, val);
                 });
+                baseIns.setInitiated();
             }
+            
+            //baseIns.print(baseIns.kv);
+            //baseIns.print("==============");
+            // Delete Values
+            /*
+            Object.entries(baseIns.delete_queue).forEach(([_index, key]) => {
+                baseIns.delKv(key);
+            });
+            */
+            //baseIns.print(baseIns.kv);
+            //baseIns.emptyDeleteQueue();
+            //aseIns.print("=============");
             if (!window[ExmSymbol]) {
                 Object.defineProperty(window, ExmSymbol, {
                     value: isEXM ? baseIns : {
                         requests: {},
                         kv: {},
+                        initiated: true,
                     },
                     configurable: false,
                     writable: false,

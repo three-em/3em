@@ -353,7 +353,7 @@
             return globalThis.EXM.getKv(key);
         },
         del(key) {
-          globalThis.EXM.delKv(key);
+          globalThis.EXM.delKv(key)
         },
         getAll() {
           return globalThis.EXM.kv;
