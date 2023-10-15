@@ -357,6 +357,12 @@
         },
         getAll() {
           return globalThis.EXM.kv;
+        },
+        kvMap(gte, lt, reverse, limit) {
+          return globalThis.EXM.getKvMap(gte, lt, reverse, limit);
+        },
+        keys(gte, lt, reverse, limit) {
+          return globalThis.EXM.getKeys(gte, lt, reverse, limit);
         }
       };
     }

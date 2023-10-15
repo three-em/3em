@@ -141,6 +141,36 @@
             Deno.core.opSync("op_exm_write_to_console", toPrint);
         }
 
+        filterKv(gte, lt, reverse, limit) {
+
+            const arr1 = Object.entries(this.kv);
+            
+            if (lt > arr1.length || gte < 0 || gte >= lt) {
+                throw new Error("invalid range");
+            }
+
+            if(limit > lt && limit > Object.keys(this.kv).length) {
+                throw new Error("limit is bigger than lt");
+            }
+
+            if(isNaN(parseInt(limit))) {
+                throw new Error("limit must be a numeric value");
+            }
+            
+            let arr2 = arr1.slice(gte, lt);
+            if(reverse) {
+                arr2 = arr2.reverse();
+            }
+
+            if(limit !== undefined) {
+                arr2 = arr2.slice(0, limit);
+            }
+
+            const obj = Object.fromEntries(arr2);
+
+            return obj;
+        }
+
         putKv(key, value) {
             this.kv[key] = value;
         }
@@ -151,6 +181,17 @@
 
         delKv(key) {
             delete this.kv[key];
+        }
+
+        getKvMap(gte = 0, lt = Object.keys(this.kv).length, reverse = false, limit) {
+            const result = this.filterKv(gte, lt, reverse, limit);
+            return result;
+        }
+
+        getKeys(gte = 0, lt = Object.keys(this.kv).length, reverse = false, limit) {
+            const result = this.filterKv(gte, lt, reverse, limit);
+            const keysArray = Object.keys(result);
+            return keysArray;
         }
 
         setInitiated() {
@@ -219,18 +260,7 @@
                 });
                 baseIns.setInitiated();
             }
-            
-            //baseIns.print(baseIns.kv);
-            //baseIns.print("==============");
-            // Delete Values
-            /*
-            Object.entries(baseIns.delete_queue).forEach(([_index, key]) => {
-                baseIns.delKv(key);
-            });
-            */
-            //baseIns.print(baseIns.kv);
-            //baseIns.emptyDeleteQueue();
-            //aseIns.print("=============");
+
             if (!window[ExmSymbol]) {
                 Object.defineProperty(window, ExmSymbol, {
                     value: isEXM ? baseIns : {
