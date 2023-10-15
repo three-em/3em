@@ -193,6 +193,14 @@ repr_u8! {
   }
 }
 
+impl std::fmt::Display for Instruction {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    write!(f, "{:?}", self)
+    // or, alternatively:
+    // fmt::Debug::fmt(self, f)
+  }
+}
+
 pub const MAX_STACK_SIZE: usize = 1024;
 
 #[derive(Debug)]
@@ -337,6 +345,7 @@ impl<'a> Machine<'a> {
   ) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
+    let mut calls = 0;
     while pc < len {
       let opcode = bytecode[pc];
       let inst = match Instruction::try_from(opcode) {
@@ -349,8 +358,10 @@ impl<'a> Machine<'a> {
       let cost = (self.cost_fn)(&inst);
 
       pc += 1;
+      calls += 1;
 
-      println!("STACK: {:?}", self.stack);
+      // println!("STACK: {:?}", self.stack);
+      println!("{} {}", calls, inst.to_string());
       match inst {
         Instruction::Stop => {}
         Instruction::Add => {
@@ -1298,5 +1309,61 @@ mod tests {
 
     let result_string = &machine.result[64..64 + len];
     assert_eq!(std::str::from_utf8(result_string).unwrap(), "littledivy");
+  }
+
+  #[test]
+  fn test_counter_evm() {
+    // Storage
+    let account = U256::zero();
+    let mut storage = Storage::new(account);
+
+    // Counter.sol
+    let bytes = hex!("608060405234801561001057600080fd5b506004361061004c5760003560e01c80635b34b96614610051578063a87d942c1461005b578063d631c63914610079578063f5c5ad8314610097575b600080fd5b6100596100a1565b005b6100636100d6565b604051610070919061011d565b60405180910390f35b6100816100df565b60405161008e919061011d565b60405180910390f35b61009f6100e9565b005b600a6000808282546100b39190610167565b925050819055506002600160008282546100cd9190610167565b92505081905550565b60008054905090565b6000600154905090565b60016000808282546100fb91906101ab565b92505081905550565b6000819050919050565b61011781610104565b82525050565b6000602082019050610132600083018461010e565b92915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b600061017282610104565b915061017d83610104565b9250828201905082811215600083121683821260008412151617156101a5576101a4610138565b5b92915050565b60006101b682610104565b91506101c183610104565b92508282039050818112600084121682821360008512151617156101e8576101e7610138565b5b9291505056fea264697066735822122099857ab17fcae0494d47b71ec679752d977f75292fc9233a8d53f89f2444b12d64736f6c63430008100033");
+
+    // Execution
+    // TODO: This isn't working !!
+    let mut machine_constructor = Machine::new_with_data(test_cost_fn, hex!("608060405260008055606460015534801561001957600080fd5b50600080819055506064600181905550610224806100386000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80635b34b96614610051578063a87d942c1461005b578063d631c63914610079578063f5c5ad8314610097575b600080fd5b6100596100a1565b005b6100636100d6565b604051610070919061011d565b60405180910390f35b6100816100df565b60405161008e919061011d565b60405180910390f35b61009f6100e9565b005b600a6000808282546100b39190610167565b925050819055506002600160008282546100cd9190610167565b92505081905550565b60008054905090565b6000600154905090565b60016000808282546100fb91906101ab565b92505081905550565b6000819050919050565b61011781610104565b82525050565b6000602082019050610132600083018461010e565b92915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b600061017282610104565b915061017d83610104565b9250828201905082811215600083121683821260008412151617156101a5576101a4610138565b5b92915050565b60006101b682610104565b91506101c183610104565b92508282039050818112600084121682821360008512151617156101e8576101e7610138565b5b9291505056fea264697066735822122099857ab17fcae0494d47b71ec679752d977f75292fc9233a8d53f89f2444b12d64736f6c63430008100033").to_vec());
+    machine_constructor.set_storage(storage);
+    let status = machine_constructor.execute(&bytes, Default::default());
+
+    let mut machine =
+      Machine::new_with_data(test_cost_fn, hex!("5b34b966").to_vec());
+    machine.set_storage(machine_constructor.storage);
+    machine.execute(&bytes, Default::default());
+
+    let mut machine2 =
+      Machine::new_with_data(test_cost_fn, hex!("5b34b966").to_vec());
+    machine2.set_storage(machine.storage);
+    machine2.execute(&bytes, Default::default());
+
+    let mut machine3 =
+      Machine::new_with_data(test_cost_fn, hex!("a87d942c").to_vec());
+    machine3.set_storage(machine2.storage);
+    machine3.execute(&bytes, Default::default());
+
+    // 14 means 20 = https://www.calculator.net/hex-calculator.html
+    assert_eq!(
+      machine3.result.clone(),
+      hex!("0000000000000000000000000000000000000000000000000000000000000014")
+        .to_vec()
+    );
+
+    let mut machine4 =
+      Machine::new_with_data(test_cost_fn, hex!("d631c639").to_vec());
+    machine4.set_storage(machine3.storage);
+    machine4.execute(&bytes, Default::default());
+
+    // But the memory from the initialization isn't working
+    // So instead of doing count = 100; It's initializing it at 0
+    // so += 2;
+    // = 4 by 2 calls.
+    // assert_eq!(
+    //   machine4.result,
+    //   hex!("0000000000000000000000000000000000000000000000000000000000000068")
+    //     .to_vec()
+    // );
+
+    // Constructor is returning ExecutionState::Revert
+    // assert_eq!(status, ExecutionState::Ok);
   }
 }

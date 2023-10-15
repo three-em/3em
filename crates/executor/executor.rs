@@ -1,4 +1,4 @@
-use crate::{get_input_from_interaction, nop_cost_fn};
+use crate::{get_input_from_interaction, nop_cost_fn, U256};
 use deno_core::error::AnyError;
 use deno_core::serde_json;
 use deno_core::serde_json::Value;
@@ -18,7 +18,7 @@ use three_em_arweave::gql_result::{
   GQLAmountInterface, GQLEdgeInterface, GQLNodeInterface,
 };
 use three_em_arweave::miscellaneous::ContractType;
-use three_em_evm::{ExecutionState, Machine, Storage};
+use three_em_evm::{BlockInfo, ExecutionState, Machine, Storage};
 use three_em_exm_base_ops::ExmContext;
 use three_em_js::CallResult;
 use three_em_js::Runtime;
@@ -417,15 +417,21 @@ pub async fn raw_execute_contract<
       // Contract source bytes.
       let bytecode = hex::decode(loaded_contract.contract_src.as_slice())
         .expect("Failed to decode contract bytecode");
-      let store = hex::decode(loaded_contract.init_state.as_bytes())
-        .expect("Failed to decode account state");
 
-      let mut account_store = Storage::from_raw(&store);
+      let account = U256::zero();
+      let mut account_store = Storage::new(account);
       let mut result = vec![];
       for interaction in interactions {
         let tx = interaction.node;
-        let block_info =
-          shared_client.get_transaction_block(&tx.id).await.unwrap();
+        let block_info = shared_client
+          .get_transaction_block(&tx.id)
+          .await
+          .unwrap_or(three_em_arweave::arweave::BlockInfo {
+            timestamp: 0,
+            diff: String::from("0"),
+            indep_hash: String::new(),
+            height: 0,
+          });
 
         let block_info = three_em_evm::BlockInfo {
           timestamp: three_em_evm::U256::from(block_info.timestamp),
@@ -441,7 +447,13 @@ pub async fn raw_execute_contract<
         let call_data = hex::decode(input).expect("Failed to decode input");
 
         let mut machine = Machine::new_with_data(nop_cost_fn, call_data);
-        machine.set_storage(account_store.clone());
+
+        if let Ok(raw_store) =
+          hex::decode(loaded_contract.init_state.as_bytes())
+        {
+          account_store.insert(&account, U256::zero(), U256::from(raw_store));
+          machine.set_storage(account_store.clone());
+        }
 
         machine.set_fetcher(Box::new(|address: &three_em_evm::U256| {
           let mut id = [0u8; 32];
@@ -484,8 +496,10 @@ pub async fn raw_execute_contract<
 mod tests {
   use crate::executor::{raw_execute_contract, ExecuteResult};
   use crate::test_util::{
-    generate_fake_interaction, generate_fake_loaded_contract_data,
+    generate_fake_interaction, generate_fake_interaction_input_string,
+    generate_fake_loaded_contract_data,
   };
+  use crate::U256;
   use deno_core::serde_json;
   use deno_core::serde_json::Value;
   use indexmap::map::IndexMap;
@@ -1083,6 +1097,103 @@ mod tests {
       assert_eq!(value.get("height").unwrap(), 200);
     } else {
       panic!("Invalid operation");
+    }
+  }
+
+  #[tokio::test]
+  async fn test_solidity_contract_counter() {
+    let fake_contract = generate_fake_loaded_contract_data(
+      include_bytes!("../../testdata/evm/counter"),
+      ContractType::EVM,
+      "".to_string(),
+    );
+
+    let fake_interactions = vec![
+      generate_fake_interaction_input_string(
+        "5b34b966",
+        "tx1",
+        None,
+        Some(100),
+        Some(String::from("ADDRESS")),
+        None,
+        None,
+        None,
+        None,
+        None,
+      ),
+      generate_fake_interaction_input_string(
+        "5b34b966",
+        "tx2",
+        None,
+        Some(200),
+        Some(String::from("ADDRESS2")),
+        None,
+        None,
+        None,
+        None,
+        None,
+      ),
+      generate_fake_interaction_input_string(
+        "5b34b966",
+        "tx3",
+        None,
+        Some(200),
+        Some(String::from("ADDRESS2")),
+        None,
+        None,
+        None,
+        None,
+        None,
+      ),
+      generate_fake_interaction_input_string(
+        "f5c5ad83",
+        "tx4",
+        None,
+        Some(200),
+        Some(String::from("ADDRESS2")),
+        None,
+        None,
+        None,
+        None,
+        None,
+      ),
+    ];
+
+    let result = raw_execute_contract(
+      String::from("WHATEVA"),
+      fake_contract,
+      fake_interactions,
+      IndexMap::new(),
+      None,
+      true,
+      false,
+      |_, _| {
+        panic!("not implemented");
+      },
+      &Arweave::new(
+        443,
+        "arweave.net".to_string(),
+        String::from("https"),
+        ArweaveCache::new(),
+      ),
+      HashMap::new(),
+      None,
+    )
+    .await;
+
+    if let ExecuteResult::Evm(storage, result, validity) = result {
+      println!("{}", hex::encode(result));
+      println!(
+        "{:?}",
+        &storage
+          .inner
+          .get(&U256::zero())
+          .unwrap()
+          .values()
+          .map(|v| v.to_string())
+          .collect::<Vec<String>>()
+      );
+    } else {
     }
   }
 }
