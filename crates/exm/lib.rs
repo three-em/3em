@@ -40,7 +40,6 @@ pub struct DeterministicFetchBody {
 pub struct ExmContext {
   pub requests: HashMap<String, DeterministicFetchBody>,
   pub kv: HashMap<String, deno_core::serde_json::Value>,
-  pub initiated: Vec<String>,
 }
 
 pub fn init(executor_settings: HashMap<String, Value>) -> Extension {

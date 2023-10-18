@@ -115,9 +115,15 @@
 
         requests = {};
 
-        initiated = [];
+        instantiated = false;
 
         constructor() {
+        }
+
+        init() {
+            if(!this.instantiated) {
+               this.instantiated = true;
+            }
         }
 
         getDate() {
@@ -194,10 +200,6 @@
             return keysArray;
         }
 
-        setInitiated() {
-            this.initiated.push("1");
-        }
-
         async deterministicFetch(...args) {
             const jsonArgs = JSON.stringify(args);
             const reqHash = await this.sha256(new TextEncoder().encode(jsonArgs));
@@ -254,11 +256,11 @@
             const isEXM = Deno.core.opSync("op_get_executor_settings", "EXM");
             const preKv = (globalThis?.exmContext?.kv || {});
             // Inject KV for persistence
-            if(Object.values(preKv).length > 0 && baseIns.initiated.length === 0) {
+            if(Object.values(preKv).length > 0 && !baseIns.instantiated) {
                 Object.entries(preKv).forEach(([key, val]) => {
                     baseIns.putKv(key, val);
                 });
-                baseIns.setInitiated();
+                baseIns.init();
             }
 
             if (!window[ExmSymbol]) {
@@ -266,7 +268,7 @@
                     value: isEXM ? baseIns : {
                         requests: {},
                         kv: {},
-                        initiated: true,
+                        instantiated: true,
                     },
                     configurable: false,
                     writable: false,
