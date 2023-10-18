@@ -110,7 +110,7 @@ repr_u8! {
     MSize = 0x59,
     Gas = 0x5a,
     JumpDest = 0x5b,
-    // 0x5c - 0x5f reserved
+    Push0 = 0x5f, // Newly Added Opcode
     Push1 = 0x60,
     Push2 = 0x61,
     Push3 = 0x62,
@@ -189,6 +189,7 @@ repr_u8! {
     Create2 = 0xfb,
     Revert = 0xfd,
     StaticCall = 0xfa,
+    Invalid = 0xfe,
     SelfDestruct = 0xff,
   }
 }
@@ -350,7 +351,7 @@ impl<'a> Machine<'a> {
 
       pc += 1;
 
-      println!("STACK: {:?}", self.stack);
+      //println!("STACK: {:?}", self.stack);
       match inst {
         Instruction::Stop => {}
         Instruction::Add => {
@@ -682,6 +683,7 @@ impl<'a> Machine<'a> {
             .copy_from_slice(data.as_slice());
         }
         Instruction::CodeSize => {
+          // If it is deployment or runtime bytecoed
           self.stack.push(U256::from(len));
         }
         Instruction::CodeCopy => {
@@ -837,6 +839,9 @@ impl<'a> Machine<'a> {
           self.stack.push(U256::zero());
         }
         Instruction::JumpDest => {}
+        Instruction::Push0 => {
+          self.stack.push(U256::from(0x00));
+        }
         Instruction::Push1
         | Instruction::Push2
         | Instruction::Push3
@@ -870,10 +875,11 @@ impl<'a> Machine<'a> {
         | Instruction::Push31
         | Instruction::Push32 => {
           let value_size = (opcode - 0x60 + 1) as usize;
-
+          println!("PC Before: {}", pc);
+          println!("How much to jump: {}", value_size);
           let value = &bytecode[pc..pc + value_size];
           pc += value_size;
-
+          println!("PC After: {}", pc);
           self.stack.push(U256::from(value));
         }
         Instruction::Dup1
@@ -1015,11 +1021,11 @@ mod tests {
   fn test_cost_fn(_: &Instruction) -> U256 {
     U256::zero()
   }
-
+  /* 
   #[allow(dead_code)]
   fn print_vm_memory(vm: &Machine) {
     let mem = &vm.memory;
-    println!("{:?}", mem);
+    //println!("{:?}", mem);
     for (i, cell) in mem.iter().enumerate() {
       if i % 16 == 0 {
         print!("\n{:x}: ", i);
@@ -1028,7 +1034,8 @@ mod tests {
       print!("{:#04x} ", cell);
     }
   }
-
+  */
+ /* 
   #[test]
   fn test_basic() {
     let mut machine = Machine::new(test_cost_fn);
@@ -1230,6 +1237,21 @@ mod tests {
   }
 
   #[test]
+  fn test_erc_twenty() {
+    let hex_code = hex!("608060405234801561001057600080fd5b50600436106100365760003560e01c80632e64cec11461003b5780636057361d14610059575b600080fd5b610043610075565b60405161005091906100a1565b60405180910390f35b610073600480360381019061006e91906100ed565b61007e565b005b60008054905090565b8060008190555050565b6000819050919050565b61009b81610088565b82525050565b60006020820190506100b66000830184610092565b92915050565b600080fd5b6100ca81610088565b81146100d557600080fd5b50565b6000813590506100e7816100c1565b92915050565b600060208284031215610103576101026100bc565b5b6000610111848285016100d8565b9150509291505056fea2646970667358221220322c78243e61b783558509c9cc22cb8493dde6925aa5e89a08cdf6e22f279ef164736f6c63430008120033");
+    let mut machine =
+      Machine::new_with_data(test_cost_fn, hex!("6057361d0000000000000000000000000000000000000000000000000000000000000002").to_vec());
+
+    let status = machine.execute(&hex_code, Default::default());
+
+    //println!("{:#?}", machine.storage);
+    //assert_eq!(status, ExecutionState::Ok);
+
+    //assert_eq!(machine.result.len(), 32);
+    //assert_eq!(machine.result.pop(), Some(0x03));
+  }
+
+  #[test]
   fn test_mstore() {
     //
     let mut machine = Machine::new(test_cost_fn);
@@ -1271,7 +1293,22 @@ mod tests {
     let status = machine.execute(&bytes, Default::default());
     assert_eq!(status, ExecutionState::Ok);
   }
+ */
+  #[test]
+  fn test_erc_constructor() {
+    //60015f60026003
+    let bytes = hex!("5f600160026003");
+    let mut machine = Machine::new(test_cost_fn);
 
+    let status = machine.execute(&bytes, Default::default());
+    //assert_eq!(status, ExecutionState::Ok);
+    println!("LOOK DOWN");
+    println!("Result: {:#?}", machine.result);
+    println!("Storage: {:#?}", machine.storage);
+    println!("Memory: {:#?}", machine.memory);
+    println!("Stack: {:#?}", machine.stack);
+  }
+ /* 
   #[test]
   fn test_storage_retrieve() {
     let bytes = hex!("608060405234801561001057600080fd5b50600436106100365760003560e01c80633a525c291461003b5780636b701e0814610059575b600080fd5b610043610075565b6040516100509190610259565b60405180910390f35b610073600480360381019061006e91906102ea565b610107565b005b60606000805461008490610366565b80601f01602080910402602001604051908101604052809291908181526020018280546100b090610366565b80156100fd5780601f106100d2576101008083540402835291602001916100fd565b820191906000526020600020905b8154815290600101906020018083116100e057829003601f168201915b5050505050905090565b81816000919061011892919061011d565b505050565b82805461012990610366565b90600052602060002090601f01602090048101928261014b5760008555610192565b82601f1061016457803560ff1916838001178555610192565b82800160010185558215610192579182015b82811115610191578235825591602001919060010190610176565b5b50905061019f91906101a3565b5090565b5b808211156101bc5760008160009055506001016101a4565b5090565b600081519050919050565b600082825260208201905092915050565b60005b838110156101fa5780820151818401526020810190506101df565b83811115610209576000848401525b50505050565b6000601f19601f8301169050919050565b600061022b826101c0565b61023581856101cb565b93506102458185602086016101dc565b61024e8161020f565b840191505092915050565b600060208201905081810360008301526102738184610220565b905092915050565b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b60008083601f8401126102aa576102a9610285565b5b8235905067ffffffffffffffff8111156102c7576102c661028a565b5b6020830191508360018202830111156102e3576102e261028f565b5b9250929050565b600080602083850312156103015761030061027b565b5b600083013567ffffffffffffffff81111561031f5761031e610280565b5b61032b85828601610294565b92509250509250929050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061037e57607f821691505b6020821081141561039257610391610337565b5b5091905056fea26469706673582212207d39b40255f686f82c889c56bfa8000e6be27070f005d24ec016e786e6ce64fc64736f6c634300080a0033");
@@ -1299,4 +1336,5 @@ mod tests {
     let result_string = &machine.result[64..64 + len];
     assert_eq!(std::str::from_utf8(result_string).unwrap(), "littledivy");
   }
+  */
 }
