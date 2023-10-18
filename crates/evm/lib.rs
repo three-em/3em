@@ -997,6 +997,10 @@ impl<'a> Machine<'a> {
         Instruction::Revert => {
           return ExecutionState::Revert;
         }
+        Instruction::Invalid => {
+          // revisit this logic. Similar to Revert but must consume all gas
+          return ExecutionState::Revert;
+        }
         _ => unimplemented!(),
       }
 
@@ -1297,7 +1301,7 @@ mod tests {
   #[test]
   fn test_erc_constructor() {
     //60015f60026003
-    let bytes = hex!("5f600160026003");
+    let bytes = hex!("fe60016002");
     let mut machine = Machine::new(test_cost_fn);
 
     let status = machine.execute(&bytes, Default::default());
