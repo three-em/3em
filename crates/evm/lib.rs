@@ -696,9 +696,10 @@ impl<'a> Machine<'a> {
           }
 
           let code_offset = code_offset.low_u64() as usize;
-          if code_offset < self.data.len() {
+          println!("len {}: ", self.data.len());
+          //if code_offset < self.data.len() {
             let code = &bytecode[code_offset..code_offset + len];
-
+            println!("Code I need: {:#?}", code);
             if self.memory.len() < mem_offset + 32 {
               self.memory.resize(mem_offset + 32, 0);
             }
@@ -710,7 +711,7 @@ impl<'a> Machine<'a> {
                 self.memory[mem_offset + i] = code[i];
               }
             }
-          }
+          //}
         }
         Instruction::ExtCodeSize => {
           // Fetch the `Contract-Src` from Arweave for the contract.
@@ -875,11 +876,8 @@ impl<'a> Machine<'a> {
         | Instruction::Push31
         | Instruction::Push32 => {
           let value_size = (opcode - 0x60 + 1) as usize;
-          println!("PC Before: {}", pc);
-          println!("How much to jump: {}", value_size);
           let value = &bytecode[pc..pc + value_size];
           pc += value_size;
-          println!("PC After: {}", pc);
           self.stack.push(U256::from(value));
         }
         Instruction::Dup1
@@ -1301,7 +1299,7 @@ mod tests {
   #[test]
   fn test_erc_constructor() {
     //60015f60026003
-    let bytes = hex!("fe60016002");
+    let bytes = hex!("608060405260075f55348015610013575f80fd5b5060af806100205f395ff3fe6080604052348015600e575f80fd5b50600436106026575f3560e01c8063eea32eb214602a575b5f80fd5b60306044565b604051603b91906062565b60405180910390f35b5f8054905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220c90818a724b5acfd11bea9df587e8ad68deeee49ede9e80140caace0f5608ee464736f6c63430008140033");
     let mut machine = Machine::new(test_cost_fn);
 
     let status = machine.execute(&bytes, Default::default());
