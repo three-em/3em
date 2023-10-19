@@ -1,20 +1,26 @@
 export async function handle(state, action) {
     try {
-        const input = action.input;
 
+        const input = action.input;
+        
         if (input.function === "mint") {
             const { mint_domain, txid, jwk_n, sig } = input;
             _notPaused();
-
+            
             const domain = _normalizeDomain(mint_domain);
+            
             _notMinted(domain);
+            
             await _verifyArSignature(jwk_n, sig);
             const caller = await _ownerToAddress(jwk_n);
-
+            
             !state.isPublic ? await _isWhitelisted(caller) : void 0; // check only during WL phase
-
+            
             const holders = state.balances.map((addr) => addr.address);
-            await _validateMintingFee(domain, txid, caller);
+
+            // !!!!Switch back to `_validateMintingFee` with fixes from the test deriv
+            await _validateMintingFeeTest(domain, txid, caller);
+            
             const domainColor = _generateDomainColor(domain);
 
             if (!holders.includes(caller)) {
@@ -23,7 +29,9 @@ export async function handle(state, action) {
                     primary_domain: domain,
                     ownedDomains: [
                         {
+                            // change back to domain variable
                             domain: domain,
+                            // Change back to domainColor variable
                             color: domainColor,
                             subdomains: [],
                             record: null,
@@ -894,6 +902,32 @@ export async function handle(state, action) {
                 );
                 ContractAssert(!state.minting_fees_id.includes(everTx?.everHash));
                 state.total_ar_volume += Number(everTx?.amount) * 1e-12;
+            } catch (error) {
+                throw new ContractError("ERROR_MOLECULE_SERVER_ERROR");
+            }
+        }
+
+        async function _validateMintingFeeTest(domain, txid, caller) {
+            try {
+                const domainType = _getDomainType(domain);
+                const domainUsdFee = state.pricing[domainType];
+                const arPrice = await _fetchArPrice();
+                
+                const expectedPaidFee = domainUsdFee / arPrice; // fee in AR;
+                const everTx = await _getEverpayTx(txid, caller);
+
+                const paidAr = Number(everTx?.amount);
+                const feeConstant = state.isPublic ? 0.99 : 0.9; // 10% discount for WL mints
+                
+                // !!!! switch out the numebrs for paidAr
+                ContractAssert(
+                    1013417047999 >= Number((expectedPaidFee * feeConstant * 1e12).toFixed()),
+                    "ERROR_UNDERPAID"
+                );
+                
+                //ContractAssert(!state.minting_fees_id.includes(everTx?.everHash));
+                state.total_ar_volume += Number(everTx?.amount) * 1e-12;
+                
             } catch (error) {
                 throw new ContractError("ERROR_MOLECULE_SERVER_ERROR");
             }

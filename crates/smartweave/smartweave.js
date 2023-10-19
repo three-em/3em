@@ -353,10 +353,16 @@
             return globalThis.EXM.getKv(key);
         },
         del(key) {
-          globalThis.EXM.delKv(key);
+          globalThis.EXM.delKv(key)
         },
         getAll() {
           return globalThis.EXM.kv;
+        },
+        kvMap(gte, lt, reverse, limit) {
+          return globalThis.EXM.getKvMap(gte, lt, reverse, limit);
+        },
+        keys(gte, lt, reverse, limit) {
+          return globalThis.EXM.getKeys(gte, lt, reverse, limit);
         }
       };
     }
