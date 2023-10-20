@@ -20,6 +20,7 @@ use three_em_arweave::gql_result::{
 use three_em_arweave::miscellaneous::ContractType;
 use three_em_evm::{ExecutionState, Machine, Storage};
 use three_em_exm_base_ops::ExmContext;
+use three_em_exm_base_ops::Data;
 use three_em_js::CallResult;
 use three_em_js::Runtime;
 use three_em_smartweave::{
@@ -66,6 +67,7 @@ pub fn get_execution_context(
     ExmContext {
       requests: HashMap::new(),
       kv: HashMap::new(),
+      //data: Data::new(),
     }
   }
 }

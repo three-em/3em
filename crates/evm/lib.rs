@@ -683,28 +683,39 @@ impl<'a> Machine<'a> {
             .copy_from_slice(data.as_slice());
         }
         Instruction::CodeSize => {
-          // If it is deployment or runtime bytecoed
           self.stack.push(U256::from(len));
         }
         Instruction::CodeCopy => {
+          // NOTE about codecopy: We need to determine what sets initial memory size & thru out init & runtime bytecode
           let mem_offset = self.stack.pop().low_u64() as usize;
           let code_offset = self.stack.pop();
           let len = self.stack.pop().low_u64() as usize;
-
           if code_offset > usize::max_value().into() {
             dbg!("CODECOPY: offset too large");
           }
-
           let code_offset = code_offset.low_u64() as usize;
-          println!("len {}: ", self.data.len());
+          
           //if code_offset < self.data.len() {
             let code = &bytecode[code_offset..code_offset + len];
-            println!("Code I need: {:#?}", code);
+            //ATTENTION: Later investigate if code is being injected into memory correctly
+            // I dont think the below code is correct. 
             if self.memory.len() < mem_offset + 32 {
               self.memory.resize(mem_offset + 32, 0);
             }
 
-            for i in 0..32 {
+            // Calculate padding for resizing
+            let current_size = code.len()+mem_offset;
+            let remainder = current_size % 32;
+            let padding = if remainder == 0 {
+                0
+            } else {
+                32 - remainder
+            };
+
+            // Resize
+            self.memory.resize(current_size + padding + 32, 0);
+            //Calculate new space of zeroes 
+            for i in 0..=code.len()-1 {
               if i > code.len() {
                 self.memory[mem_offset + i] = 0;
               } else {
@@ -780,6 +791,7 @@ impl<'a> Machine<'a> {
         Instruction::MStore => {
           let offset = self.stack.pop();
           let val = self.stack.pop();
+
           if offset > usize::max_value().into() {
             dbg!("MStore: offset too large");
           }
@@ -1299,17 +1311,36 @@ mod tests {
   #[test]
   fn test_erc_constructor() {
     //60015f60026003
-    let bytes = hex!("608060405260075f55348015610013575f80fd5b5060af806100205f395ff3fe6080604052348015600e575f80fd5b50600436106026575f3560e01c8063eea32eb214602a575b5f80fd5b60306044565b604051603b91906062565b60405180910390f35b5f8054905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220c90818a724b5acfd11bea9df587e8ad68deeee49ede9e80140caace0f5608ee464736f6c63430008140033");
+    let bytes = hex!("608060405234801561000f575f80fd5b5060405161015a38038061015a83398181016040528101906100319190610074565b805f819055505061009f565b5f80fd5b5f819050919050565b61005381610041565b811461005d575f80fd5b50565b5f8151905061006e8161004a565b92915050565b5f602082840312156100895761008861003d565b5b5f61009684828501610060565b91505092915050565b60af806100ab5f395ff3fe6080604052348015600e575f80fd5b50600436106026575f3560e01c8063eea32eb214602a575b5f80fd5b60306044565b604051603b91906062565b60405180910390f35b5f8054905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220e172226e595342e8a3f2ef9078c5da77614a34292db622e83940893b7979708764736f6c634300081400330000000000000000000000000000000000000000000000000000000000000003");
     let mut machine = Machine::new(test_cost_fn);
 
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
+    
     println!("LOOK DOWN");
     println!("Result: {:#?}", machine.result);
     println!("Storage: {:#?}", machine.storage);
     println!("Memory: {:#?}", machine.memory);
-    println!("Stack: {:#?}", machine.stack);
+    println!("Stack: {:#?}", machine.stack); 
+  
   }
+  /*
+  #[test]
+  fn test_erc_twenty() {
+    let hex_code = hex!("6080604052348015600e575f80fd5b50600436106026575f3560e01c8063eea32eb214602a575b5f80fd5b60306044565b604051603b91906062565b60405180910390f35b5f8054905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220c90818a724b5acfd11bea9df587e8ad68deeee49ede9e80140caace0f5608ee464736f6c63430008140033");
+    let mut machine =
+      Machine::new_with_data(test_cost_fn, hex!("eea32eb2").to_vec());
+
+    let status = machine.execute(&hex_code, Default::default());
+
+    println!("STOR: {:#?}", machine.storage);
+    println!("RES: {:#?}", machine.result);
+    //assert_eq!(status, ExecutionState::Ok);
+
+    //assert_eq!(machine.result.len(), 32);
+    //assert_eq!(machine.result.pop(), Some(0x03));
+  }
+  */
  /* 
   #[test]
   fn test_storage_retrieve() {

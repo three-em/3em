@@ -324,13 +324,12 @@ mod tests {
   //   get_gateway(None, Some(false));
   //   get_cache();
   // }
-
+  
   #[tokio::test]
   pub async fn with_cache_test() {
     get_gateway(None, None);
     get_cache();
   }
-
 
   // #[tokio::test]
   // pub async fn test_execute_contract() {
@@ -351,7 +350,7 @@ mod tests {
   //     "VERTO"
   //   );
   // }
-  
+
   #[tokio::test]
   pub async fn simulate_contract_test() {
     let execution_context: SimulateExecutionContext =
@@ -517,6 +516,7 @@ mod tests {
     assert_eq!(contract.result.as_str().unwrap(), "Hello World");
     assert_eq!(contract.updated, true);
   }
+
   //NOTE: Fix assert statements within _validateMintingFeeTest in ans.js
   #[tokio::test]
   pub async fn simulate_contract_ans() {
@@ -553,11 +553,11 @@ mod tests {
 
     let contract_result = contract.state;
     let str_state = contract_result.to_string();
-    //println!("{}", contract_result);
+
     assert!(str_state.contains("wearemintingyes"));
 
   }
-  
+
   #[tokio::test]
   pub async fn simulate_contract_ark() {
     let contract_source_bytes =
@@ -757,6 +757,44 @@ mod tests {
     //println!("{}", contract.exm_context);
     //println!("{}", contract.result);
     assert_eq!(contract.result, "[\"Yangtze\",\"Amazon\"]");
+  }
+  
+  #[tokio::test]
+  pub async fn simulate_kv_get() {
+    let contract_source_bytes =
+        include_bytes!("../../../testdata/contracts/getKv.js");
+    let contract_source_vec = contract_source_bytes.to_vec();
+    let execution_context: SimulateExecutionContext =
+        SimulateExecutionContext {
+          contract_id: String::new(),
+          interactions: vec![SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({
+            "function": "get",
+            "key": "Yangtze"
+          })
+                .to_string(),
+          }],
+          contract_init_state: Some(r#"{"gets": [], "puts": []}"#.into()),
+          maybe_config: None,
+          maybe_cache: Some(false),
+          maybe_bundled_contract: None,
+          maybe_settings: None,
+          maybe_exm_context: Some(r#"{"requests": {}, "kv": {"Nile": "River1", "Yangtze": "River2", "Amazon": "River3", "Mississippi": "River4"}, "instantiated":false}"#.into()),
+          maybe_contract_source: Some(ContractSource {
+            contract_src: contract_source_vec.into(),
+            contract_type: SimulateContractType::JAVASCRIPT,
+          }),
+        };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
+    assert_eq!(contract.state["gets"][0], "River2");
   }
   
 }

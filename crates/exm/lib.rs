@@ -35,11 +35,24 @@ pub struct DeterministicFetchBody {
   pub headers: HashMap<String, String>,
   pub vector: Vec<u8>,
 }
+#[derive(Deserialize, Serialize, Default, Clone)]
+pub struct Data {
+  pub instantiated: bool,
+}
+
+impl Data {
+  pub fn new() -> Data {
+    Data {
+      instantiated: false
+    }
+  }
+}
 
 #[derive(Deserialize, Serialize, Default, Clone)]
 pub struct ExmContext {
   pub requests: HashMap<String, DeterministicFetchBody>,
   pub kv: HashMap<String, deno_core::serde_json::Value>,
+  //pub data: Data,
 }
 
 pub fn init(executor_settings: HashMap<String, Value>) -> Extension {

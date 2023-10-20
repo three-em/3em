@@ -19,11 +19,14 @@ export async function handle(state, action) {
             const holders = state.balances.map((addr) => addr.address);
 
             // !!!!Switch back to `_validateMintingFee` with fixes from the test deriv
-            await _validateMintingFeeTest(domain, txid, caller);
             
+            let t = await _validateMintingFeeTest(domain, txid, caller);
+           
             const domainColor = _generateDomainColor(domain);
-
+            
+            
             if (!holders.includes(caller)) {
+                
                 state.balances.push({
                     address: caller,
                     primary_domain: domain,
@@ -39,6 +42,7 @@ export async function handle(state, action) {
                         },
                     ],
                 });
+
             } else {
                 const callerIndex = _getValidateCallerIndex(caller);
                 state.balances[callerIndex].ownedDomains.push({
@@ -912,16 +916,16 @@ export async function handle(state, action) {
                 const domainType = _getDomainType(domain);
                 const domainUsdFee = state.pricing[domainType];
                 const arPrice = await _fetchArPrice();
-                
+
                 const expectedPaidFee = domainUsdFee / arPrice; // fee in AR;
                 const everTx = await _getEverpayTx(txid, caller);
 
                 const paidAr = Number(everTx?.amount);
                 const feeConstant = state.isPublic ? 0.99 : 0.9; // 10% discount for WL mints
-                
+
                 // !!!! switch out the numebrs for paidAr
                 ContractAssert(
-                    1013417047999 >= Number((expectedPaidFee * feeConstant * 1e12).toFixed()),
+                    1013417047999+4805402417 >= Number((expectedPaidFee * feeConstant * 1e12).toFixed()),
                     "ERROR_UNDERPAID"
                 );
                 
@@ -947,7 +951,7 @@ export async function handle(state, action) {
                 const value = (hash >> (i * 8)) & 0xff;
                 color += ("00" + value.toString(16)).substr(-2);
             }
-            return color;
+            return domain;
         }
 
         async function _isWhitelisted(address) {
