@@ -66,6 +66,7 @@ pub fn get_execution_context(
     ExmContext {
       requests: HashMap::new(),
       kv: HashMap::new(),
+      //data: Data::new(),
     }
   }
 }

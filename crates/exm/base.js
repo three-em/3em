@@ -115,14 +115,17 @@
 
         requests = {};
 
-        instantiated = false;
+        data = {
+            instantiated: false
+        }
+
 
         constructor() {
         }
 
         init() {
-            if(!this.instantiated) {
-               this.instantiated = true;
+            if(!this.data.instantiated) {
+               this.data.instantiated = true;
             }
         }
 
@@ -256,11 +259,11 @@
             const isEXM = Deno.core.opSync("op_get_executor_settings", "EXM");
             const preKv = (globalThis?.exmContext?.kv || {});
             // Inject KV for persistence
-            if(Object.values(preKv).length > 0 && !baseIns.instantiated) {
+            if(Object.values(preKv).length > 0 && !baseIns.data.instantiated) {
                 Object.entries(preKv).forEach(([key, val]) => {
                     baseIns.putKv(key, val);
                 });
-                baseIns.init();
+                baseIns.init(); 
             }
 
             if (!window[ExmSymbol]) {
