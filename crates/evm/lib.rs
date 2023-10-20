@@ -1314,7 +1314,7 @@ mod tests {
     println!("Result: {:#?}", machine.result);
     println!("Storage: {:#?}", machine.storage);
     println!("Memory: {:#?}", machine.memory);
-    println!("Stack: {:#?}", machine.stack); 
+    println!("Stack: {:#?}", machine.stack);
   }
   /*
   #[test]
