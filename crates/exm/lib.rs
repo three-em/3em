@@ -43,7 +43,7 @@ pub struct Data {
 impl Data {
   pub fn new() -> Data {
     Data {
-      instantiated: false
+      instantiated: false,
     }
   }
 }
