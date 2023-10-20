@@ -694,34 +694,30 @@ impl<'a> Machine<'a> {
             dbg!("CODECOPY: offset too large");
           }
           let code_offset = code_offset.low_u64() as usize;
-          
+
           //if code_offset < self.data.len() {
-            let code = &bytecode[code_offset..code_offset + len];
-            //ATTENTION: Later investigate if code is being injected into memory correctly
-            // I dont think the below code is correct. 
-            if self.memory.len() < mem_offset + 32 {
-              self.memory.resize(mem_offset + 32, 0);
-            }
+          let code = &bytecode[code_offset..code_offset + len];
+          //ATTENTION: Later investigate if code is being injected into memory correctly
+          // I dont think the below code is correct.
+          if self.memory.len() < mem_offset + 32 {
+            self.memory.resize(mem_offset + 32, 0);
+          }
 
-            // Calculate padding for resizing
-            let current_size = code.len()+mem_offset;
-            let remainder = current_size % 32;
-            let padding = if remainder == 0 {
-                0
+          // Calculate padding for resizing
+          let current_size = code.len() + mem_offset;
+          let remainder = current_size % 32;
+          let padding = if remainder == 0 { 0 } else { 32 - remainder };
+
+          // Resize
+          self.memory.resize(current_size + padding + 32, 0);
+          //Calculate new space of zeroes
+          for i in 0..=code.len() - 1 {
+            if i > code.len() {
+              self.memory[mem_offset + i] = 0;
             } else {
-                32 - remainder
-            };
-
-            // Resize
-            self.memory.resize(current_size + padding + 32, 0);
-            //Calculate new space of zeroes 
-            for i in 0..=code.len()-1 {
-              if i > code.len() {
-                self.memory[mem_offset + i] = 0;
-              } else {
-                self.memory[mem_offset + i] = code[i];
-              }
+              self.memory[mem_offset + i] = code[i];
             }
+          }
           //}
         }
         Instruction::ExtCodeSize => {
@@ -1035,7 +1031,7 @@ mod tests {
   fn test_cost_fn(_: &Instruction) -> U256 {
     U256::zero()
   }
-  /* 
+  /*
   #[allow(dead_code)]
   fn print_vm_memory(vm: &Machine) {
     let mem = &vm.memory;
@@ -1049,264 +1045,264 @@ mod tests {
     }
   }
   */
- /* 
-  #[test]
-  fn test_basic() {
-    let mut machine = Machine::new(test_cost_fn);
+  /*
+   #[test]
+   fn test_basic() {
+     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(
-      &[
-        Instruction::Push1 as u8,
-        0x01,
-        Instruction::Push1 as u8,
-        0x02,
-        Instruction::Add as u8,
-      ],
-      Default::default(),
-    );
+     let status = machine.execute(
+       &[
+         Instruction::Push1 as u8,
+         0x01,
+         Instruction::Push1 as u8,
+         0x02,
+         Instruction::Add as u8,
+       ],
+       Default::default(),
+     );
 
-    assert_eq!(status, ExecutionState::Ok);
-    assert_eq!(machine.stack.pop(), U256::from(0x03));
-  }
+     assert_eq!(status, ExecutionState::Ok);
+     assert_eq!(machine.stack.pop(), U256::from(0x03));
+   }
 
-  #[test]
-  fn test_stack_swap() {
-    let mut stack = Stack::default();
+   #[test]
+   fn test_stack_swap() {
+     let mut stack = Stack::default();
 
-    stack.push(U256::from(0x01));
-    stack.push(U256::from(0x02));
-    stack.swap(1);
+     stack.push(U256::from(0x01));
+     stack.push(U256::from(0x02));
+     stack.swap(1);
 
-    stack.pop();
-    stack.swap(1);
+     stack.pop();
+     stack.swap(1);
 
-    assert_eq!(stack.pop(), U256::from(0x02));
-  }
+     assert_eq!(stack.pop(), U256::from(0x02));
+   }
 
-  #[test]
-  fn test_swap_jump() {
-    let mut machine = Machine::new(test_cost_fn);
+   #[test]
+   fn test_swap_jump() {
+     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(
-      &[
-        Instruction::Push1 as u8,
-        0x00,
-        Instruction::Push1 as u8,
-        0x03,
-        Instruction::Swap1 as u8,
-        Instruction::Pop as u8,
-        Instruction::Swap1 as u8,
-      ],
-      Default::default(),
-    );
+     let status = machine.execute(
+       &[
+         Instruction::Push1 as u8,
+         0x00,
+         Instruction::Push1 as u8,
+         0x03,
+         Instruction::Swap1 as u8,
+         Instruction::Pop as u8,
+         Instruction::Swap1 as u8,
+       ],
+       Default::default(),
+     );
 
-    assert_eq!(status, ExecutionState::Ok);
-    assert_eq!(machine.stack.pop(), U256::from(0x03));
-  }
+     assert_eq!(status, ExecutionState::Ok);
+     assert_eq!(machine.stack.pop(), U256::from(0x03));
+   }
 
-  #[test]
-  fn test_sdiv() {
-    let mut machine = Machine::new(test_cost_fn);
+   #[test]
+   fn test_sdiv() {
+     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(
-      &[
-        Instruction::Push1 as u8,
-        0x02,
-        Instruction::Push1 as u8,
-        0x04,
-        Instruction::SDiv as u8,
-      ],
-      Default::default(),
-    );
+     let status = machine.execute(
+       &[
+         Instruction::Push1 as u8,
+         0x02,
+         Instruction::Push1 as u8,
+         0x04,
+         Instruction::SDiv as u8,
+       ],
+       Default::default(),
+     );
 
-    assert_eq!(status, ExecutionState::Ok);
-    assert_eq!(machine.stack.pop(), U256::from(0x02));
-  }
+     assert_eq!(status, ExecutionState::Ok);
+     assert_eq!(machine.stack.pop(), U256::from(0x02));
+   }
 
-  #[test]
-  fn test_add_solidity() {
-    // label_0000:
-    // 	// Inputs[1] { @0005  msg.value }
-    // 	0000    60  PUSH1 0x80
-    // 	0002    60  PUSH1 0x40
-    // 	0004    52  MSTORE
-    // 	0005    34  CALLVALUE
-    // 	0006    80  DUP1
-    // 	0007    15  ISZERO
-    // 	0008    60  PUSH1 0x0f
-    // 	000A    57  *JUMPI
-    // 	// Stack delta = +1
-    // 	// Outputs[2]
-    // 	// {
-    // 	//     @0004  memory[0x40:0x60] = 0x80
-    // 	//     @0005  stack[0] = msg.value
-    // 	// }
-    // 	// Block ends with conditional jump to 0x000f, if !msg.value
+   #[test]
+   fn test_add_solidity() {
+     // label_0000:
+     // 	// Inputs[1] { @0005  msg.value }
+     // 	0000    60  PUSH1 0x80
+     // 	0002    60  PUSH1 0x40
+     // 	0004    52  MSTORE
+     // 	0005    34  CALLVALUE
+     // 	0006    80  DUP1
+     // 	0007    15  ISZERO
+     // 	0008    60  PUSH1 0x0f
+     // 	000A    57  *JUMPI
+     // 	// Stack delta = +1
+     // 	// Outputs[2]
+     // 	// {
+     // 	//     @0004  memory[0x40:0x60] = 0x80
+     // 	//     @0005  stack[0] = msg.value
+     // 	// }
+     // 	// Block ends with conditional jump to 0x000f, if !msg.value
 
-    // label_000B:
-    // 	// Incoming jump from 0x000A, if not !msg.value
-    // 	// Inputs[1] { @000E  memory[0x00:0x00] }
-    // 	000B    60  PUSH1 0x00
-    // 	000D    80  DUP1
-    // 	000E    FD  *REVERT
-    // 	// Stack delta = +0
-    // 	// Outputs[1] { @000E  revert(memory[0x00:0x00]); }
-    // 	// Block terminates
+     // label_000B:
+     // 	// Incoming jump from 0x000A, if not !msg.value
+     // 	// Inputs[1] { @000E  memory[0x00:0x00] }
+     // 	000B    60  PUSH1 0x00
+     // 	000D    80  DUP1
+     // 	000E    FD  *REVERT
+     // 	// Stack delta = +0
+     // 	// Outputs[1] { @000E  revert(memory[0x00:0x00]); }
+     // 	// Block terminates
 
-    // label_000F:
-    // 	// Incoming jump from 0x000A, if !msg.value
-    // 	// Inputs[1] { @001B  memory[0x00:0x77] }
-    // 	000F    5B  JUMPDEST
-    // 	0010    50  POP
-    // 	0011    60  PUSH1 0x77
-    // 	0013    80  DUP1
-    // 	0014    60  PUSH1 0x1d
-    // 	0016    60  PUSH1 0x00
-    // 	0018    39  CODECOPY
-    // 	0019    60  PUSH1 0x00
-    // 	001B    F3  *RETURN
-    // 	// Stack delta = -1
-    // 	// Outputs[2]
-    // 	// {
-    // 	//     @0018  memory[0x00:0x77] = code[0x1d:0x94]
-    // 	//     @001B  return memory[0x00:0x77];
-    // 	// }
-    // 	// Block terminates
+     // label_000F:
+     // 	// Incoming jump from 0x000A, if !msg.value
+     // 	// Inputs[1] { @001B  memory[0x00:0x77] }
+     // 	000F    5B  JUMPDEST
+     // 	0010    50  POP
+     // 	0011    60  PUSH1 0x77
+     // 	0013    80  DUP1
+     // 	0014    60  PUSH1 0x1d
+     // 	0016    60  PUSH1 0x00
+     // 	0018    39  CODECOPY
+     // 	0019    60  PUSH1 0x00
+     // 	001B    F3  *RETURN
+     // 	// Stack delta = -1
+     // 	// Outputs[2]
+     // 	// {
+     // 	//     @0018  memory[0x00:0x77] = code[0x1d:0x94]
+     // 	//     @001B  return memory[0x00:0x77];
+     // 	// }
+     // 	// Block terminates
 
-    // 	001C    FE    *ASSERT
-    // 	001D    60    PUSH1 0x80
-    // 	001F    60    PUSH1 0x40
-    // 	0021    52    MSTORE
-    // 	0022    34    CALLVALUE
-    // 	0023    80    DUP1
-    // 	0024    15    ISZERO
-    // 	0025    60    PUSH1 0x0f
-    // 	0027    57    *JUMPI
-    // 	0028    60    PUSH1 0x00
-    // 	002A    80    DUP1
-    // 	002B    FD    *REVERT
-    // 	002C    5B    JUMPDEST
-    // 	002D    50    POP
-    // 	002E    60    PUSH1 0x04
-    // 	0030    36    CALLDATASIZE
-    // 	0031    10    LT
-    // 	0032    60    PUSH1 0x28
-    // 	0034    57    *JUMPI
-    // 	0035    60    PUSH1 0x00
-    // 	0037    35    CALLDATALOAD
-    // 	0038    60    PUSH1 0xe0
-    // 	003A    1C    SHR
-    // 	003B    80    DUP1
-    // 	003C    63    PUSH4 0x4f2be91f
-    // 	0041    14    EQ
-    // 	0042    60    PUSH1 0x2d
-    // 	0044    57    *JUMPI
-    // 	0045    5B    JUMPDEST
-    // 	0046    60    PUSH1 0x00
-    // 	0048    80    DUP1
-    // 	0049    FD    *REVERT
-    // 	004A    5B    JUMPDEST
-    // 	004B    60    PUSH1 0x03
-    // 	004D    60    PUSH1 0x40
-    // 	004F    51    MLOAD
-    // 	0050    90    SWAP1
-    // 	0051    81    DUP2
-    // 	0052    52    MSTORE
-    // 	0053    60    PUSH1 0x20
-    // 	0055    01    ADD
-    // 	0056    60    PUSH1 0x40
-    // 	0058    51    MLOAD
-    // 	0059    80    DUP1
-    // 	005A    91    SWAP2
-    // 	005B    03    SUB
-    // 	005C    90    SWAP1
-    // 	005D    F3    *RETURN
-    // 	005E    FE    *ASSERT
-    // 	005F    A2    LOG2
-    // 	0060    64    PUSH5 0x6970667358
-    // 	0066    22    22
-    // 	0067    12    SLT
-    // 	0068    20    SHA3
-    // 	0069    FD    *REVERT
-    // 	006A    A5    A5
-    // 	006B    D9    D9
-    // 	006C    D2    D2
-    // 	006D    16    AND
-    // 	006E    9A    SWAP11
-    // 	006F    B4    B4
-    // 	0070    47    SELFBALANCE
-    // 	0071    B0    PUSH
-    // 	0072    A2    LOG2
-    // 	0073    35    CALLDATALOAD
-    // 	0074    7F    PUSH32 0xe5d46648452a2ffa2d4046a757ef013fbfe7a7d764736f6c634300080a0033
-    let hex_code = hex!("6080604052348015600f57600080fd5b506004361060285760003560e01c80634f2be91f14602d575b600080fd5b60336047565b604051603e91906067565b60405180910390f35b60006003905090565b6000819050919050565b6061816050565b82525050565b6000602082019050607a6000830184605a565b9291505056fea26469706673582212200047574855cc88b41f29d7879f8126fe8da6f03c5f30c66c8e1290510af5253964736f6c634300080a0033");
-    let mut machine =
-      Machine::new_with_data(test_cost_fn, hex!("4f2be91f").to_vec());
+     // 	001C    FE    *ASSERT
+     // 	001D    60    PUSH1 0x80
+     // 	001F    60    PUSH1 0x40
+     // 	0021    52    MSTORE
+     // 	0022    34    CALLVALUE
+     // 	0023    80    DUP1
+     // 	0024    15    ISZERO
+     // 	0025    60    PUSH1 0x0f
+     // 	0027    57    *JUMPI
+     // 	0028    60    PUSH1 0x00
+     // 	002A    80    DUP1
+     // 	002B    FD    *REVERT
+     // 	002C    5B    JUMPDEST
+     // 	002D    50    POP
+     // 	002E    60    PUSH1 0x04
+     // 	0030    36    CALLDATASIZE
+     // 	0031    10    LT
+     // 	0032    60    PUSH1 0x28
+     // 	0034    57    *JUMPI
+     // 	0035    60    PUSH1 0x00
+     // 	0037    35    CALLDATALOAD
+     // 	0038    60    PUSH1 0xe0
+     // 	003A    1C    SHR
+     // 	003B    80    DUP1
+     // 	003C    63    PUSH4 0x4f2be91f
+     // 	0041    14    EQ
+     // 	0042    60    PUSH1 0x2d
+     // 	0044    57    *JUMPI
+     // 	0045    5B    JUMPDEST
+     // 	0046    60    PUSH1 0x00
+     // 	0048    80    DUP1
+     // 	0049    FD    *REVERT
+     // 	004A    5B    JUMPDEST
+     // 	004B    60    PUSH1 0x03
+     // 	004D    60    PUSH1 0x40
+     // 	004F    51    MLOAD
+     // 	0050    90    SWAP1
+     // 	0051    81    DUP2
+     // 	0052    52    MSTORE
+     // 	0053    60    PUSH1 0x20
+     // 	0055    01    ADD
+     // 	0056    60    PUSH1 0x40
+     // 	0058    51    MLOAD
+     // 	0059    80    DUP1
+     // 	005A    91    SWAP2
+     // 	005B    03    SUB
+     // 	005C    90    SWAP1
+     // 	005D    F3    *RETURN
+     // 	005E    FE    *ASSERT
+     // 	005F    A2    LOG2
+     // 	0060    64    PUSH5 0x6970667358
+     // 	0066    22    22
+     // 	0067    12    SLT
+     // 	0068    20    SHA3
+     // 	0069    FD    *REVERT
+     // 	006A    A5    A5
+     // 	006B    D9    D9
+     // 	006C    D2    D2
+     // 	006D    16    AND
+     // 	006E    9A    SWAP11
+     // 	006F    B4    B4
+     // 	0070    47    SELFBALANCE
+     // 	0071    B0    PUSH
+     // 	0072    A2    LOG2
+     // 	0073    35    CALLDATALOAD
+     // 	0074    7F    PUSH32 0xe5d46648452a2ffa2d4046a757ef013fbfe7a7d764736f6c634300080a0033
+     let hex_code = hex!("6080604052348015600f57600080fd5b506004361060285760003560e01c80634f2be91f14602d575b600080fd5b60336047565b604051603e91906067565b60405180910390f35b60006003905090565b6000819050919050565b6061816050565b82525050565b6000602082019050607a6000830184605a565b9291505056fea26469706673582212200047574855cc88b41f29d7879f8126fe8da6f03c5f30c66c8e1290510af5253964736f6c634300080a0033");
+     let mut machine =
+       Machine::new_with_data(test_cost_fn, hex!("4f2be91f").to_vec());
 
-    let status = machine.execute(&hex_code, Default::default());
-    assert_eq!(status, ExecutionState::Ok);
+     let status = machine.execute(&hex_code, Default::default());
+     assert_eq!(status, ExecutionState::Ok);
 
-    assert_eq!(machine.result.len(), 32);
-    assert_eq!(machine.result.pop(), Some(0x03));
-  }
+     assert_eq!(machine.result.len(), 32);
+     assert_eq!(machine.result.pop(), Some(0x03));
+   }
 
-  #[test]
-  fn test_erc_twenty() {
-    let hex_code = hex!("608060405234801561001057600080fd5b50600436106100365760003560e01c80632e64cec11461003b5780636057361d14610059575b600080fd5b610043610075565b60405161005091906100a1565b60405180910390f35b610073600480360381019061006e91906100ed565b61007e565b005b60008054905090565b8060008190555050565b6000819050919050565b61009b81610088565b82525050565b60006020820190506100b66000830184610092565b92915050565b600080fd5b6100ca81610088565b81146100d557600080fd5b50565b6000813590506100e7816100c1565b92915050565b600060208284031215610103576101026100bc565b5b6000610111848285016100d8565b9150509291505056fea2646970667358221220322c78243e61b783558509c9cc22cb8493dde6925aa5e89a08cdf6e22f279ef164736f6c63430008120033");
-    let mut machine =
-      Machine::new_with_data(test_cost_fn, hex!("6057361d0000000000000000000000000000000000000000000000000000000000000002").to_vec());
+   #[test]
+   fn test_erc_twenty() {
+     let hex_code = hex!("608060405234801561001057600080fd5b50600436106100365760003560e01c80632e64cec11461003b5780636057361d14610059575b600080fd5b610043610075565b60405161005091906100a1565b60405180910390f35b610073600480360381019061006e91906100ed565b61007e565b005b60008054905090565b8060008190555050565b6000819050919050565b61009b81610088565b82525050565b60006020820190506100b66000830184610092565b92915050565b600080fd5b6100ca81610088565b81146100d557600080fd5b50565b6000813590506100e7816100c1565b92915050565b600060208284031215610103576101026100bc565b5b6000610111848285016100d8565b9150509291505056fea2646970667358221220322c78243e61b783558509c9cc22cb8493dde6925aa5e89a08cdf6e22f279ef164736f6c63430008120033");
+     let mut machine =
+       Machine::new_with_data(test_cost_fn, hex!("6057361d0000000000000000000000000000000000000000000000000000000000000002").to_vec());
 
-    let status = machine.execute(&hex_code, Default::default());
+     let status = machine.execute(&hex_code, Default::default());
 
-    //println!("{:#?}", machine.storage);
-    //assert_eq!(status, ExecutionState::Ok);
+     //println!("{:#?}", machine.storage);
+     //assert_eq!(status, ExecutionState::Ok);
 
-    //assert_eq!(machine.result.len(), 32);
-    //assert_eq!(machine.result.pop(), Some(0x03));
-  }
+     //assert_eq!(machine.result.len(), 32);
+     //assert_eq!(machine.result.pop(), Some(0x03));
+   }
 
-  #[test]
-  fn test_mstore() {
-    //
-    let mut machine = Machine::new(test_cost_fn);
+   #[test]
+   fn test_mstore() {
+     //
+     let mut machine = Machine::new(test_cost_fn);
 
-    // memory[0x40:0x60] = 0x80
-    let status = machine.execute(
-      &[
-        Instruction::Push1 as u8,
-        0x80,
-        Instruction::Push1 as u8,
-        0x40,
-        Instruction::MStore as u8,
-      ],
-      Default::default(),
-    );
-    assert_eq!(status, ExecutionState::Ok);
-  }
+     // memory[0x40:0x60] = 0x80
+     let status = machine.execute(
+       &[
+         Instruction::Push1 as u8,
+         0x80,
+         Instruction::Push1 as u8,
+         0x40,
+         Instruction::MStore as u8,
+       ],
+       Default::default(),
+     );
+     assert_eq!(status, ExecutionState::Ok);
+   }
 
-  #[test]
-  fn test_keccak256() {
-    // object "object" {
-    //   code {
-    //       mstore(0, 0x10)
-    //       pop(keccak256(0, 0x20))
-    //   }
-    // }
-    let bytes = hex!("6010600052602060002050");
-    let mut machine = Machine::new(test_cost_fn);
+   #[test]
+   fn test_keccak256() {
+     // object "object" {
+     //   code {
+     //       mstore(0, 0x10)
+     //       pop(keccak256(0, 0x20))
+     //   }
+     // }
+     let bytes = hex!("6010600052602060002050");
+     let mut machine = Machine::new(test_cost_fn);
 
-    let status = machine.execute(&bytes, Default::default());
-    assert_eq!(status, ExecutionState::Ok);
-  }
+     let status = machine.execute(&bytes, Default::default());
+     assert_eq!(status, ExecutionState::Ok);
+   }
 
-  #[test]
-  fn test_storage_constructor() {
-    let bytes = hex!("608060405234801561001057600080fd5b506040518060400160405280600a81526020017f6c6974746c6564697679000000000000000000000000000000000000000000008152506000908051906020019061005c929190610062565b50610166565b82805461006e90610134565b90600052602060002090601f01602090048101928261009057600085556100d7565b82601f106100a957805160ff19168380011785556100d7565b828001600101855582156100d7579182015b828111156100d65782518255916020019190600101906100bb565b5b5090506100e491906100e8565b5090565b5b808211156101015760008160009055506001016100e9565b5090565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061014c57607f821691505b602082108114156101605761015f610105565b5b50919050565b6104a8806101756000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80633a525c291461003b5780636b701e0814610059575b600080fd5b610043610075565b604051610050919061025d565b60405180910390f35b610073600480360381019061006e91906103c8565b610107565b005b60606000805461008490610440565b80601f01602080910402602001604051908101604052809291908181526020018280546100b090610440565b80156100fd5780601f106100d2576101008083540402835291602001916100fd565b820191906000526020600020905b8154815290600101906020018083116100e057829003601f168201915b5050505050905090565b806000908051906020019061011d929190610121565b5050565b82805461012d90610440565b90600052602060002090601f01602090048101928261014f5760008555610196565b82601f1061016857805160ff1916838001178555610196565b82800160010185558215610196579182015b8281111561019557825182559160200191906001019061017a565b5b5090506101a391906101a7565b5090565b5b808211156101c05760008160009055506001016101a8565b5090565b600081519050919050565b600082825260208201905092915050565b60005b838110156101fe5780820151818401526020810190506101e3565b8381111561020d576000848401525b50505050565b6000601f19601f8301169050919050565b600061022f826101c4565b61023981856101cf565b93506102498185602086016101e0565b61025281610213565b840191505092915050565b600060208201905081810360008301526102778184610224565b905092915050565b6000604051905090565b600080fd5b600080fd5b600080fd5b600080fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b6102d582610213565b810181811067ffffffffffffffff821117156102f4576102f361029d565b5b80604052505050565b600061030761027f565b905061031382826102cc565b919050565b600067ffffffffffffffff8211156103335761033261029d565b5b61033c82610213565b9050602081019050919050565b82818337600083830152505050565b600061036b61036684610318565b6102fd565b90508281526020810184848401111561038757610386610298565b5b610392848285610349565b509392505050565b600082601f8301126103af576103ae610293565b5b81356103bf848260208601610358565b91505092915050565b6000602082840312156103de576103dd610289565b5b600082013567ffffffffffffffff8111156103fc576103fb61028e565b5b6104088482850161039a565b91505092915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061045857607f821691505b6020821081141561046c5761046b610411565b5b5091905056fea264697066735822122007a3fec27bf391246bb4a62e66c81e304129cd8c6427df54eb8e9cebec9c658f64736f6c634300080a0033");
-    let mut machine = Machine::new(test_cost_fn);
-    let status = machine.execute(&bytes, Default::default());
-    assert_eq!(status, ExecutionState::Ok);
-  }
- */
+   #[test]
+   fn test_storage_constructor() {
+     let bytes = hex!("608060405234801561001057600080fd5b506040518060400160405280600a81526020017f6c6974746c6564697679000000000000000000000000000000000000000000008152506000908051906020019061005c929190610062565b50610166565b82805461006e90610134565b90600052602060002090601f01602090048101928261009057600085556100d7565b82601f106100a957805160ff19168380011785556100d7565b828001600101855582156100d7579182015b828111156100d65782518255916020019190600101906100bb565b5b5090506100e491906100e8565b5090565b5b808211156101015760008160009055506001016100e9565b5090565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061014c57607f821691505b602082108114156101605761015f610105565b5b50919050565b6104a8806101756000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80633a525c291461003b5780636b701e0814610059575b600080fd5b610043610075565b604051610050919061025d565b60405180910390f35b610073600480360381019061006e91906103c8565b610107565b005b60606000805461008490610440565b80601f01602080910402602001604051908101604052809291908181526020018280546100b090610440565b80156100fd5780601f106100d2576101008083540402835291602001916100fd565b820191906000526020600020905b8154815290600101906020018083116100e057829003601f168201915b5050505050905090565b806000908051906020019061011d929190610121565b5050565b82805461012d90610440565b90600052602060002090601f01602090048101928261014f5760008555610196565b82601f1061016857805160ff1916838001178555610196565b82800160010185558215610196579182015b8281111561019557825182559160200191906001019061017a565b5b5090506101a391906101a7565b5090565b5b808211156101c05760008160009055506001016101a8565b5090565b600081519050919050565b600082825260208201905092915050565b60005b838110156101fe5780820151818401526020810190506101e3565b8381111561020d576000848401525b50505050565b6000601f19601f8301169050919050565b600061022f826101c4565b61023981856101cf565b93506102498185602086016101e0565b61025281610213565b840191505092915050565b600060208201905081810360008301526102778184610224565b905092915050565b6000604051905090565b600080fd5b600080fd5b600080fd5b600080fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b6102d582610213565b810181811067ffffffffffffffff821117156102f4576102f361029d565b5b80604052505050565b600061030761027f565b905061031382826102cc565b919050565b600067ffffffffffffffff8211156103335761033261029d565b5b61033c82610213565b9050602081019050919050565b82818337600083830152505050565b600061036b61036684610318565b6102fd565b90508281526020810184848401111561038757610386610298565b5b610392848285610349565b509392505050565b600082601f8301126103af576103ae610293565b5b81356103bf848260208601610358565b91505092915050565b6000602082840312156103de576103dd610289565b5b600082013567ffffffffffffffff8111156103fc576103fb61028e565b5b6104088482850161039a565b91505092915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061045857607f821691505b6020821081141561046c5761046b610411565b5b5091905056fea264697066735822122007a3fec27bf391246bb4a62e66c81e304129cd8c6427df54eb8e9cebec9c658f64736f6c634300080a0033");
+     let mut machine = Machine::new(test_cost_fn);
+     let status = machine.execute(&bytes, Default::default());
+     assert_eq!(status, ExecutionState::Ok);
+   }
+  */
   #[test]
   fn test_erc_constructor() {
     //60015f60026003
@@ -1314,12 +1310,12 @@ mod tests {
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
-    
+
     println!("LOOK DOWN");
     println!("Result: {:#?}", machine.result);
     println!("Storage: {:#?}", machine.storage);
     println!("Memory: {:#?}", machine.memory);
-    println!("Stack: {:#?}", machine.stack); 
+    println!("Stack: {:#?}", machine.stack);
   }
   /*
   #[test]
@@ -1338,7 +1334,7 @@ mod tests {
     //assert_eq!(machine.result.pop(), Some(0x03));
   }
   */
-  /* 
+  /*
   #[test]
   fn test_storage_retrieve() {
     let bytes = hex!("608060405234801561001057600080fd5b50600436106100365760003560e01c80633a525c291461003b5780636b701e0814610059575b600080fd5b610043610075565b6040516100509190610259565b60405180910390f35b610073600480360381019061006e91906102ea565b610107565b005b60606000805461008490610366565b80601f01602080910402602001604051908101604052809291908181526020018280546100b090610366565b80156100fd5780601f106100d2576101008083540402835291602001916100fd565b820191906000526020600020905b8154815290600101906020018083116100e057829003601f168201915b5050505050905090565b81816000919061011892919061011d565b505050565b82805461012990610366565b90600052602060002090601f01602090048101928261014b5760008555610192565b82601f1061016457803560ff1916838001178555610192565b82800160010185558215610192579182015b82811115610191578235825591602001919060010190610176565b5b50905061019f91906101a3565b5090565b5b808211156101bc5760008160009055506001016101a4565b5090565b600081519050919050565b600082825260208201905092915050565b60005b838110156101fa5780820151818401526020810190506101df565b83811115610209576000848401525b50505050565b6000601f19601f8301169050919050565b600061022b826101c0565b61023581856101cb565b93506102458185602086016101dc565b61024e8161020f565b840191505092915050565b600060208201905081810360008301526102738184610220565b905092915050565b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b60008083601f8401126102aa576102a9610285565b5b8235905067ffffffffffffffff8111156102c7576102c661028a565b5b6020830191508360018202830111156102e3576102e261028f565b5b9250929050565b600080602083850312156103015761030061027b565b5b600083013567ffffffffffffffff81111561031f5761031e610280565b5b61032b85828601610294565b92509250509250929050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b6000600282049050600182168061037e57607f821691505b6020821081141561039257610391610337565b5b5091905056fea26469706673582212207d39b40255f686f82c889c56bfa8000e6be27070f005d24ec016e786e6ce64fc64736f6c634300080a0033");
