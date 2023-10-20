@@ -916,7 +916,6 @@ export async function handle(state, action) {
                 const domainType = _getDomainType(domain);
                 const domainUsdFee = state.pricing[domainType];
                 const arPrice = await _fetchArPrice();
-
                 const expectedPaidFee = domainUsdFee / arPrice; // fee in AR;
                 const everTx = await _getEverpayTx(txid, caller);
 
