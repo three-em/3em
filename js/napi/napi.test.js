@@ -255,7 +255,8 @@ export async function handle(state, action) {
         requests: {},
         kv: {
           'PreviouslyAddedKey': 'Buccees'
-        }
+        },
+        data: {},
       })
     });
     console.log(simulate);
