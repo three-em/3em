@@ -1,4 +1,5 @@
 pub use primitive_types::U256;
+pub use primitive_types::H128;
 use tiny_keccak::Hasher;
 use tiny_keccak::Keccak;
 
@@ -362,7 +363,11 @@ impl<'a> Machine<'a> {
         Instruction::Sub => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-          self.stack.push(lhs - rhs);
+          let mlhs = lhs.as_u128();
+          let mrhs = rhs.as_u128();
+          let difference = mlhs.overflowing_sub(mrhs);
+          println!("{:#?}", difference);
+          self.stack.push(lhs);
         }
         Instruction::Mul => {
           let lhs = self.stack.pop();
@@ -1306,7 +1311,7 @@ mod tests {
   #[test]
   fn test_erc_constructor() {
     //60015f60026003
-    let bytes = hex!("608060405234801561000f575f80fd5b5060405161015a38038061015a83398181016040528101906100319190610074565b805f819055505061009f565b5f80fd5b5f819050919050565b61005381610041565b811461005d575f80fd5b50565b5f8151905061006e8161004a565b92915050565b5f602082840312156100895761008861003d565b5b5f61009684828501610060565b91505092915050565b60af806100ab5f395ff3fe6080604052348015600e575f80fd5b50600436106026575f3560e01c8063eea32eb214602a575b5f80fd5b60306044565b604051603b91906062565b60405180910390f35b5f8054905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220e172226e595342e8a3f2ef9078c5da77614a34292db622e83940893b7979708764736f6c634300081400330000000000000000000000000000000000000000000000000000000000000003");
+    let bytes = hex!("6003600203");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
