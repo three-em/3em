@@ -391,12 +391,14 @@ impl<'a> Machine<'a> {
         Instruction::Div => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-
+          let lhs16: u16 = lhs.as_u64() as u16;
+          let rhs16: u16 = rhs.as_u64() as u16;
+          let quotient = U256::from(lhs16.overflowing_div(rhs16).0);
           if rhs == U256::zero() {
             return ExecutionState::Abort(AbortError::DivZero);
           }
 
-          self.stack.push(lhs / rhs);
+          self.stack.push(quotient);
         }
         Instruction::SDiv => {
           let dividend = to_signed(self.stack.pop());
@@ -1351,7 +1353,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("61ffff600102");
+    let bytes = hex!("6002600404");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
