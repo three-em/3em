@@ -673,7 +673,7 @@ impl<'a> Machine<'a> {
         }
         Instruction::Caller => {
           // TODO: caller
-          self.stack.push(U256::zero());
+          self.stack.push(U256::from("03"));
         }
         Instruction::CallValue => {
           self.stack.push(self.state);
@@ -1353,7 +1353,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("6002600404");
+    let bytes = hex!("33");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
