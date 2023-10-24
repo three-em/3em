@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub use primitive_types::U256;
 pub use primitive_types::H128;
 use tiny_keccak::Hasher;
@@ -343,6 +345,7 @@ impl<'a> Machine<'a> {
   ) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
+    let mut instruction_vec: Vec<String> = Vec::new();
     while pc < len {
       let opcode = bytecode[pc];
       let inst = match Instruction::try_from(opcode) {
@@ -356,27 +359,34 @@ impl<'a> Machine<'a> {
 
       pc += 1;
 
-      println!("Instruction: {:#?}", inst);
-      println!("Counter: {:#?}", pc);
+      println!("'{:#?}',", inst);
+
+      //println!("Counter: {:#?}", pc);
       match inst {
         Instruction::Stop => {}
         Instruction::Add => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-          self.stack.push(lhs + rhs);
+          let lhs16: u16 = lhs.as_u64() as u16;
+          let rhs16: u16 = rhs.as_u64() as u16;
+          let sum = U256::from(lhs16.overflowing_add(rhs16).0);
+          self.stack.push(sum);
         }
         Instruction::Sub => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-          let test1: u16 = lhs.as_u64() as u16;
-          let test2: u16 = rhs.as_u64() as u16;
-          let difference = U256::from(test1.overflowing_sub(test2).0);
+          let lhs16: u16 = lhs.as_u64() as u16;
+          let rhs16: u16 = rhs.as_u64() as u16;
+          let difference = U256::from(lhs16.overflowing_sub(rhs16).0);
           self.stack.push(difference);
         }
         Instruction::Mul => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-          self.stack.push(lhs * rhs);
+          let lhs16: u16 = lhs.as_u64() as u16;
+          let rhs16: u16 = rhs.as_u64() as u16;
+          let product = U256::from(lhs16.overflowing_mul(rhs16).0);
+          self.stack.push(product);
         }
         Instruction::Div => {
           let lhs = self.stack.pop();
@@ -1051,6 +1061,8 @@ impl<'a> Machine<'a> {
   }
 }
 
+
+
 #[cfg(test)]
 mod tests {
   use crate::storage::Storage;
@@ -1339,7 +1351,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("600119");
+    let bytes = hex!("61ffff600102");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
@@ -1397,3 +1409,7 @@ mod tests {
   }
   */
 }
+/*
+Yield integer overflow error to u64
+60017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff01
+*/
