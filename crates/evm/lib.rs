@@ -711,8 +711,6 @@ impl<'a> Machine<'a> {
           let mem_offset = self.stack.peek_step(1).low_u64() as usize;
           let code_offset = self.stack.peek_step(2);
           let len = self.stack.peek_step(3).low_u64() as usize;
-          println!("code offset: {:#?}", code_offset);
-          println!("len: {:#?}", len);
           //println!("Dest Offset: {:#?}", mem_offset);
           //println!("Offset: {:#?}", code_offset);
           //println!("Size: {:#?}", len);
@@ -755,7 +753,6 @@ impl<'a> Machine<'a> {
               self.memory[mem_offset + i] = code[i];
             }
           }
-          //}
         }
         Instruction::ExtCodeSize => {
           // Fetch the `Contract-Src` from Arweave for the contract.
