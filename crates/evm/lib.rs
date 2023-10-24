@@ -223,6 +223,10 @@ impl Stack {
     self.data[self.data.len() - 1]
   }
 
+  pub fn peek_step(&self, step: usize) -> U256 {
+    self.data[self.data.len() - step]
+  }
+
   pub fn swap(&mut self, index: usize) {
     let ptr = self.data.len() - 1;
 
@@ -704,10 +708,11 @@ impl<'a> Machine<'a> {
           self.stack.push(U256::from(len));
         }
         Instruction::CodeCopy => {
-          // NOTE about codecopy: We need to determine what sets initial memory size & thru out init & runtime bytecode
-          let mem_offset = self.stack.pop().low_u64() as usize;
-          let code_offset = self.stack.pop();
-          let len = self.stack.pop().low_u64() as usize;
+          let mem_offset = self.stack.peek_step(1).low_u64() as usize;
+          let code_offset = self.stack.peek_step(2);
+          let len = self.stack.peek_step(3).low_u64() as usize;
+          println!("code offset: {:#?}", code_offset);
+          println!("len: {:#?}", len);
           //println!("Dest Offset: {:#?}", mem_offset);
           //println!("Offset: {:#?}", code_offset);
           //println!("Size: {:#?}", len);
@@ -1337,8 +1342,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    //608060405234801562000010575f80fd5b506040516200166f3803806200166f3839
-    let bytes = hex!("600360011b");
+    let bytes = hex!("608060405234801562000010575f80fd5b506040516200166f3803806200166f3839");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
