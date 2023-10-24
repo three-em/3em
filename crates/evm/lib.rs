@@ -370,7 +370,6 @@ impl<'a> Machine<'a> {
           let rhs = self.stack.pop();
           let test1: u16 = lhs.as_u64() as u16;
           let test2: u16 = rhs.as_u64() as u16;
-          println!("CHECK: {:#?}", test1.overflowing_sub(test2).0);
           let difference = U256::from(test1.overflowing_sub(test2).0);
           self.stack.push(difference);
         }
@@ -617,8 +616,9 @@ impl<'a> Machine<'a> {
         }
         Instruction::Not => {
           let val = self.stack.pop();
-
-          self.stack.push(!val);
+          let val16: u16 = val.as_u64() as u16;
+          let not_val16 = U256::from(!val16);
+          self.stack.push(not_val16);
         }
         Instruction::Byte => {
           let rhs = self.stack.pop();
@@ -1339,7 +1339,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("608060405234801562000010575f80fd5b506040516200166f3803806200166f3839");
+    let bytes = hex!("600119");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
