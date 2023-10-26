@@ -859,9 +859,6 @@ impl<'a> Machine<'a> {
           
           let len = offset.low_u64() as usize;
           
-          let mut data = vec![0u8; 32];
-          println!("offset: {:#?}", len);
-
           // Calcuate bytes to add to memory based on offset
           let num_memory_rows = self.memory.len() / 32;
           let offset_needed_rows = ((len + 32) as f64 / 32.0).ceil() as usize;
@@ -875,15 +872,12 @@ impl<'a> Machine<'a> {
 
           let word = get_window_data(&self.memory, 32, len);
           let filtered_word = filter_left_zeros(word);
-          println!("filtered word: {:#?}", filtered_word);
-          
-          /* 
-          for (idx, mem_ptr) in (0..len).zip(len..len + 32) {
-            data[idx] = self.memory[mem_ptr];
-          }
-          println!("altered data: {:#?}", data.as_slice());
-          self.stack.push(U256::from(data.as_slice()));
-          */
+          let filtered_hex: Vec<String> = filtered_word.iter().map(|u256| format!("{:02x}", u256)).collect();
+          let joined_filtered: String = filtered_hex.into_iter().map(|byte| byte.to_string()).collect();
+          let word_u256 = U256::from_str_radix(joined_filtered.as_str(), 16).unwrap();
+
+          self.stack.push(U256::from(word_u256));
+
         }
         Instruction::MStore => {
           let offset = self.stack.pop();
@@ -1408,7 +1402,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("7f00000000000000000000000000000000000000000000000000000000000000ff600052600351");
+    let bytes = hex!("7f00000000000000000000000000000000000000000000000000000000000011ff6000527f00000000000000000000000000000000000000000000000000000000002200ff602052601f51");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
@@ -1418,6 +1412,7 @@ mod tests {
     println!("Storage: {:#?}", machine.storage);
     println!("Memory: {:#?}", machine.memory);
     println!("Stack: {:#?}", machine.stack);
+    println!("Test: {:#?}", U256::from("ff00000000000000000000000000000000000000000000000000000000002200"));
   }
   /*
   #[test]
