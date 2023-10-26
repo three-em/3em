@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 pub use primitive_types::U256;
 pub use primitive_types::H128;
 use tiny_keccak::Hasher;
@@ -36,6 +34,21 @@ fn to_signed(value: U256) -> U256 {
     true => (!value).overflowing_add(U256::one()).0,
     false => value,
   }
+}
+
+fn get_window_data(data: &Vec<u8>, window_size: usize, offset: usize) -> Vec<u8> {
+  let start_index = offset % data.len();
+  let end_index = start_index + window_size;
+
+  // Ensure the end index doesn't go beyond the length of the data
+  let end_index = if end_index > data.len() {
+      data.len()
+  } else {
+      end_index
+  };
+
+  // Return the data within the specified window
+  data[start_index..end_index].to_vec()
 }
 
 repr_u8! {
@@ -345,7 +358,8 @@ impl<'a> Machine<'a> {
   ) -> ExecutionState {
     let mut pc = 0;
     let len = bytecode.len();
-    let mut instruction_vec: Vec<String> = Vec::new();
+    let mut counter = 0;
+
     while pc < len {
       let opcode = bytecode[pc];
       let inst = match Instruction::try_from(opcode) {
@@ -358,10 +372,17 @@ impl<'a> Machine<'a> {
       let cost = (self.cost_fn)(&inst);
 
       pc += 1;
+      counter += 1;
+      /* 
+      if counter == 576 {
+         break;
+      }
+      */
+      println!("{:#?}", inst);
 
-      println!("'{:#?}',", inst);
-
-      //println!("Counter: {:#?}", pc);
+      println!("Position: {:#?}", pc);
+      println!("Counter: {:#?}", counter);
+      println!("===================");
       match inst {
         Instruction::Stop => {}
         Instruction::Add => {
@@ -673,7 +694,7 @@ impl<'a> Machine<'a> {
         }
         Instruction::Caller => {
           // TODO: caller
-          self.stack.push(U256::from("03"));
+          self.stack.push(U256::zero());
         }
         Instruction::CallValue => {
           self.stack.push(self.state);
@@ -723,9 +744,6 @@ impl<'a> Machine<'a> {
           let mem_offset = self.stack.peek_step(1).low_u64() as usize;
           let code_offset = self.stack.peek_step(2);
           let len = self.stack.peek_step(3).low_u64() as usize;
-          //println!("Dest Offset: {:#?}", mem_offset);
-          //println!("Offset: {:#?}", code_offset);
-          //println!("Size: {:#?}", len);
           if code_offset > usize::max_value().into() {
             dbg!("CODECOPY: offset too large");
           }
@@ -821,14 +839,20 @@ impl<'a> Machine<'a> {
           if offset > usize::max_value().into() {
             dbg!("MLOAD: offset too large");
           }
+          
           let len = offset.low_u64() as usize;
+          
           let mut data = vec![0u8; 32];
 
+          let d1 = get_window_data(&self.memory, 32, len);
+          println!("{:#?}", d1);
+          /* 
           for (idx, mem_ptr) in (0..len).zip(len..len + 32) {
             data[idx] = self.memory[mem_ptr];
           }
-
+          println!("altered data: {:#?}", data.as_slice());
           self.stack.push(U256::from(data.as_slice()));
+          */
         }
         Instruction::MStore => {
           let offset = self.stack.pop();
@@ -1353,7 +1377,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("33");
+    let bytes = hex!("7f00000000000000000000000000000000000000000000000000000000000000ff600052600151");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
@@ -1361,7 +1385,7 @@ mod tests {
     println!("LOOK DOWN");
     println!("Result: {:#?}", machine.result);
     println!("Storage: {:#?}", machine.storage);
-    println!("Memory: {:#?}", machine.memory.len());
+    println!("Memory: {:#?}", machine.memory);
     println!("Stack: {:#?}", machine.stack);
   }
   /*
