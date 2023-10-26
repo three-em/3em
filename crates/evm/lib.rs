@@ -51,6 +51,23 @@ fn get_window_data(data: &Vec<u8>, window_size: usize, offset: usize) -> Vec<u8>
   data[start_index..end_index].to_vec()
 }
 
+fn filter_left_zeros(data: Vec<u8>) -> Vec<u8> {
+  let mut result = Vec::new();
+  let mut found_non_zero = false;
+
+  for &value in &data {
+      if value > 0 {
+          found_non_zero = true;
+      }
+
+      if found_non_zero || value > 0 {
+          result.push(value);
+      }
+  }
+
+  result
+}
+
 repr_u8! {
   // EVM instructions
   #[repr(u8)]
@@ -849,17 +866,16 @@ impl<'a> Machine<'a> {
           let num_memory_rows = self.memory.len() / 32;
           let offset_needed_rows = ((len + 32) as f64 / 32.0).ceil() as usize;
           let rows_to_add = offset_needed_rows - num_memory_rows;
-          println!("num_memory_rows {:#?}", num_memory_rows);
-          println!("offset_needed_rows {:#?}", offset_needed_rows);
-          println!("rows_to_add {:#?}", rows_to_add);
-          
+  
           if rows_to_add > 0 {
             for _ in 0..=rows_to_add - 1 {
               self.memory.extend(std::iter::repeat(0).take(32));
             }
           }
-          //let d1 = get_window_data(&self.memory, 32, len);
-          //println!("function res: {:#?}", d1);
+
+          let word = get_window_data(&self.memory, 32, len);
+          let filtered_word = filter_left_zeros(word);
+          println!("filtered word: {:#?}", filtered_word);
           
           /* 
           for (idx, mem_ptr) in (0..len).zip(len..len + 32) {
@@ -1392,7 +1408,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("7f00000000000000000000000000000000000000000000000000000000000000ff600052602251");
+    let bytes = hex!("7f00000000000000000000000000000000000000000000000000000000000000ff600052600351");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
