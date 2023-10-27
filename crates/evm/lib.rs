@@ -399,6 +399,7 @@ impl<'a> Machine<'a> {
 
       println!("Position: {:#?}", pc);
       println!("Counter: {:#?}", counter);
+
       println!("===================");
       match inst {
         Instruction::Stop => {}
@@ -413,8 +414,15 @@ impl<'a> Machine<'a> {
         Instruction::Sub => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-          let lhs16: u16 = lhs.as_u64() as u16;
-          let rhs16: u16 = rhs.as_u64() as u16;
+
+          if counter == 534 {
+            println!("STACK: {:#?}", self.stack);
+            println!("TEST: {:#?}", U256::from("be862ad9abfe6f22bcb087716c7d89a26051f74c"));
+          }
+
+          let lhs16: u16 = lhs.as_u64() as u16; // culprits causing an issue
+          let rhs16: u16 = rhs.as_u64() as u16; // Should wallet be converted to base16? We need to see what obj truth offers wallet conversion 
+
           let difference = U256::from(lhs16.overflowing_sub(rhs16).0);
           self.stack.push(difference);
         }
@@ -711,7 +719,7 @@ impl<'a> Machine<'a> {
         }
         Instruction::Caller => {
           // TODO: caller
-          self.stack.push(U256::zero());
+          self.stack.push(U256::from("320F23780c98f1cbA153dA685e67c4F02aC78bd1"));
         }
         Instruction::CallValue => {
           self.stack.push(self.state);
@@ -862,7 +870,12 @@ impl<'a> Machine<'a> {
           // Calcuate bytes to add to memory based on offset
           let num_memory_rows = self.memory.len() / 32;
           let offset_needed_rows = ((len + 32) as f64 / 32.0).ceil() as usize;
-          let rows_to_add = offset_needed_rows - num_memory_rows;
+          println!("OFFSET: {:#?}", len);
+          println!("num_memory_rows: {:#?}", num_memory_rows);
+          println!("offset_needed_row {:#?}", offset_needed_rows);
+          
+          let rows_to_add = offset_needed_rows as i32 - num_memory_rows as i32;
+          println!("rows_to_add {:#?}", rows_to_add);
   
           if rows_to_add > 0 {
             for _ in 0..=rows_to_add - 1 {
@@ -875,7 +888,7 @@ impl<'a> Machine<'a> {
           let filtered_hex: Vec<String> = filtered_word.iter().map(|u256| format!("{:02x}", u256)).collect();
           let joined_filtered: String = filtered_hex.into_iter().map(|byte| byte.to_string()).collect();
           let word_u256 = U256::from_str_radix(joined_filtered.as_str(), 16).unwrap();
-
+          println!("HEXXY {:#?}", joined_filtered);
           self.stack.push(U256::from(word_u256));
 
         }
@@ -1402,7 +1415,7 @@ mod tests {
   */
   #[test]
   fn test_erc_constructor() {
-    let bytes = hex!("7f00000000000000000000000000000000000000000000000000000000000011ff6000527f00000000000000000000000000000000000000000000000000000000002200ff602052601f51");
+    let bytes = hex!("608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033");
     let mut machine = Machine::new(test_cost_fn);
     let status = machine.execute(&bytes, Default::default());
     //assert_eq!(status, ExecutionState::Ok);
@@ -1412,7 +1425,7 @@ mod tests {
     println!("Storage: {:#?}", machine.storage);
     println!("Memory: {:#?}", machine.memory);
     println!("Stack: {:#?}", machine.stack);
-    println!("Test: {:#?}", U256::from("ff00000000000000000000000000000000000000000000000000000000002200"));
+    
   }
   /*
   #[test]
