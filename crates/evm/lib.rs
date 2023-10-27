@@ -391,13 +391,14 @@ impl<'a> Machine<'a> {
       pc += 1;
       counter += 1;
       /* 
-      if counter == 576 {
+      if counter == 16 {
          break;
       }
       */
+    
       println!("{:#?}", inst);
 
-      println!("Position: {:#?}", pc);
+      println!("Position: {:#?}", pc-1);
       println!("Counter: {:#?}", counter);
 
       println!("===================");
@@ -766,9 +767,9 @@ impl<'a> Machine<'a> {
           self.stack.push(U256::from(len));
         }
         Instruction::CodeCopy => {
-          let mem_offset = self.stack.peek_step(1).low_u64() as usize;
-          let code_offset = self.stack.peek_step(2);
-          let len = self.stack.peek_step(3).low_u64() as usize;
+          let mem_offset = self.stack.pop().low_u64() as usize;
+          let code_offset = self.stack.pop();
+          let len = self.stack.pop().low_u64() as usize;
           if code_offset > usize::max_value().into() {
             dbg!("CODECOPY: offset too large");
           }
@@ -1088,6 +1089,7 @@ impl<'a> Machine<'a> {
             .copy_from_slice(&evm.result);
         }
         Instruction::Return => {
+
           let offset = self.stack.pop();
 
           if offset > usize::max_value().into() {
@@ -1425,6 +1427,14 @@ mod tests {
     println!("Storage: {:#?}", machine.storage);
     println!("Memory: {:#?}", machine.memory);
     println!("Stack: {:#?}", machine.stack);
+
+    /* 
+    let test_wallet = U256::from("be862ad9abfe6f22bcb087716c7d89a26051f74b");
+    let convert_wallet: u16 = test_wallet.as_u64() as u16;
+    println!("Wallet to u256 {:#?}", test_wallet);
+    println!("Wallet to u16 {:#?}", convert_wallet);
+    */
+
     
   }
   /*
