@@ -390,11 +390,11 @@ impl<'a> Machine<'a> {
 
       pc += 1;
       counter += 1;
-      /* 
-      if counter == 16 {
+      /*    
+      if counter == 20 {
          break;
       }
-      */
+     */
     
       println!("{:#?}", inst);
 
@@ -415,11 +415,6 @@ impl<'a> Machine<'a> {
         Instruction::Sub => {
           let lhs = self.stack.pop();
           let rhs = self.stack.pop();
-
-          if counter == 534 {
-            println!("STACK: {:#?}", self.stack);
-            println!("TEST: {:#?}", U256::from("be862ad9abfe6f22bcb087716c7d89a26051f74c"));
-          }
 
           let lhs16: u16 = lhs.as_u64() as u16; // culprits causing an issue
           let rhs16: u16 = rhs.as_u64() as u16; // Should wallet be converted to base16? We need to see what obj truth offers wallet conversion 
@@ -720,7 +715,7 @@ impl<'a> Machine<'a> {
         }
         Instruction::Caller => {
           // TODO: caller
-          self.stack.push(U256::from("320F23780c98f1cbA153dA685e67c4F02aC78bd1"));
+          self.stack.push(U256::zero());
         }
         Instruction::CallValue => {
           self.stack.push(self.state);
@@ -778,36 +773,20 @@ impl<'a> Machine<'a> {
           let code: &[u8];
           // Needed for testing parts of bytecode to avoid out of bound errors in &bytecode[code_offset..code_offset + len]
           let mut temp_vec: Vec<u8> = vec![]; 
+          println!("mem_offset: {:#?}", mem_offset);
+          println!("code_offset: {:#?}", code_offset);
+          println!("len: {:#?}", len);
+          println!("Memory Size: {:#?}", self.memory.len());
           
-          if code_offset + len <= bytecode.len() {
-            code = &bytecode[code_offset..code_offset + len];
-          } else {
-            // Used for byte by byte testing
-            temp_vec.extend(std::iter::repeat(0).take(len - code_offset));
-            code = &temp_vec;
+          if self.memory.len() < (mem_offset + len) {
+            self.memory.extend(std::iter::repeat(0).take(mem_offset+len - self.memory.len()));
           }
-          println!("length of new code {:#?}", &code.len());
-          //ATTENTION: Later investigate if code is being injected into memory correctly
-          // I dont think the below code is correct.
-          if self.memory.len() < mem_offset + 32 {
-            self.memory.resize(mem_offset + 32, 0);
-          }
-
-          // Calculate padding for resizing
-          let current_size = code.len() + mem_offset;
-          let remainder = current_size % 32;
-          let padding = if remainder == 0 { 0 } else { 32 - remainder };
-          
-          // Resize
-          self.memory.resize(current_size + padding + 32, 0);
+          code = &bytecode[code_offset..code_offset + len];
+          println!("Grabbed Code: {:#?}", code);
           
           //Calculate new space of zeroes
           for i in 0..=code.len() - 1 {
-            if i > code.len() {
-              self.memory[mem_offset + i] = 0;
-            } else {
               self.memory[mem_offset + i] = code[i];
-            }
           }
         }
         Instruction::ExtCodeSize => {
