@@ -800,7 +800,7 @@ mod tests {
   pub async fn simulate_kv_get() {
     let contract_source_bytes =
         include_bytes!("../../../testdata/contracts/getKv.js");
-
+ 
     let contract_source_vec = contract_source_bytes.to_vec();
     let execution_context: SimulateExecutionContext =
         SimulateExecutionContext {
