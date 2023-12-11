@@ -372,12 +372,12 @@
         async toSHA256(input) {
           const encoder = new TextEncoder();
           const data = encoder.encode(input);
-          const hashBuffer = await SmartWeave.arweave.crypto.hash(data);
+          const hashBuffer = await globalThis.SmartWeave.arweave.crypto.hash(data);
           const hashArray = Array.from(hashBuffer);
           const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
         
           return hashHex; 
-
+          
         }
       }
     }

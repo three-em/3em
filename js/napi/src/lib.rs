@@ -554,6 +554,7 @@ mod tests {
 
     let contract_result = contract.state;
     let str_state = contract_result.to_string();
+    //println!("STATUS::::: {:#?}", str_state.contains("wearemintingyes"));
     assert!(str_state.contains("wearemintingyes"));
 
   }
@@ -791,9 +792,7 @@ mod tests {
 
     let contract = simulate_contract(execution_context).await.unwrap();
     const hello_hash: &str = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
-    println!("{:#?}", contract.state);
-    println!("{:#?}", contract.state[0]);
-    //assert_eq!(contract.state[0], hello_hash);
+    assert_eq!(contract.state[0], hello_hash);
   }
 
   #[tokio::test]
