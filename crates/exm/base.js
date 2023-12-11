@@ -238,29 +238,6 @@
         testDelKv() {
             return this.kv;
         }
-
-        async sha256(buffer) {
-            return subtle.digest('SHA-256', buffer).then((hashBuffer) => {
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray
-                    .map((bytes) => bytes.toString(16).padStart(2, '0'))
-                    .join('');
-                return hashHex;
-            });
-        }
-
-        async stringToSHA256(input) {
-          const encoder = new TextEncoder();
-          const data = encoder.encode(input);
-        
-          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-        
-          return hashHex;
-        }
-
     }
 
     const ExmSymbol = Symbol('exm');
