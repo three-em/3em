@@ -394,7 +394,7 @@ impl<'a> Machine<'a> {
 
       pc += 1;
       counter += 1;
-      
+
       if counter == 400 {
         break;
       }
