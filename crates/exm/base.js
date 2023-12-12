@@ -238,7 +238,6 @@
         testDelKv() {
             return this.kv;
         }
-
         async sha256(buffer) {
             return subtle.digest('SHA-256', buffer).then((hashBuffer) => {
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -248,7 +247,6 @@
                 return hashHex;
             });
         }
-
     }
 
     const ExmSymbol = Symbol('exm');

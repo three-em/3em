@@ -1,0 +1,50 @@
+
+## List of the supported and tested 3EM EVM opcodes:
+
+| opcodes | status |
+|:---------:|:--------:|
+| `CallValue` | ✅ |
+| `Dup1` | ✅ |
+| `IsZero` | ✅ |
+| `Push3` | ✅ |
+| `JumpI` | ✅ |
+| `JumpDest` | ✅ |
+| `Pop` | ✅ |
+| `Push1` | ✅ |
+| `MLoad` | ✅ |
+| `CodeSize` | ✅ |
+| `Sub` | ✅ |
+| `CodeCopy` | ✅ |
+| `Dup2` | ✅ |
+| `Add` | ✅ |
+| `MStore` | ✅ |
+| `Swap1` | ✅ |
+| `Swap2` | ✅ |
+| `Jump` | ✅ |
+| `Push0` | ✅ |
+| `Dup3` | ✅ |
+| `Dup5` | ✅ |
+| `SLt` | ✅ |
+| `Dup6` | ✅ |
+| `Eq` | ✅ |
+| `Swap3` | ✅ |
+| `Push32` | ✅ |
+| `Push8` | ✅ |
+| `Gt` | ✅ |
+| `SLoad` | ✅ |
+| `Div` | ✅ |
+| `And` | ✅ |
+| `Lt` | ✅ |
+| `Dup4` | ✅ |
+| `Dup8` | ✅ |
+| `Not` | ✅ |
+| `Mul` | ✅ |
+| `Shr` | ✅ |
+| `Or` | ✅ |
+| `Dup7` | ✅ |
+| `SStore` | ✅ |
+| `Caller` | ✅ |
+| `Shl` | ✅ |
+| `Push20` | ✅ |
+| `Revert` | ✅ |
+| `Mload` | ✅ |

@@ -554,6 +554,7 @@ mod tests {
 
     let contract_result = contract.state;
     let str_state = contract_result.to_string();
+    //println!("STATUS::::: {:#?}", str_state.contains("wearemintingyes"));
     assert!(str_state.contains("wearemintingyes"));
 
   }
@@ -753,16 +754,52 @@ mod tests {
         };
 
     let contract = simulate_contract(execution_context).await.unwrap();
-    //println!("{}", contract.exm_context);
-    //println!("{}", contract.result);
     assert_eq!(contract.result, "[\"Yangtze\",\"Amazon\"]");
   }
-  
+
+  #[tokio::test]
+  pub async fn simulate_sha256() {
+    let contract_source_bytes =
+        include_bytes!("../../../testdata/contracts/sha256.js");
+    let contract_source_vec = contract_source_bytes.to_vec();
+    let execution_context: SimulateExecutionContext =
+        SimulateExecutionContext {
+          contract_id: String::new(),
+          interactions: vec![SimulateInput {
+            id: String::from("abcd"),
+            owner: String::from("210392sdaspd-asdm-asd_sa0d1293-lc"),
+            quantity: String::from("12301"),
+            reward: String::from("12931293"),
+            target: None,
+            tags: vec![],
+            block: None,
+            input: serde_json::json!({
+            "act": "1",
+          })
+                .to_string(),
+          }],
+          contract_init_state: Some(r#"{}"#.into()),
+          maybe_config: None,
+          maybe_cache: Some(false),
+          maybe_bundled_contract: None,
+          maybe_settings: None,
+          maybe_exm_context: Some(r#"{"requests": {}, "kv": {}, "initiated":[]}"#.into()),
+          maybe_contract_source: Some(ContractSource {
+            contract_src: contract_source_vec.into(),
+            contract_type: SimulateContractType::JAVASCRIPT,
+          }),
+        };
+
+    let contract = simulate_contract(execution_context).await.unwrap();
+    const hello_hash: &str = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+    assert_eq!(contract.state[0], hello_hash);
+  }
+
   #[tokio::test]
   pub async fn simulate_kv_get() {
     let contract_source_bytes =
         include_bytes!("../../../testdata/contracts/getKv.js");
-
+ 
     let contract_source_vec = contract_source_bytes.to_vec();
     let execution_context: SimulateExecutionContext =
         SimulateExecutionContext {
