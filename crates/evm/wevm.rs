@@ -15,38 +15,23 @@ pub struct EvmConfig {
     pub program: String,
     pub contract: EvmAccount,
     pub caller: EvmAccount,
-    pub vicinity: Option<evm::backend::MemoryVicinity>,
     pub state: BTreeMap<H160, evm::backend::MemoryAccount>
 }
 
 pub struct CallData {
-    config: EvmConfig,
     input: String
 }
 
-pub struct Evm;
+pub struct Evm<'a> {
+    pub memory: evm::backend::MemoryBackend<'a>,
+    pub contract_address: H160,
+    pub caller_address: H160,
+    pub fork_config: evm::Config
+}
 
-impl Evm {
+impl<'memory> Evm<'memory> {
     
-    pub fn new() -> Self {
-        Self
-    }
-    
-    pub fn call_raw(&self, config: EvmConfig, fork_config: evm::Config, input: String) -> (ExitReason, Vec<u8>) {
-        let vicinity = config.vicinity.unwrap_or_else(|| evm::backend::MemoryVicinity {
-            gas_price: U256::zero(),
-            origin: H160::default(),
-            block_hashes: Vec::new(),
-            block_number: Default::default(),
-            block_coinbase: Default::default(),
-            block_timestamp: Default::default(),
-            block_difficulty: Default::default(),
-            block_gas_limit: Default::default(),
-            chain_id: U256::one(),
-            block_base_fee_per_gas: U256::zero(),
-            block_randomness: None
-        });
-
+    pub fn new(config: EvmConfig, fork_config: evm::Config, vicinity: &'memory evm::backend::MemoryVicinity) -> Self {
         let mut state: BTreeMap<H160, evm::backend::MemoryAccount> = BTreeMap::new();
 
         let contract_address = H160::from_str(config.contract.address.as_str()).unwrap();
@@ -69,15 +54,25 @@ impl Evm {
         );
 
         // Prepare the executor.
-        let mut backend = evm::backend::MemoryBackend::new(&vicinity, state);
-        let metadata = evm::executor::stack::StackSubstateMetadata::new(u64::MAX, &fork_config);
-        let mut state = evm::executor::stack::MemoryStackState::new(metadata, &mut backend);
+        let backend = evm::backend::MemoryBackend::new(&vicinity, state);
+
+        Self {
+            memory: backend,
+            contract_address,
+            caller_address,
+            fork_config
+        }
+    }
+    
+    pub fn call_raw(&mut self, input: String) -> (ExitReason, Vec<u8>) {
+        let metadata = evm::executor::stack::StackSubstateMetadata::new(u64::MAX, &self.fork_config);
+        let mut state = evm::executor::stack::MemoryStackState::new(metadata, &mut self.memory);
         let precompiles = BTreeMap::new();
-        let mut executor = evm::executor::stack::StackExecutor::new_with_precompiles(state, &fork_config, &precompiles);
+        let mut executor = evm::executor::stack::StackExecutor::new_with_precompiles(state, &self.fork_config, &precompiles);
 
         let res = executor.transact_call(
-            caller_address,
-            contract_address,
+            self.caller_address.clone(),
+            self.contract_address.clone(),
             U256::zero(),
             hex::decode(input.as_str()).unwrap(),
             u64::MAX,
@@ -87,22 +82,21 @@ impl Evm {
         res
     }
 
-    pub fn call(&self, data: CallData, fork_config: evm::Config) -> (ExitReason, Vec<u8>) {
-        self.call_raw(data.config, fork_config, data.input)
-    }
-
-    pub fn call_istanbul(&self, data: CallData) -> (ExitReason, Vec<u8>) {
-        self.call(data, Config::istanbul())
+    pub fn call(&mut self, data: CallData) -> (ExitReason, Vec<u8>) {
+        self.call_raw(data.input)
     }
 }
 
 #[cfg(test)]
 mod tests {
-
+    use evm::Config;
     use crate::wevm;
     pub use wevm::EvmConfig;
     pub use wevm::EvmAccount;
     use crate::wevm::{CallData, Evm};
+    pub use primitive_types::H128;
+    pub use primitive_types::U256;
+    pub use primitive_types::H160;
 
     #[tokio::test]
     pub async fn test_wevm() {
@@ -127,13 +121,25 @@ mod tests {
                 memory: Default::default()
             },
             caller: EvmAccount { address: "0xf000000000000000000000000000000000000000".to_string(), memory: Default::default() },
-            vicinity: None,
             state: Default::default()
         };
+
+        let vicinity = evm::backend::MemoryVicinity {
+            gas_price: U256::zero(),
+            origin: H160::default(),
+            block_hashes: Vec::new(),
+            block_number: Default::default(),
+            block_coinbase: Default::default(),
+            block_timestamp: Default::default(),
+            block_difficulty: Default::default(),
+            block_gas_limit: Default::default(),
+            chain_id: U256::one(),
+            block_base_fee_per_gas: U256::zero(),
+            block_randomness: None
+        };
         
-        let evm = Evm::new();
-        let res = evm.call_istanbul(CallData {
-            config,
+        let mut evm = Evm::new(config, Config::istanbul(), &vicinity);
+        let res = evm.call(CallData {
             /// add(7,2)
             input: "771602f700000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000002".to_string()
         });
