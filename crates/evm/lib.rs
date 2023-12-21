@@ -4,6 +4,7 @@ use tiny_keccak::Hasher;
 use tiny_keccak::Keccak;
 
 pub mod storage;
+pub mod wevm;
 
 pub use storage::Storage;
 
