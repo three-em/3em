@@ -107,31 +107,36 @@ mod tests {
 
     #[tokio::test]
     pub async fn test_wevm() {
-        // SPDX-License-Identifier: MIT
-        //         pragma solidity ^0.8.0;
-        // contract Calculator {
-        //     string public storedString;
-        //
-        //     // Constructor to initialize the stored string
-        //     constructor(string memory _initString) {
-            //     storedString = _initString;
-        //     }
-        //
-        //     // Function to add two numbers
-        //     function add(uint256 a, uint256 b) public pure returns (uint256) {
-            //     return a + b;
-        //     }
-        //
-        //     // Recursive function to calculate Fibonacci number
-        //     function fibonacci(uint256 n) public returns (uint256) {
-            //     if (n <= 1) {
-             //     return n;
-            //     } else {
-                //     return fibonacci(n - 1) + fibonacci(n - 2);
-            //     }
-        //     }
-        // }
-
+// // SPDX-License-Identifier: MIT
+//         pragma solidity ^0.8.0;
+//
+//         contract Calculator {
+//             string private storedString;
+//
+//             // Constructor to initialize the stored string
+//             constructor(string memory _initString) {
+//             storedString = _initString;
+//             }
+//
+//             // Function to view the stored string
+//             function getStoredString() public view returns (string memory) {
+//             return storedString;
+//             }
+//
+//             // Function to add two numbers
+//             function add(uint256 a, uint256 b) public pure returns (uint256) {
+//             return a + b;
+//             }
+//
+//             // Recursive function to calculate Fibonacci number
+//             function fibonacci(uint256 n) public returns (uint256) {
+//             if (n <= 1) {
+//             return n;
+//             } else {
+//             return fibonacci(n - 1) + fibonacci(n - 2);
+//             }
+//             }
+//         }
         let mut initial_memory: BTreeMap<H256, H256> = BTreeMap::new();
         initial_memory.insert(H256::from_str("0x0000000000000000000000000000000000000000000000000000000000000000").unwrap(), H256::from_str("0x48656c6c6f20576f726c64000000000000000000000000000000000000000016").unwrap());
 
