@@ -60,7 +60,7 @@ jobs:
         run: Compress-Archive -CompressionLevel Optimal -Force -Path ${{ steps.binary.outputs.path }}, README.md, LICENSE -DestinationPath three_em-${{ matrix.target }}.zip
 
       - name: Upload Release Builds
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: release
           path: three_em-${{ matrix.target }}.zip
