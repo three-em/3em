@@ -54,7 +54,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Use Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Set up incremental LTO and sysroot build
         if: matrix.use_sysroot || startsWith(matrix.os, 'ubuntu')
